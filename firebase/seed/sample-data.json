@@ -1,0 +1,34 @@
+{
+  "hospitals": [
+    {
+      "id": "hosp-colombo-national",
+      "name": "National Hospital of Sri Lanka",
+      "status": "active",
+      "hospitalId": "hosp-colombo-national",
+      "createdBy": "system",
+      "updatedBy": "system"
+    }
+  ],
+  "departments": [
+    { "id": "dept-opd", "name": "Medical OPD", "hospitalId": "hosp-colombo-national", "status": "active" },
+    { "id": "dept-ed", "name": "Emergency Department", "hospitalId": "hosp-colombo-national", "status": "active" },
+    { "id": "dept-lab", "name": "Laboratory", "hospitalId": "hosp-colombo-national", "status": "active" }
+  ],
+  "patients": [
+    {
+      "id": "patient-demo-1",
+      "patientId": "PAT-2026-000001",
+      "firstName": "Nimal",
+      "lastName": "Silva",
+      "nicOrPassport": "812345678V",
+      "hospitalId": "hosp-colombo-national",
+      "status": "active",
+      "allergies": ["Penicillin"],
+      "chronicDiseases": ["Diabetes"]
+    }
+  ],
+  "medicines": [
+    { "id": "med-metformin", "name": "Metformin 500mg", "stock": 4200, "reorderLevel": 600, "expiryDate": "2027-08-30", "hospitalId": "hosp-colombo-national", "status": "active" },
+    { "id": "med-ceftriaxone", "name": "Ceftriaxone 1g", "stock": 92, "reorderLevel": 200, "expiryDate": "2026-09-01", "hospitalId": "hosp-colombo-national", "status": "active" }
+  ]
+}

@@ -1,0 +1,2 @@
+cd "C:\wamp64\www\wholesale vegetable\govcare-ehr-system"
+npm run dev -- --host 127.0.0.1
