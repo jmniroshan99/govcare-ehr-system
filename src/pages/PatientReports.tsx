@@ -1,4 +1,4 @@
-import { Download, FileText } from "lucide-react";
+﻿import { Download, FileText } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Table, Td, Th } from "../components/ui/table";
@@ -19,7 +19,7 @@ export function PatientReports() {
     try {
       const url = await getPatientReportDownloadUrl(reportId);
       if (url.startsWith("/sample-report-")) {
-        downloadTextFile(timestampedFilename(`${reportId}-${name.replaceAll(" ", "-").toLowerCase()}`, "txt"), `GovCare EHR System\nReleased patient report\n\nReport: ${name}\nUnit: ${unit}\nDate: ${date}\nStatus: ${status}\nReport ID: ${reportId}\n\nThis is a secure demo download. Production downloads should use signed Firebase Storage URLs.`, "text/plain;charset=utf-8");
+        downloadTextFile(timestampedFilename(`${reportId}-${name.replaceAll(" ", "-").toLowerCase()}`, "txt"), `GovCare EHR System\nReleased patient report\n\nReport: ${name}\nUnit: ${unit}\nDate: ${date}\nStatus: ${status}\nReport ID: ${reportId}\n\nThis is a secure demo download. Production downloads should use signed Spring Boot file storage URLs.`, "text/plain;charset=utf-8");
       } else {
         window.open(url, "_blank", "noopener,noreferrer");
       }
@@ -59,3 +59,4 @@ export function PatientReports() {
     </div>
   );
 }
+

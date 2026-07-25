@@ -1,4 +1,4 @@
-import { Building2, ChevronRight, ClipboardList, DoorOpen, HeartPulse, Hospital, Layers3, Save, Settings as SettingsIcon, ShieldCheck, UsersRound } from "lucide-react";
+﻿import { Building2, ChevronRight, ClipboardList, DoorOpen, HeartPulse, Hospital, Layers3, Save, Settings as SettingsIcon, ShieldCheck, UsersRound } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
@@ -52,7 +52,7 @@ const healthcareCenters = [
 ];
 
 const branchPolicies = [
-  ["Tenant isolation", "Every record stores hospitalId/centerId and Firestore rules restrict cross-centre reads by default."],
+  ["Tenant isolation", "Every record stores hospitalId/centerId and Spring Boot API authorization restrict cross-centre reads by default."],
   ["Separate dashboards", "Each hospital, clinic, lab, and pharmacy can load its own dashboard counters, queues, and reports."],
   ["Authorized sharing", "Referral, lab, radiology, and prescription sharing requires role permission, patient scope, and audit logs."],
   ["Role-based staff access", "Doctors, lab technicians, pharmacists, and admins receive only the modules allowed for their center."],
@@ -204,3 +204,4 @@ export function Settings() {
     </div>
   );
 }
+

@@ -3,11 +3,12 @@ import { Baby, Camera, Fingerprint, QrCode, ScanBarcode, Settings2, ShieldAlert,
 import { QRCodeSVG } from "qrcode.react";
 import { useMemo, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { PatientCodeScanner } from "../components/patient/PatientCodeScanner";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { SmartSearch } from "../components/search/SmartSearch";
 import { Input } from "../components/ui/input";
 import { Select } from "../components/ui/select";
 import { useToast } from "../components/ui/toast-context";
@@ -39,13 +40,14 @@ function calculateAge(dateOfBirth: string) {
 
 export function PatientRegistration() {
   const { showToast } = useToast();
+  const navigate = useNavigate();
   const role = useAuthStore((state) => state.role);
   const config = getPatientFieldConfiguration();
   const [generatedId, setGeneratedId] = useState(nextPatientId());
   const [photoName, setPhotoName] = useState("");
   const [duplicateTerm, setDuplicateTerm] = useState("");
   const [scannerMode, setScannerMode] = useState<"qr" | "barcode" | null>(null);
-  const { register, handleSubmit, control, reset, formState: { errors, isSubmitting } } = useForm<PatientInput>({
+  const { register, handleSubmit, control, reset, getValues, formState: { errors, isSubmitting } } = useForm<PatientInput>({
     resolver: zodResolver(patientSchema),
     defaultValues: { sex: config.genderOptions[0] ?? "Female", riskCategory: "routine", consentToShare: false, patientId: generatedId, preferredLanguage: "English", nationality: "Sri Lankan" },
   });
@@ -145,7 +147,8 @@ export function PatientRegistration() {
     });
     if (guardian?.guardianId) syncGuardianPatientClassification(generatedId, guardian.guardianId);
     console.info("Validated advanced patient payload ready for Cloud Function:", { patientId: generatedId, ...sanitized, photoName });
-    showToast(`${patientName} saved and visible to doctors.`, "success");
+    showToast(`${patientName} saved and profile opened.`, "success");
+    navigate(`/patients/${encodeURIComponent(generatedId)}`);
     const nextId = nextPatientId();
     reset({ sex: config.genderOptions[0] ?? "Female", riskCategory: "routine", consentToShare: false, patientId: nextId, preferredLanguage: "English", nationality: "Sri Lankan" });
     setPhotoName("");
@@ -159,12 +162,23 @@ export function PatientRegistration() {
   }
 
   function printPatientIdentifier(kind: "qr" | "barcode") {
+    const values = getValues();
+    const patientName = `${values.title ?? ""} ${values.firstName ?? ""} ${values.middleName ?? ""} ${values.lastName ?? ""}`.replace(/\s+/g, " ").trim() || "Pending patient name";
+    const age = calculateAge(values.dateOfBirth ?? "");
+    const identifier = age !== undefined && age < 16 ? values.birthCertificateNo : values.nicOrPassport || values.passportNumber;
+    const guardianLine = age !== undefined && age < 16 ? `<p><strong>Guardian:</strong> ${values.guardianName || "Not recorded"} (${values.guardianRelationship || "Guardian"})</p>` : "";
+    const qrValue = JSON.stringify({
+      patientId: generatedId,
+      name: patientName,
+      identifier: identifier || "not-recorded",
+      hospitalId: "hosp-colombo-national",
+    });
     const printWindow = window.open("", "_blank", "width=520,height=520");
     if (!printWindow) {
       showToast("Popup blocked. Allow popups to print the patient card.", "warning");
       return;
     }
-    printWindow.document.write(`<html><head><title>GovCare ${kind.toUpperCase()} Card</title></head><body style="font-family:Arial;padding:24px;text-align:center"><h2>GovCare EHR</h2><p>Patient ID</p><h1>${generatedId}</h1><p>${kind === "barcode" ? barcodeValue : "QR card ready in the registration screen"}</p><button onclick="window.print()">Print</button></body></html>`);
+    printWindow.document.write(`<html><head><title>GovCare ${kind.toUpperCase()} Card</title></head><body style="font-family:Arial;padding:24px;text-align:center;color:#0f172a"><h2>GovCare EHR</h2><p>Government Hospital Patient Identifier</p><h1>${generatedId}</h1><h2>${patientName}</h2><p><strong>Gender:</strong> ${values.sex || "Not recorded"} | <strong>Age:</strong> ${age ?? "Not recorded"}</p><p><strong>NIC/Passport/Birth certificate:</strong> ${identifier || "Not recorded"}</p><p><strong>Phone:</strong> ${values.phone || "Not recorded"} | <strong>District:</strong> ${values.district || "Not recorded"}</p>${guardianLine}<hr/><p style="font-family:monospace;font-size:24px">${kind === "barcode" ? barcodeValue : qrValue}</p><p>${kind === "barcode" ? "Barcode value" : "QR secure registration payload"}</p><button onclick="window.print()" style="padding:10px 16px;border:0;background:#0f766e;color:white;border-radius:8px">Print</button></body></html>`);
     printWindow.document.close();
     showToast(`${kind.toUpperCase()} card opened for printing.`, "success");
   }
@@ -187,7 +201,7 @@ export function PatientRegistration() {
         <Card>
           <CardHeader><CardTitle className="flex items-center gap-2"><ShieldAlert className="h-5 w-5 text-amber-600" />Duplicate detection</CardTitle></CardHeader>
           <CardContent className="grid gap-3 md:grid-cols-[1fr_auto]">
-            <Input placeholder="Search NIC, passport, birth certificate, name, or phone" value={duplicateTerm} onChange={(event) => setDuplicateTerm(event.target.value)} />
+            <SmartSearch placeholder="Search NIC, passport, birth certificate, name, or phone" value={duplicateTerm} onChange={setDuplicateTerm} />
             <div className="grid gap-2 sm:grid-cols-2">
               <Button type="button" variant="outline" onClick={() => setScannerMode("qr")}><QrCode className="h-4 w-4" />QR scan</Button>
               <Button type="button" variant="outline" onClick={() => setScannerMode("barcode")}><ScanBarcode className="h-4 w-4" />Barcode scan</Button>

@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Input } from "../components/ui/input";
+import { SmartSearch } from "../components/search/SmartSearch";
 import { Select } from "../components/ui/select";
 import { useToast } from "../components/ui/toast-context";
 import { addNotification, ensureNotificationsSeeded, getNotifications, NOTIFICATIONS_UPDATED_EVENT, playNotificationSound, saveNotifications, updateNotification } from "../utils/notifications";
@@ -192,7 +192,7 @@ export function NotificationCenter() {
       <Card>
         <CardHeader><CardTitle className="flex items-center gap-2"><Search className="h-5 w-5 text-primary" />{t("notificationsPage.filterSearch")}</CardTitle></CardHeader>
         <CardContent className="grid gap-3 lg:grid-cols-[1fr_180px_180px]">
-          <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t("notificationsPage.searchPlaceholder")} />
+          <SmartSearch value={query} onChange={setQuery} placeholder={t("notificationsPage.searchPlaceholder")} />
           <Select value={priority} onChange={(event) => setPriority(event.target.value as PriorityFilter)}>
             <option value="all">{t("notificationsPage.allPriorities")}</option>
             <option value="information">{t("notificationsPage.information")}</option>

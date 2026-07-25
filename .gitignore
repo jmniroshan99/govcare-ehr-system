@@ -1,24 +1,114 @@
+# GovCare EHR GitHub ignore file
+# Keep source, schemas, docs, and examples. Ignore secrets, dependencies, builds, logs, and local runtime data.
+
+# Dependencies
+node_modules/
+**/node_modules/
+.pnp
+.pnp.*
+
+# Build outputs
+dist/
+dist-ssr/
+build/
+out/
+.vite/
+**/.vite/
+coverage/
+**/coverage/
+
+# Spring Boot / Java / Maven outputs
+target/
+**/target/
+*.class
+*.jar
+*.war
+*.ear
+.mvn/timing.properties
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+!.env.sample
+*.local
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+serviceAccount*.json
+firebase-adminsdk*.json
+google-services.json
+GoogleService-Info.plist
+
+# Firebase local/runtime files
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+database-debug.log
+pubsub-debug.log
+storage-debug.log
+firebase-export-*/
+
 # Logs
-logs
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+vite-dev.out.log
+vite-dev.err.log
 
-node_modules
-dist
-dist-ssr
-*.local
+# Runtime uploads and generated local files
+uploads/
+**/uploads/
+storage/
+**/storage/
+media-storage/
+**/media-storage/
+tmp/
+temp/
+.cache/
+**/.cache/
+
+# Generated documents and exports
+docs/*.pdf
+docs/*.xlsx
+docs/*.csv
+exports/
+reports/generated/
+
+# Database dumps and local database files
+*.dump
+*.backup
+*.bak
+*.sqlite
+*.sqlite3
+*.db
+*.psql
+*.pgdump
+database/postgresql/seed.sql
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
-.idea
-.DS_Store
+!.vscode/settings.example.json
+.idea/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+# Misc local notes
+New Text Document.txt
+run.txt

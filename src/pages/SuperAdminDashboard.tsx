@@ -14,7 +14,6 @@ import {
   KeyRound,
   Layers3,
   Lock,
-  Search,
   Server,
   ShieldAlert,
   ShieldCheck,
@@ -30,10 +29,11 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { PageTransition, Reveal, SectionReveal, Stagger } from "../components/motion/PageTransition";
+import { SelfRegistrationQrCenter } from "../components/admin/SelfRegistrationQrCenter";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Input } from "../components/ui/input";
+import { SmartSearch } from "../components/search/SmartSearch";
 import { Select } from "../components/ui/select";
 import { Table, Td, Th } from "../components/ui/table";
 import { useToast } from "../components/ui/toast-context";
@@ -219,14 +219,11 @@ export function SuperAdminDashboard() {
         <Card>
           <CardContent className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap gap-2">
-              {["actors", "permissions", "users", "firebase", "audit", "collections"].map((tab) => (
+              {["actors", "qr", "permissions", "users", "firebase", "audit", "collections"].map((tab) => (
                 <Button key={tab} variant={activeTab === tab ? "primary" : "outline"} onClick={() => setActiveTab(tab)}>{tab[0].toUpperCase() + tab.slice(1)}</Button>
               ))}
             </div>
-            <div className="relative min-w-64">
-              <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input className="pl-9" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search roles, modules, users..." />
-            </div>
+            <SmartSearch className="min-w-64" value={search} onChange={setSearch} placeholder="Search roles, modules, users..." />
           </CardContent>
         </Card>
 
@@ -267,6 +264,8 @@ export function SuperAdminDashboard() {
             </section>
           </Stagger>
         )}
+
+        {activeTab === "qr" && <SelfRegistrationQrCenter />}
 
         {activeTab === "permissions" && (
           <section className="grid gap-4 xl:grid-cols-[360px_1fr]">

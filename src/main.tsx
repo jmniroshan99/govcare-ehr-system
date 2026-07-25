@@ -5,16 +5,29 @@ import App from './App.tsx'
 import { AppProviders } from './app/providers.tsx'
 import { initializeTheme } from './hooks/useTheme.ts'
 import { registerOfflineSynchronization } from './services/offlineQueue.ts'
+import { scheduleAfterFirstPaint } from './utils/schedule.ts'
 
 initializeTheme()
 
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    void navigator.serviceWorker.register("/sw.js").then((registration) => registration.update());
-  });
-}
+scheduleAfterFirstPaint(() => {
+  if (import.meta.env.DEV) {
+    if ("serviceWorker" in navigator) {
+      void navigator.serviceWorker.getRegistrations()
+        .then((registrations) => Promise.all(registrations.map((registration) => registration.unregister())));
+    }
+    if ("caches" in window) {
+      void caches.keys()
+        .then((keys) => Promise.all(keys.filter((key) => key.startsWith("govcare-")).map((key) => caches.delete(key))));
+    }
+    registerOfflineSynchronization();
+    return;
+  }
 
-registerOfflineSynchronization()
+  if ("serviceWorker" in navigator) {
+    void navigator.serviceWorker.register("/sw.js").then((registration) => registration.update());
+  }
+  registerOfflineSynchronization();
+});
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

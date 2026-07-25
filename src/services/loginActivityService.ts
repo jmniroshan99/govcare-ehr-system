@@ -1,7 +1,5 @@
-import { collection, limit, onSnapshot, orderBy, query, where } from "firebase/firestore";
-import { httpsCallable } from "firebase/functions";
-import { db, functions } from "../lib/firebase";
 import type { AppUser, AuthenticationMethod, LoginActivity, LogoutActivityStatus, Role } from "../types/ehr";
+import { apiRequest } from "./apiClient";
 
 const SESSION_KEY = "govcare-login-activity-session";
 const LOCAL_KEY = "govcare-login-activities";
@@ -61,12 +59,15 @@ export async function recordLoginActivity(input: LoginEventInput) {
     uid: input.profile.uid, displayName: input.profile.displayName, role: input.profile.role, hospitalId: input.profile.hospitalId,
     hospitalName: input.profile.hospitalName, departmentId: input.profile.departmentId, departmentName: input.profile.departmentName,
   } : undefined, sessionId, ...clientContext() };
-  if (functions && window.sessionStorage.getItem("govcare-auth-mode") !== "demo") {
+  if (window.sessionStorage.getItem("govcare-auth-mode") !== "demo") {
     try {
-      await httpsCallable(functions, "recordLoginActivity")(payload);
+      await apiRequest("/api/login-activities", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
       return;
     } catch (error) {
-      console.warn("Login activity Cloud Function unavailable; retained locally.", error);
+      console.warn("Login activity API unavailable; retained locally.", error);
     }
   }
   localRecord(input, sessionId);
@@ -76,8 +77,15 @@ export async function closeLoginSession(logoutStatus: Exclude<LogoutActivityStat
   const stored = JSON.parse(localStorage.getItem(SESSION_KEY) ?? "null") as { sessionId?: string; loginTime?: number } | null;
   if (!stored?.sessionId) return;
   const payload = { sessionId: stored.sessionId, logoutStatus, ...clientContext() };
-  if (functions && window.sessionStorage.getItem("govcare-auth-mode") !== "demo") {
-    try { await httpsCallable(functions, "closeLoginSession")(payload); } catch (error) { console.warn("Session close audit retained locally.", error); }
+  if (window.sessionStorage.getItem("govcare-auth-mode") !== "demo") {
+    try {
+      await apiRequest("/api/login-activities/session/close", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+    } catch (error) {
+      console.warn("Session close audit retained locally.", error);
+    }
   }
   const now = new Date().toISOString();
   writeLocal(readLocal().map((row) => row.sessionId === stored.sessionId ? {
@@ -88,17 +96,32 @@ export async function closeLoginSession(logoutStatus: Exclude<LogoutActivityStat
 }
 
 export function subscribeToLoginActivities(hospitalId: string, role: Role, callback: (rows: LoginActivity[]) => void, onError: (error: Error) => void) {
-  if (!db || window.sessionStorage.getItem("govcare-auth-mode") === "demo") {
-    const emit = () => callback(readLocal());
-    emit();
-    window.addEventListener("govcare:login-activity", emit);
-    return () => window.removeEventListener("govcare:login-activity", emit);
+  let cancelled = false;
+  async function load() {
+    if (window.sessionStorage.getItem("govcare-auth-mode") === "demo") {
+      callback(readLocal());
+      return;
+    }
+    try {
+      const params = role === "super_admin" ? "" : `?hospitalId=${encodeURIComponent(hospitalId)}`;
+      const result = await apiRequest<{ items: LoginActivity[] }>(`/api/login-activities${params}`);
+      if (!cancelled) callback(result.items);
+    } catch (error) {
+      if (!cancelled) {
+        callback(readLocal());
+        onError(error instanceof Error ? error : new Error(String(error)));
+      }
+    }
   }
-  const base = collection(db, "loginActivities");
-  const activityQuery = role === "super_admin"
-    ? query(base, orderBy("timestamp", "desc"), limit(500))
-    : query(base, where("hospitalId", "==", hospitalId), orderBy("timestamp", "desc"), limit(500));
-  return onSnapshot(activityQuery, (snapshot) => callback(snapshot.docs.map((item) => ({ id: item.id, ...item.data() } as LoginActivity))), (error) => onError(error));
+  const emit = () => callback(readLocal());
+  void load();
+  const interval = window.setInterval(load, 30_000);
+  window.addEventListener("govcare:login-activity", emit);
+  return () => {
+    cancelled = true;
+    window.clearInterval(interval);
+    window.removeEventListener("govcare:login-activity", emit);
+  };
 }
 
 export function seedLoginActivitiesForDemo(hospitalId: string) {

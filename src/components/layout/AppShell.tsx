@@ -44,7 +44,7 @@ import type { ReactNode } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "../ui/button";
-import { Input } from "../ui/input";
+import { SmartSearch } from "../search/SmartSearch";
 import { navItems } from "./navItems";
 import { useAuthStore } from "../../stores/authStore";
 import { logout } from "../../services/authService";
@@ -58,6 +58,7 @@ import type { Role } from "../../types/ehr";
 import { languageOptions } from "../../i18n";
 import { ensureNotificationsSeeded, NOTIFICATIONS_UPDATED_EVENT, unreadCountForRole } from "../../utils/notifications";
 import { useOfflineStatus } from "../../hooks/useOfflineStatus";
+import { preloadRoute } from "../../routes/routePreload";
 
 interface SidebarEntry {
   href: string;
@@ -301,10 +302,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <Button variant="ghost" className="w-10 px-0 lg:hidden" onClick={() => setMobileOpen((value) => !value)} aria-label="Open menu">
             <Menu className="h-5 w-5" />
           </Button>
-          <div className="relative max-w-xl flex-1">
-            <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input className="pl-9" placeholder={t("search")} />
-          </div>
+          <SmartSearch className="max-w-xl flex-1" placeholder={t("search")} />
           <Button variant="outline" className="hidden px-3 md:inline-flex" aria-label={t("help")} onClick={() => navigate("/settings")}>
             <HelpCircle className="h-4 w-4" />{t("help")}
           </Button>
@@ -411,10 +409,13 @@ function SidebarContent({
 
       <div className="p-3">
         {expanded ? (
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input className="h-10 pl-9" value={navSearch} onChange={(event) => setNavSearch(event.target.value)} placeholder={t("layout.searchModules")} />
-          </div>
+          <SmartSearch
+            inputClassName="h-10"
+            navigateOnSelect
+            onChange={setNavSearch}
+            placeholder={t("layout.searchModules")}
+            value={navSearch}
+          />
         ) : (
           <div className="grid h-10 place-items-center rounded-md border border-teal-200 bg-teal-50 text-primary" title="Search modules">
             <Search className="h-4 w-4" />
@@ -448,6 +449,9 @@ function SidebarContent({
                         key={`${group.title}-${entry.label}-${entry.href}`}
                         to={entry.href}
                         onClick={onNavigate}
+                        onFocus={() => preloadRoute(entry.href)}
+                        onMouseEnter={() => preloadRoute(entry.href)}
+                        onTouchStart={() => preloadRoute(entry.href)}
                         title={entry.translationKey ? t(entry.translationKey) : entry.label}
                         accessKey={entry.shortcut?.toLowerCase()}
                         className={({ isActive }) =>

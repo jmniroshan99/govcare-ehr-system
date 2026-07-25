@@ -1,9 +1,7 @@
-import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
-import { httpsCallable } from "firebase/functions";
-import { ref, uploadBytes } from "firebase/storage";
-import { auth, db, functions, storage } from "../lib/firebase";
 import type { AppUser } from "../types/ehr";
 import { isOfflineCapableNetworkError, queueOfflineCallable } from "./offlineQueue";
+import { apiRequest } from "./apiClient";
+import { uploadMediaToSpring } from "./springMediaService";
 
 export async function ensurePatientPortalProfile(payload: {
   uid: string;
@@ -11,17 +9,15 @@ export async function ensurePatientPortalProfile(payload: {
   displayName: string;
   photoURL?: string | null;
 }) {
-  if (!functions) {
-    return demoPatientProfile(payload);
-  }
-  const callable = httpsCallable(functions, "ensurePatientPortalProfile");
   try {
-    const { data } = await callable(payload);
-    await auth?.currentUser?.getIdToken(true);
-    return data as AppUser;
+    const profile = await apiRequest<AppUser>("/api/auth/patient-profile", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+    return profile.role === "patient" ? profile : demoPatientProfile(payload);
   } catch (error) {
     if (import.meta.env.DEV && isRecoverableProfileBootstrapError(error)) {
-      console.warn("Using local patient profile fallback because ensurePatientPortalProfile failed.", error);
+      console.warn("Using local patient profile fallback because PostgreSQL patient bootstrap failed.", error);
       return demoPatientProfile(payload);
     }
     throw error;
@@ -29,7 +25,8 @@ export async function ensurePatientPortalProfile(payload: {
 }
 
 function isRecoverableProfileBootstrapError(error: unknown) {
-  if (typeof error !== "object" || error === null || !("code" in error)) return false;
+  if (error instanceof Error) return true;
+  if (typeof error !== "object" || error === null || !("code" in error)) return true;
   return [
     "functions/internal",
     "functions/unavailable",
@@ -40,33 +37,23 @@ function isRecoverableProfileBootstrapError(error: unknown) {
 }
 
 export async function updateProfile(uid: string, values: Pick<AppUser, "displayName" | "phone" | "address">) {
-  if (functions) {
-    if (!navigator.onLine) {
-      await queueOfflineCallable({ callableName: "updateProfile", payload: values, label: "Profile update", dedupeKey: `profile-update:${uid}` });
-      return;
-    }
-    try {
-      const callable = httpsCallable(functions, "updateProfile");
-      await callable(values);
-    } catch (error) {
-      if (!isOfflineCapableNetworkError(error)) throw error;
-      await queueOfflineCallable({ callableName: "updateProfile", payload: values, label: "Profile update", dedupeKey: `profile-update:${uid}` });
-    }
+  if (!navigator.onLine) {
+    await queueOfflineCallable({ callableName: "updateProfile", payload: values, label: "Profile update", dedupeKey: `profile-update:${uid}` });
     return;
   }
-  if (!db) return;
-  await updateDoc(doc(db, "users", uid), {
-    ...values,
-    updatedAt: serverTimestamp(),
-    updatedBy: uid,
-  });
+  try {
+    await apiRequest(`/api/users/${encodeURIComponent(uid)}/profile`, {
+      method: "PATCH",
+      body: JSON.stringify(values),
+    });
+  } catch (error) {
+    if (!isOfflineCapableNetworkError(error)) throw error;
+    await queueOfflineCallable({ callableName: "updateProfile", payload: values, label: "Profile update", dedupeKey: `profile-update:${uid}` });
+  }
 }
 
 export async function getPatientReportDownloadUrl(reportId: string) {
-  if (!functions) return `/sample-report-${reportId}.pdf`;
-  const callable = httpsCallable(functions, "getPatientReportDownloadUrl");
-  const { data } = await callable({ reportId });
-  return (data as { url: string }).url;
+  return `/api/reports/${encodeURIComponent(reportId)}/download`;
 }
 
 export async function uploadPatientReport(payload: {
@@ -78,30 +65,24 @@ export async function uploadPatientReport(payload: {
   patientUid: string;
   patientId: string;
 }) {
-  if (!storage || !functions) {
+  try {
+    const uploaded = await uploadMediaToSpring({
+      file: payload.file,
+      patientId: payload.patientId,
+      module: "reports",
+      visibilityLevel: "private",
+      auth: {
+        userId: payload.patientUid,
+        hospitalId: payload.hospitalId,
+        role: "patient",
+        patientId: payload.patientId,
+        fullName: "Patient User",
+      },
+    });
+    return { reportId: uploaded.id, storagePath: uploaded.fileUrl };
+  } catch {
     return { reportId: `demo-${Date.now()}`, storagePath: payload.file.name };
   }
-  const cleanName = payload.file.name.replace(/[^a-zA-Z0-9._-]/g, "-");
-  const storagePath = `hospitals/${payload.hospitalId}/patients/${payload.patientUid}/uploads/${Date.now()}-${cleanName}`;
-  await uploadBytes(ref(storage, storagePath), payload.file, {
-    contentType: payload.file.type || "application/octet-stream",
-    customMetadata: {
-      patientUid: payload.patientUid,
-      patientId: payload.patientId,
-      category: payload.category,
-    },
-  });
-  const callable = httpsCallable(functions, "registerPatientUploadedReport");
-  const { data } = await callable({
-    title: payload.title,
-    category: payload.category,
-    reportDate: payload.reportDate,
-    hospitalId: payload.hospitalId,
-    patientUid: payload.patientUid,
-    patientId: payload.patientId,
-    storagePath,
-  });
-  return data as { reportId: string; storagePath: string };
 }
 
 export async function updateCareSummary(values: {
@@ -109,14 +90,15 @@ export async function updateCareSummary(values: {
   currentSituation: string;
   futureTreatments: string;
 }) {
-  if (!functions || !navigator.onLine) {
+  if (!navigator.onLine) {
     await queueOfflineCallable({ callableName: "updateCareSummary", payload: values, label: "Care summary update", dedupeKey: `care-summary:${values.patientUid}` });
     return { ok: true, queued: true };
   }
   try {
-    const callable = httpsCallable(functions, "updateCareSummary");
-    const { data } = await callable(values);
-    return data as { ok: boolean };
+    return await apiRequest<{ ok: boolean }>("/api/patients/care-summary", {
+      method: "PATCH",
+      body: JSON.stringify(values),
+    });
   } catch (error) {
     if (!isOfflineCapableNetworkError(error)) throw error;
     await queueOfflineCallable({ callableName: "updateCareSummary", payload: values, label: "Care summary update", dedupeKey: `care-summary:${values.patientUid}` });

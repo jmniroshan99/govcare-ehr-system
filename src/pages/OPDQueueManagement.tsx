@@ -1,4 +1,4 @@
-import { Activity, AlertTriangle, ArrowRightLeft, BedDouble, BellRing, CheckCircle2, ClipboardList, Clock3, FileText, Hospital, Printer, QrCode, RefreshCcw, ScanLine, Search, Send, ShieldCheck, Smartphone, Stethoscope, UserPlus } from "lucide-react";
+﻿import { Activity, AlertTriangle, ArrowRightLeft, BedDouble, BellRing, CheckCircle2, ClipboardList, Clock3, FileText, Hospital, Printer, QrCode, RefreshCcw, ScanLine, Search, Send, ShieldCheck, Smartphone, Stethoscope, UserPlus } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { PageTransition, Reveal, SectionReveal, Stagger } from "../components/motion/PageTransition";
 import { GenderBadge } from "../components/patient/GenderBadge";
@@ -6,6 +6,7 @@ import { PatientCodeScanner } from "../components/patient/PatientCodeScanner";
 import { Badge, StatusBadge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { SmartSearch } from "../components/search/SmartSearch";
 import { Input } from "../components/ui/input";
 import { Select } from "../components/ui/select";
 import { Table, Td, Th } from "../components/ui/table";
@@ -290,16 +291,13 @@ export function OPDQueueManagement() {
           </Card>
 
           <Card>
-            <CardHeader><CardTitle className="flex items-center gap-2"><ScanLine className="h-5 w-5 text-primary" />Smart search and sorting</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="flex items-center gap-2"><ScanLine className="h-5 w-5 text-primary" /><Search className="h-5 w-5 text-primary" />Smart search and sorting</CardTitle></CardHeader>
             <CardContent className="space-y-3">
-              <div className="relative">
-                <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input className="pl-9" placeholder="Search NIC, patient ID, token, QR, phone number..." />
-              </div>
+              <SmartSearch value={search} onChange={setSearch} placeholder="Search NIC, patient ID, token, QR, phone number..." />
               <label className="text-sm font-medium">Queue sort priority<Select value={sortMode} onChange={(event) => setSortMode(event.target.value as SortMode)}><option value="priority">Priority level</option><option value="arrival">Arrival time</option><option value="appointment">Appointment time</option><option value="age">Age</option><option value="disability">Disability access</option><option value="pregnancy">Pregnancy</option><option value="emergency">Emergency severity</option><option value="doctor">Doctor availability</option></Select></label>
               <div className="grid gap-2 md:grid-cols-2">
-                <p className="help-strip p-3 text-sm">Cloud Functions should generate tokens, recalculate queue position, and apply emergency/elderly/disability/pregnancy priority rules.</p>
-                <p className="help-strip p-3 text-sm">Firestore real-time listeners should be limited to active department queues, doctor call events, and patient ticket updates.</p>
+                <p className="help-strip p-3 text-sm">Spring Boot services should generate tokens, recalculate queue position, and apply emergency/elderly/disability/pregnancy priority rules.</p>
+                <p className="help-strip p-3 text-sm">PostgreSQL real-time listeners should be limited to active department queues, doctor call events, and patient ticket updates.</p>
               </div>
             </CardContent>
           </Card>
@@ -384,7 +382,7 @@ export function OPDQueueManagement() {
           <CardHeader>
             <CardTitle className="flex flex-wrap items-center justify-between gap-3">
               <span className="flex items-center gap-2"><Stethoscope className="h-5 w-5 text-primary" />Doctor check synchronization</span>
-              <Badge tone="success">Firestore listener ready</Badge>
+              <Badge tone="success">PostgreSQL API refresh ready</Badge>
             </CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 xl:grid-cols-2">
@@ -459,3 +457,4 @@ export function OPDQueueManagement() {
     </PageTransition>
   );
 }
+

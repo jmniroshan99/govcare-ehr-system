@@ -1,6 +1,3 @@
-import { httpsCallable } from "firebase/functions";
-import { functions } from "../lib/firebase";
-
 export type OfflineCallableName =
   | "saveConsultationDraft"
   | "sendSecureChatMessage"
@@ -10,7 +7,10 @@ export type OfflineCallableName =
   | "submitMedicalDecisionRequest"
   | "reviewMedicalDecisionRequest"
   | "updateProfile"
-  | "updateCareSummary";
+  | "updateCareSummary"
+  | "sendDoctorReferral"
+  | "approveDoctorDischarge"
+  | "scheduleDoctorFollowUp";
 
 export interface OfflineAction {
   id: string;
@@ -166,20 +166,23 @@ async function updateOfflineAction(action: OfflineAction) {
 export function isOfflineCapableNetworkError(error: unknown) {
   const code = typeof error === "object" && error !== null && "code" in error ? String((error as { code?: unknown }).code) : "";
   return !navigator.onLine
-    || code === "functions/unavailable"
-    || code === "functions/deadline-exceeded"
-    || code === "functions/internal"
+    || code === "api/unavailable"
+    || code === "api/deadline-exceeded"
+    || code === "api/internal"
     || code === "auth/network-request-failed";
 }
 
 export async function syncOfflineActions() {
-  if (!navigator.onLine || !functions) return { synced: 0, remaining: await getOfflineActionCount() };
+  if (!navigator.onLine) return { synced: 0, remaining: await getOfflineActionCount() };
   const actions = await getOfflineActions();
   let synced = 0;
   for (const action of actions) {
     try {
-      const callable = httpsCallable(functions, action.callableName);
-      await callable(action.payload);
+      await fetch(`/api/offline-actions/${action.callableName}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(action.payload),
+      });
       await removeOfflineAction(action.id);
       synced += 1;
     } catch (error) {

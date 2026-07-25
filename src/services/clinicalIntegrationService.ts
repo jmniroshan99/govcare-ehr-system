@@ -1,7 +1,6 @@
-import { addDoc, collection, serverTimestamp, setDoc, doc } from "firebase/firestore";
-import { db } from "../lib/firebase";
 import type { Role } from "../types/ehr";
 import { addNotification } from "../utils/notifications";
+import { apiRequest } from "./apiClient";
 
 export const CLINICAL_INTEGRATION_STORAGE_KEY = "govcare.clinicalIntegration";
 export const CLINICAL_INTEGRATION_UPDATED_EVENT = "govcare:clinical-integration-updated";
@@ -151,21 +150,20 @@ function saveClinicalIntegrationState(state: ClinicalIntegrationState) {
   emitUpdate();
 }
 
-async function mirrorToFirestore(collectionName: string, id: string, payload: Record<string, unknown>) {
-  if (!db || !navigator.onLine || import.meta.env.DEV) return;
-  await setDoc(doc(db, collectionName, id), {
-    ...payload,
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  }, { merge: true });
+async function mirrorToPostgres(collectionName: string, id: string, payload: Record<string, unknown>) {
+  if (!navigator.onLine || import.meta.env.DEV) return;
+  await apiRequest(`/api/integration/${encodeURIComponent(collectionName)}/${encodeURIComponent(id)}`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  }).catch(() => undefined);
 }
 
-async function addFirestoreAuditLog(log: IntegratedAuditLog) {
-  if (!db || !navigator.onLine || import.meta.env.DEV) return;
-  await addDoc(collection(db, "auditLogs"), {
-    ...log,
-    timestamp: serverTimestamp(),
-  });
+async function addPostgresAuditLog(log: IntegratedAuditLog) {
+  if (!navigator.onLine || import.meta.env.DEV) return;
+  await apiRequest("/api/audit-logs", {
+    method: "POST",
+    body: JSON.stringify(log),
+  }).catch(() => undefined);
 }
 
 export async function recordIntegrationAudit(log: Omit<IntegratedAuditLog, "id" | "timestamp">) {
@@ -173,7 +171,7 @@ export async function recordIntegrationAudit(log: Omit<IntegratedAuditLog, "id" 
   const state = getClinicalIntegrationState();
   state.auditLogs.unshift(entry);
   saveClinicalIntegrationState(state);
-  await addFirestoreAuditLog(entry);
+  await addPostgresAuditLog(entry);
   return entry;
 }
 
@@ -231,8 +229,8 @@ export async function createIntegratedOpdVisit(payload: {
   state.visits.unshift(visit);
   state.billingInvoices.unshift(invoice);
   saveClinicalIntegrationState(state);
-  await mirrorToFirestore("visits", visitId, visit as unknown as Record<string, unknown>);
-  await mirrorToFirestore("billingInvoices", invoiceNo, invoice as unknown as Record<string, unknown>);
+  await mirrorToPostgres("visits", visitId, visit as unknown as Record<string, unknown>);
+  await mirrorToPostgres("billingInvoices", invoiceNo, invoice as unknown as Record<string, unknown>);
   await recordIntegrationAudit({
     hospitalId: payload.patient.hospitalId,
     patientId: payload.patient.patientId,
@@ -302,8 +300,8 @@ export async function createDiagnosticOrdersFromConsultation(payload: {
   state.radiologyOrders.unshift(...radiologyOrders);
   saveClinicalIntegrationState(state);
 
-  for (const order of labOrders) await mirrorToFirestore("labOrders", order.orderId, order as unknown as Record<string, unknown>);
-  for (const order of radiologyOrders) await mirrorToFirestore("radiologyOrders", order.orderId, order as unknown as Record<string, unknown>);
+  for (const order of labOrders) await mirrorToPostgres("labOrders", order.orderId, order as unknown as Record<string, unknown>);
+  for (const order of radiologyOrders) await mirrorToPostgres("radiologyOrders", order.orderId, order as unknown as Record<string, unknown>);
   for (const order of [...labOrders, ...radiologyOrders]) {
     await recordIntegrationAudit({
       hospitalId: order.hospitalId,
@@ -355,7 +353,7 @@ export async function updateDiagnosticOrderStatus(orderId: string, kind: "labora
   const index = bucket.findIndex((order) => order.orderId === orderId);
   bucket[index] = next;
   saveClinicalIntegrationState(state);
-  await mirrorToFirestore(kind === "laboratory" ? "labOrders" : "radiologyOrders", orderId, next as unknown as Record<string, unknown>);
+  await mirrorToPostgres(kind === "laboratory" ? "labOrders" : "radiologyOrders", orderId, next as unknown as Record<string, unknown>);
   await recordIntegrationAudit({
     hospitalId: next.hospitalId,
     patientId: next.patientId,
@@ -380,4 +378,3 @@ export function getIntegratedPatientTimeline(patientId: string) {
     ...state.billingInvoices.filter((item) => item.patientId === patientId).map((item) => ({ date: item.createdAt, type: "Billing", title: item.description, status: item.status })),
   ].sort((a, b) => b.date.localeCompare(a.date));
 }
-

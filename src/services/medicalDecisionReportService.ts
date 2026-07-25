@@ -1,7 +1,5 @@
-import { httpsCallable } from "firebase/functions";
-import { functions } from "../lib/firebase";
 import type { MedicalDecisionRequest } from "../types/medicalDecisionReport";
-import { isOfflineCapableNetworkError, queueOfflineCallable } from "./offlineQueue";
+import { queueOfflineCallable } from "./offlineQueue";
 
 const STORAGE_KEY = "govcare-medical-decision-requests";
 
@@ -100,16 +98,6 @@ export async function listMedicalDecisionRequests() {
 export async function submitMedicalDecisionRequest(input: Omit<MedicalDecisionRequest, "id" | "status" | "releaseStatus" | "createdAt" | "updatedAt" | "timeline">) {
   const clientRequestId = crypto.randomUUID();
   const cloudPayload = { ...input, clientRequestId };
-  if (functions && navigator.onLine) {
-    try {
-      const callable = httpsCallable(functions, "submitMedicalDecisionRequest");
-      const { data } = await callable(cloudPayload);
-      return data as { requestId: string };
-    } catch (error) {
-      if (!isOfflineCapableNetworkError(error) && !import.meta.env.DEV) throw error;
-      console.warn("Queuing medical report request for synchronization.", error);
-    }
-  }
   const now = new Date().toISOString();
   const request: MedicalDecisionRequest = {
     ...input,
@@ -142,25 +130,6 @@ export async function saveMedicalDecisionReview(requestId: string, updates: Part
       dedupeKey: `medical-report-draft:${requestId}`,
     });
   }
-  if (functions && navigator.onLine) {
-    try {
-      const callable = httpsCallable(functions, "reviewMedicalDecisionRequest");
-      const { data } = await callable({ requestId, updates, action });
-      return data as { ok: boolean; reportNumber?: string; verificationToken?: string };
-    } catch (error) {
-      if (!isOfflineCapableNetworkError(error) && !import.meta.env.DEV) throw error;
-      if (action !== "save-draft" && !navigator.onLine) throw error;
-      if (action === "save-draft") {
-        await queueOfflineCallable({
-          callableName: "reviewMedicalDecisionRequest",
-          payload: { requestId, updates, action },
-          label: `Medical report draft ${requestId}`,
-          dedupeKey: `medical-report-draft:${requestId}`,
-        });
-      }
-      console.warn("Using local medical report review fallback.", error);
-    }
-  }
   const requests = readLocalRequests();
   const index = requests.findIndex((request) => request.id === requestId);
   if (index < 0) throw new Error("Medical report request not found.");
@@ -184,16 +153,6 @@ export async function saveMedicalDecisionReview(requestId: string, updates: Part
 }
 
 export async function verifyMedicalDecisionReport(reportNumber: string, token?: string) {
-  if (functions) {
-    try {
-      const callable = httpsCallable(functions, "verifyMedicalDecisionReport");
-      const { data } = await callable({ reportNumber, token });
-      return data as VerificationResult;
-    } catch (error) {
-      if (!import.meta.env.DEV) throw error;
-      console.warn("Using local medical report verification fallback.", error);
-    }
-  }
   const report = readLocalRequests().find((item) =>
     item.reportNumber?.toLowerCase() === reportNumber.trim().toLowerCase()
     && (!token || item.verificationToken === token),

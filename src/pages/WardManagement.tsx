@@ -1,4 +1,4 @@
-import { BedDouble, ClipboardList, DoorOpen, HeartPulse, RefreshCw, ShieldAlert, UserRoundCheck } from "lucide-react";
+﻿import { BedDouble, ClipboardList, DoorOpen, HeartPulse, RefreshCw, ShieldAlert, UserRoundCheck } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { PageTransition, Reveal, SectionReveal, Stagger } from "../components/motion/PageTransition";
@@ -203,6 +203,26 @@ export function WardManagement() {
     });
   }
 
+  function saveBedAllocation(nextStatus: BedStatus, nextPatientId: string, nextPatientName: string, nextDiagnosis: string, nextRisk: string) {
+    setBeds((current) =>
+      current.map((bed) =>
+        bed.id === selectedBedId
+          ? {
+              ...bed,
+              status: nextStatus,
+              patientId: nextStatus === "available" || nextStatus === "cleaning" ? undefined : nextPatientId,
+              patientName: nextStatus === "available" || nextStatus === "cleaning" ? undefined : nextPatientName,
+              patientAge: nextStatus === "available" || nextStatus === "cleaning" ? undefined : patientClassification.age ?? (Number(patientAge) || undefined),
+              patientGender: nextStatus === "available" || nextStatus === "cleaning" ? undefined : patientClassification.gender,
+              diagnosis: nextStatus === "available" || nextStatus === "cleaning" ? undefined : nextDiagnosis,
+              risk: nextStatus === "available" || nextStatus === "cleaning" ? undefined : nextRisk,
+              lastVitals: nextStatus === "available" || nextStatus === "cleaning" ? undefined : bed.lastVitals ?? "Vitals pending",
+            }
+          : bed,
+      ),
+    );
+  }
+
   function refreshBedMap() {
     setBeds(createBeds());
     showToast("Bed map refreshed with latest ward availability.", "success");
@@ -215,11 +235,22 @@ export function WardManagement() {
       showToast(`${recommendation.label} recommended before allocation. Select a matching ward or approve override.`, "warning");
       return;
     }
+    const nextPatientId = patientId || "PAT-NEW";
+    const nextPatientName = patientName || "New admitted patient";
+    const nextDiagnosis = diagnosis || "Admission pending doctor review";
+    const nextRisk = risk || "New admission";
     setStatus("occupied");
-    setPatientId(patientId || "PAT-NEW");
-    setPatientName(patientName || "New admitted patient");
-    setDiagnosis(diagnosis || "Admission pending doctor review");
-    showToast(`${selectedBed.bedNo} prepared for allocation. Click Update patient to save.`, "info");
+    setPatientId(nextPatientId);
+    setPatientName(nextPatientName);
+    setDiagnosis(nextDiagnosis);
+    setRisk(nextRisk);
+    saveBedAllocation("occupied", nextPatientId, nextPatientName, nextDiagnosis, nextRisk);
+    showToast(`${selectedBed.bedNo} allocated and updated for ${nextPatientName}.`, "success");
+    refreshAndRedirectToMainMenu(800, {
+      title: `${selectedBed.bedNo} allocated`,
+      summary: `occupied | ${nextPatientName} | ${nextDiagnosis}`,
+      module: "Ward Management",
+    });
   }
 
   function loadPatientClassification() {
@@ -412,7 +443,7 @@ export function WardManagement() {
                   {patientId && <Link className="interactive-control inline-flex h-10 items-center justify-center rounded-md border border-border bg-white px-4 text-sm font-semibold text-slate-800 hover:bg-muted" to={`/patients/${patientId}`}>Open patient profile</Link>}
                 </div>
                 <p className="rounded-md border border-cyan-200 bg-cyan-50 px-3 py-2 text-sm text-cyan-950">
-                  In production this update should write to Firestore admissions, beds, patients, and auditLogs through a Cloud Function.
+                  In production this update should write to PostgreSQL admissions, beds, patients, and auditLogs through a Spring Boot service.
                 </p>
               </CardContent>
             </Card>
@@ -443,3 +474,4 @@ export function WardManagement() {
     </PageTransition>
   );
 }
+

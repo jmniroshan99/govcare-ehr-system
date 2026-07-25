@@ -1,7 +1,7 @@
-import { QRCodeSVG } from "qrcode.react";
-import { Activity, AlertTriangle, Bell, BrainCircuit, CalendarPlus, Camera, Download, FileText, HeartPulse, LockKeyhole, QrCode, ScanBarcode, Stethoscope, Upload } from "lucide-react";
+﻿import { QRCodeSVG } from "qrcode.react";
+import { Activity, AlertTriangle, Bell, BrainCircuit, CalendarDays, CalendarPlus, Camera, Download, FileText, HeartPulse, LockKeyhole, MapPin, QrCode, ScanBarcode, Stethoscope, Upload } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { GenderBadge } from "../components/patient/GenderBadge";
 import { PatientCodeScanner } from "../components/patient/PatientCodeScanner";
@@ -13,6 +13,47 @@ import { useToast } from "../components/ui/toast-context";
 import { downloadTextFile, timestampedFilename } from "../utils/download";
 import { normaliseGenderLabel } from "../utils/gender";
 import { getSavedPatientsForDoctors, PATIENTS_UPDATED_EVENT } from "../utils/patientRegistry";
+import type { SavedPatientForDoctor } from "../utils/patientRegistry";
+import { getSelfRegisteredPatients, SELF_REGISTRATION_UPDATED_EVENT, type SelfRegisteredPatient } from "../services/selfRegistrationService";
+
+const seedPatients: SavedPatientForDoctor[] = [
+  {
+    patientId: "PAT-2026-000001",
+    hospitalId: "hosp-colombo-national",
+    name: "Nimal Silva",
+    nicOrPassport: "812345678V",
+    phone: "0771234567",
+    sex: "Male",
+    age: 44,
+    district: "Colombo",
+    bloodGroup: "B+",
+    riskCategory: "high",
+    allergies: "Penicillin",
+    chronicDiseases: "Diabetes, hypertension",
+    assignedDoctor: "Dr. Anjali Perera",
+    visitReason: "Diabetes follow-up",
+    status: "assigned",
+    registeredAt: "2026-06-10T08:30:00.000Z",
+  },
+  {
+    patientId: "PAT-2026-000002",
+    hospitalId: "hosp-colombo-national",
+    name: "Fathima Rizna",
+    nicOrPassport: "945551234V",
+    phone: "0712228899",
+    sex: "Female",
+    age: 31,
+    district: "Galle",
+    bloodGroup: "O+",
+    riskCategory: "moderate",
+    allergies: "No known allergies",
+    chronicDiseases: "Antenatal review",
+    assignedDoctor: "Dr. Anjali Perera",
+    visitReason: "Antenatal review",
+    status: "waiting",
+    registeredAt: "2026-06-11T09:15:00.000Z",
+  },
+];
 
 const timeline = [
   ["OPD", "2026-06-13", "Medical OPD", "Fever and cough, diagnosis pending"],
@@ -24,11 +65,20 @@ const timeline = [
 ];
 
 const vitals = [
-  { day: "Mon", bp: 128, pulse: 82, spo2: 98, sugar: 122 },
-  { day: "Tue", bp: 132, pulse: 86, spo2: 97, sugar: 140 },
-  { day: "Wed", bp: 126, pulse: 80, spo2: 99, sugar: 118 },
-  { day: "Thu", bp: 144, pulse: 92, spo2: 96, sugar: 168 },
-  { day: "Fri", bp: 136, pulse: 84, spo2: 98, sugar: 130 },
+  { slot: "Day 1 06:00", bp: 128, pulse: 82, spo2: 98, sugar: 122 },
+  { slot: "Day 1 12:00", bp: 132, pulse: 86, spo2: 97, sugar: 140 },
+  { slot: "Day 1 18:00", bp: 136, pulse: 90, spo2: 97, sugar: 154 },
+  { slot: "Day 1 22:00", bp: 130, pulse: 84, spo2: 98, sugar: 132 },
+  { slot: "Day 2 06:00", bp: 126, pulse: 80, spo2: 99, sugar: 118 },
+  { slot: "Day 2 12:00", bp: 144, pulse: 92, spo2: 96, sugar: 168 },
+  { slot: "Day 2 18:00", bp: 138, pulse: 88, spo2: 97, sugar: 150 },
+  { slot: "Day 2 22:00", bp: 136, pulse: 84, spo2: 98, sugar: 130 },
+];
+
+const appointments = [
+  { id: "APT-2026-0021", date: "2026-07-24", time: "09:30 AM", department: "Medical Clinic", doctor: "Dr. Anjali Perera", type: "Follow-up", mode: "Physical", status: "confirmed", location: "Clinic Room 04" },
+  { id: "APT-2026-0034", date: "2026-07-31", time: "02:00 PM", department: "Diabetes Clinic", doctor: "Dr. S. Fernando", type: "Review", mode: "Telemedicine", status: "pending", location: "GovCare Video" },
+  { id: "APT-2026-0048", date: "2026-08-07", time: "10:15 AM", department: "Laboratory", doctor: "Lab Services", type: "HbA1c test", mode: "Physical", status: "scheduled", location: "Lab Counter 02" },
 ];
 
 const docs = [
@@ -40,28 +90,35 @@ const docs = [
 export function PatientProfile() {
   const { showToast } = useToast();
   const navigate = useNavigate();
+  const { id } = useParams();
   const photoInputRef = useRef<HTMLInputElement>(null);
   const [scannerMode, setScannerMode] = useState<"qr" | "barcode" | null>(null);
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
   const [savedPatients, setSavedPatients] = useState(() => getSavedPatientsForDoctors());
-  const savedPatient = savedPatients.find((patient) => patient.patientId === "PAT-2026-000001");
-  const patientName = savedPatient?.name ?? "Nimal Silva";
-  const patientId = savedPatient?.patientId ?? "PAT-2026-000001";
-  const patientGender = normaliseGenderLabel(savedPatient?.sex ?? "Male");
-  const patientAge = savedPatient?.age ?? 44;
-  const patientPhone = savedPatient?.phone ?? "0771234567";
-  const patientDistrict = savedPatient?.district || "Colombo";
-  const patientBloodGroup = savedPatient?.bloodGroup || "B+";
+  const [selfRegisteredPatients, setSelfRegisteredPatients] = useState<SelfRegisteredPatient[]>([]);
+  const requestedPatientId = decodeURIComponent(id ?? "");
+  const profilePatient = resolveProfilePatient(requestedPatientId, savedPatients, selfRegisteredPatients);
+  const patientName = profilePatient.name;
+  const patientId = profilePatient.patientId;
+  const patientGender = normaliseGenderLabel(profilePatient.sex);
+  const patientAge = profilePatient.age;
+  const patientPhone = profilePatient.phone;
+  const patientDistrict = profilePatient.district;
+  const patientBloodGroup = profilePatient.bloodGroup;
   const bmi = (72 / ((1.68 * 1.68))).toFixed(1);
 
   useEffect(() => {
     function refreshPatients() {
       setSavedPatients(getSavedPatientsForDoctors());
+      void getSelfRegisteredPatients().then(setSelfRegisteredPatients).catch(() => setSelfRegisteredPatients([]));
     }
     window.addEventListener(PATIENTS_UPDATED_EVENT, refreshPatients);
+    window.addEventListener(SELF_REGISTRATION_UPDATED_EVENT, refreshPatients);
     window.addEventListener("storage", refreshPatients);
+    void getSelfRegisteredPatients().then(setSelfRegisteredPatients).catch(() => setSelfRegisteredPatients([]));
     return () => {
       window.removeEventListener(PATIENTS_UPDATED_EVENT, refreshPatients);
+      window.removeEventListener(SELF_REGISTRATION_UPDATED_EVENT, refreshPatients);
       window.removeEventListener("storage", refreshPatients);
     };
   }, []);
@@ -87,7 +144,7 @@ export function PatientProfile() {
       return;
     }
     setProfilePhoto(URL.createObjectURL(file));
-    showToast("Patient profile picture preview updated. Production upload should save to Firebase Storage with audit metadata.", "success");
+    showToast("Patient profile picture preview updated. Production upload should save to Spring Boot file storage with audit metadata.", "success");
   }
 
   return (
@@ -129,7 +186,7 @@ export function PatientProfile() {
               </div>
               <QRCodeSVG value={patientId} size={118} />
               <div className="text-right">
-                <p className="font-mono text-xl tracking-widest">*PAT2026000001*</p>
+                <p className="font-mono text-xl tracking-widest">*{patientId.replaceAll("-", "")}*</p>
                 <p className="text-xs text-muted-foreground">Barcode scan supported</p>
               </div>
             </div>
@@ -138,7 +195,7 @@ export function PatientProfile() {
                 <h2 className="text-xl font-bold">{patientName}</h2>
                 <GenderBadge value={patientGender} />
               </div>
-              <p className="text-sm text-muted-foreground">{patientId} | NIC {savedPatient?.nicOrPassport || "812345678V"}</p>
+              <p className="text-sm text-muted-foreground">{patientId} | NIC {profilePatient.nicOrPassport || "Not recorded"}</p>
               <p className="text-sm text-muted-foreground">{patientBloodGroup} | {patientAge} years | {patientDistrict} | {patientPhone}</p>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -207,7 +264,7 @@ export function PatientProfile() {
             <div className="h-72">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={vitals}>
-                  <XAxis dataKey="day" />
+                  <XAxis dataKey="slot" tick={{ fontSize: 11 }} />
                   <YAxis />
                   <Tooltip />
                   <Line type="monotone" dataKey="bp" stroke="#0f766e" strokeWidth={2} />
@@ -219,6 +276,35 @@ export function PatientProfile() {
           </CardContent>
         </Card>
       </section>
+
+      <Card>
+        <CardHeader><CardTitle className="flex items-center gap-2"><CalendarDays className="h-5 w-5 text-primary" />Appointments</CardTitle></CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-cyan-200 bg-cyan-50 px-3 py-2 text-sm text-cyan-950">
+            <span className="font-semibold">Appointments linked to this patient profile and visible in Patient Portal.</span>
+            <Button variant="outline" onClick={() => navigate("/portal/appointments")}><CalendarPlus className="h-4 w-4" />Book appointment</Button>
+          </div>
+          <div className="overflow-x-auto">
+            <Table>
+              <thead><tr><Th>ID</Th><Th>Date / Time</Th><Th>Department</Th><Th>Doctor</Th><Th>Type</Th><Th>Mode</Th><Th>Status</Th><Th>Location</Th></tr></thead>
+              <tbody>
+                {appointments.map((appointment) => (
+                  <tr key={appointment.id}>
+                    <Td className="font-semibold">{appointment.id}</Td>
+                    <Td>{appointment.date}<br /><span className="text-xs text-muted-foreground">{appointment.time}</span></Td>
+                    <Td>{appointment.department}</Td>
+                    <Td>{appointment.doctor}</Td>
+                    <Td>{appointment.type}</Td>
+                    <Td>{appointment.mode}</Td>
+                    <Td><Badge tone={appointment.status === "confirmed" ? "success" : appointment.status === "pending" ? "warning" : "info"}>{appointment.status}</Badge></Td>
+                    <Td><span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5 text-primary" />{appointment.location}</span></Td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
 
       <section className="grid gap-4 lg:grid-cols-3">
         <Card>
@@ -269,3 +355,63 @@ export function PatientProfile() {
     </div>
   );
 }
+
+function normalizePatientId(value: string) {
+  return value.trim().toUpperCase().replace(/\s+/g, "").replace(/^PATIENT:/, "");
+}
+
+function isSamePatientId(left: string, right: string) {
+  const normalizedLeft = normalizePatientId(left);
+  const normalizedRight = normalizePatientId(right);
+  return normalizedLeft === normalizedRight || normalizedLeft.replaceAll("-", "") === normalizedRight.replaceAll("-", "");
+}
+
+function selfRegisteredToSavedPatient(patient: SelfRegisteredPatient): SavedPatientForDoctor {
+  return {
+    patientId: patient.patient_no ?? patient.patientNo ?? patient.id ?? "PT-PENDING",
+    hospitalId: "hosp-colombo-national",
+    name: patient.full_name ?? patient.fullName ?? "New self-registered patient",
+    nicOrPassport: patient.nic ?? patient.passport_no ?? "",
+    phone: patient.phone ?? "Not recorded",
+    sex: patient.gender ?? "Not stated",
+    age: undefined,
+    district: "Pending review",
+    bloodGroup: "Not recorded",
+    riskCategory: "routine",
+    allergies: "Pending clinical review",
+    chronicDiseases: "Pending clinical review",
+    assignedDoctor: "Unassigned",
+    visitReason: "Self-registration review",
+    status: patient.status === "active" ? "assigned" : "new",
+    registeredAt: patient.created_at ?? new Date().toISOString(),
+  };
+}
+
+function resolveProfilePatient(routeId: string, savedPatients: SavedPatientForDoctor[], selfRegisteredPatients: SelfRegisteredPatient[]): SavedPatientForDoctor {
+  const allSaved = [...savedPatients, ...seedPatients];
+  const selfRegistered = selfRegisteredPatients.map(selfRegisteredToSavedPatient);
+  if (routeId) {
+    const found = [...allSaved, ...selfRegistered].find((patient) => isSamePatientId(patient.patientId, routeId));
+    if (found) return found;
+    return {
+      patientId: routeId,
+      hospitalId: "hosp-colombo-national",
+      name: "New patient profile",
+      nicOrPassport: "",
+      phone: "Not recorded",
+      sex: "Not stated",
+      age: undefined,
+      district: "Pending review",
+      bloodGroup: "Not recorded",
+      riskCategory: "routine",
+      allergies: "Pending clinical review",
+      chronicDiseases: "Pending clinical review",
+      assignedDoctor: "Unassigned",
+      visitReason: "Newly created profile",
+      status: "new",
+      registeredAt: new Date().toISOString(),
+    };
+  }
+  return allSaved[0] ?? seedPatients[0];
+}
+

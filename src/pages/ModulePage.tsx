@@ -3,6 +3,7 @@ import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Table, Td, Th } from "../components/ui/table";
+import { useToast } from "../components/ui/toast-context";
 
 interface ModulePageProps {
   title: string;
@@ -13,11 +14,13 @@ interface ModulePageProps {
 }
 
 export function ModulePage({ title, description, action, rows, children }: ModulePageProps) {
+  const { showToast } = useToast();
+
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div><h1 className="text-2xl font-bold">{title}</h1><p className="text-sm text-muted-foreground">{description}</p></div>
-        <Button onClick={() => window.alert(`${action} is ready for this module.`)}>{action}</Button>
+        <Button onClick={() => showToast(`${action} is ready for ${title}.`, "success")}>{action}</Button>
       </div>
       {children}
       <Card>

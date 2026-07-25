@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { BarChart3, ChevronDown, ChevronUp, Download, FileSpreadsheet, FileText, Filter, LoaderCircle, Printer, Search, ShieldCheck } from "lucide-react";
+import { BarChart3, ChevronDown, ChevronUp, Download, FileSpreadsheet, FileText, Filter, LoaderCircle, Printer, ShieldCheck } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -12,6 +12,7 @@ import { Badge } from "../components/ui/badge";
 import type { BadgeTone } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { SmartSearch } from "../components/search/SmartSearch";
 import { Input } from "../components/ui/input";
 import { Select } from "../components/ui/select";
 import { Table, Td, Th } from "../components/ui/table";
@@ -306,10 +307,7 @@ export function Reports() {
           <CardHeader>
             <CardTitle className="flex flex-wrap items-center justify-between gap-3">
               <span>{selectedDefinition?.label ?? "Report results"}</span>
-              <label className="relative w-full max-w-xs print:hidden">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input className="pl-9" value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Search report results..." />
-              </label>
+              <SmartSearch className="w-full max-w-xs print:hidden" value={search} onChange={(value) => { setSearch(value); setPage(1); }} placeholder="Search report results..." />
             </CardTitle>
           </CardHeader>
           <CardContent>

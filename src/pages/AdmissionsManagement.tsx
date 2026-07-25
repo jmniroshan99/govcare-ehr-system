@@ -6,6 +6,7 @@ import { GenderBadge } from "../components/patient/GenderBadge";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { SmartSearch } from "../components/search/SmartSearch";
 import { Input } from "../components/ui/input";
 import { Select } from "../components/ui/select";
 import { Table, Td, Th } from "../components/ui/table";
@@ -353,7 +354,7 @@ export function AdmissionsManagement() {
             <Card>
               <CardHeader><CardTitle className="flex items-center gap-2"><Filter className="h-5 w-5 text-primary" />Admission queue</CardTitle></CardHeader>
               <CardContent className="grid gap-3 lg:grid-cols-[1fr_220px]">
-                <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search patient, diagnosis, consultant, department..." />
+                <SmartSearch value={query} onChange={setQuery} placeholder="Search patient, diagnosis, consultant, department..." />
                 <Select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as AdmissionStatus | "all")}>
                   <option value="all">All statuses</option>
                   <option value="pending">Pending</option>

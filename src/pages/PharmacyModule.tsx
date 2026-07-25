@@ -27,6 +27,7 @@ import { Badge } from "../components/ui/badge";
 import type { BadgeTone } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { SmartSearch } from "../components/search/SmartSearch";
 import { Input } from "../components/ui/input";
 import { Select } from "../components/ui/select";
 import { Table, Td, Th } from "../components/ui/table";
@@ -407,7 +408,7 @@ export function PharmacyModule() {
             <CardHeader><CardTitle className="flex items-center gap-2"><Search className="h-5 w-5 text-primary" />Pharmacy queue</CardTitle></CardHeader>
             <CardContent className="space-y-3">
               <div className="grid gap-3 md:grid-cols-[1fr_180px]">
-                <Input placeholder="Search patient ID, NIC, QR, prescription no, doctor, OPD token..." value={query} onChange={(event) => setQuery(event.target.value)} />
+                <SmartSearch placeholder="Search patient ID, NIC, QR, prescription no, doctor, OPD token..." value={query} onChange={setQuery} />
                 <Select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as RxStatus | "all")}><option value="all">All status</option><option value="pending">Pending</option><option value="verified">Verified</option><option value="issued">Issued</option><option value="partially issued">Partially issued</option><option value="rejected">Rejected</option></Select>
               </div>
               <div className="max-h-[520px] space-y-2 overflow-y-auto pr-1">

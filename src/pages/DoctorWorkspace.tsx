@@ -26,11 +26,20 @@ import { Input } from "../components/ui/input";
 import { Select } from "../components/ui/select";
 import { Table, Td, Th } from "../components/ui/table";
 import { useToast } from "../components/ui/toast-context";
-import { saveConsultationDraft, submitDoctorApproval } from "../services/doctorService";
+import {
+  approveDoctorDischarge,
+  getDoctorSessionActions,
+  saveConsultationDraft,
+  scheduleDoctorFollowUp,
+  sendDoctorReferral,
+  submitDoctorApproval,
+  type DoctorSessionActionRecord,
+} from "../services/doctorService";
 import { createDiagnosticOrdersFromConsultation, type OrderPriority, type PatientIdentitySnapshot } from "../services/clinicalIntegrationService";
 import { createPrescriptionFromConsultation, type PharmacyPriority } from "../services/pharmacyService";
 import { downloadTextFile, timestampedFilename } from "../utils/download";
 import { completeDoctorConsultation, getDoctorVisitBuckets } from "../utils/doctorWorkflow";
+import { addNotification } from "../utils/notifications";
 import { useAuthStore } from "../stores/authStore";
 
 const timeline = [
@@ -72,6 +81,9 @@ export function DoctorWorkspace() {
   const [labPriority, setLabPriority] = useState("routine");
   const [radiologyPriority, setRadiologyPriority] = useState("routine");
   const [pharmacyPipelineState, setPharmacyPipelineState] = useState("Prescription not sent to pharmacy yet.");
+  const [referralDestination, setReferralDestination] = useState("Medical clinic follow-up");
+  const [dischargeTitle, setDischargeTitle] = useState("OPD discharge note");
+  const [approvalReason, setApprovalReason] = useState("Approve lab result review and prescription");
   const aiSummary = useMemo(() => "44-year-old with diabetes and penicillin allergy. Stable vitals, likely viral URTI. Avoid penicillin-class antibiotics; monitor sugar and follow up if fever persists.", []);
   const patientSnapshot: PatientIdentitySnapshot = useMemo(() => ({
     patientId: activeVisit?.patientId ?? "PAT-2026-000001",
@@ -85,6 +97,7 @@ export function DoctorWorkspace() {
     chronicDiseases: history.toLowerCase().includes("diabetes") ? ["Diabetes"] : [],
     hospitalId: activeVisit?.hospitalId ?? "hosp-colombo-national",
   }), [activeVisit, history]);
+  const [sessionActions, setSessionActions] = useState<DoctorSessionActionRecord[]>(() => getDoctorSessionActions(patientSnapshot.patientId).slice(0, 3));
 
   function diagnosticPriority(value: string): OrderPriority {
     if (value === "critical") return "critical";
@@ -100,9 +113,89 @@ export function DoctorWorkspace() {
     return () => window.clearTimeout(timer);
   }, [symptoms, history, exam, diagnosis, soap, plan]);
 
+  useEffect(() => {
+    setSessionActions(getDoctorSessionActions(patientSnapshot.patientId).slice(0, 3));
+  }, [patientSnapshot.patientId]);
+
   async function approve(type: string) {
-    await submitDoctorApproval({ type, patientId: "PAT-2026-000001" });
+    await submitDoctorApproval({ type, patientId: patientSnapshot.patientId });
     setDraftState(`${type} approved`);
+  }
+
+  function sessionPayload(notes: string) {
+    const visit = activeVisit ?? {
+      visitId: "VIS-DEMO-SESSION",
+      patientId: patientSnapshot.patientId,
+      patientName: patientSnapshot.patientName,
+      department: "Medical OPD",
+      hospitalId: patientSnapshot.hospitalId,
+    };
+    return {
+      visitId: visit.visitId,
+      patientId: visit.patientId,
+      patientName: visit.patientName,
+      hospitalId: visit.hospitalId,
+      department: visit.department,
+      doctorId: profile?.uid ?? "demo-doctor",
+      doctorName: profile?.displayName ?? "Dr. Anjali Perera",
+      diagnosis,
+      treatmentPlan: plan,
+      notes,
+      followUpDate,
+      destination: referralDestination,
+      completionStatus,
+      actionReason: approvalReason,
+      actorRole: profile?.role ?? "doctor",
+    };
+  }
+
+  function recordSessionAction(action: DoctorSessionActionRecord, toastMessage: string, notificationTitle: string) {
+    setSessionActions((current) => [action, ...current.filter((item) => item.id !== action.id)].slice(0, 3));
+    setDraftState(`${notificationTitle}: ${action.status}`);
+    addNotification({
+      title: notificationTitle,
+      message: `${action.patientName} - ${toastMessage}`,
+      module: "Doctor Center",
+      priority: action.type === "discharge_approval" ? "urgent" : "information",
+      roles: ["super_admin", "hospital_admin", "doctor", "nurse", "receptionist", "patient"],
+      channels: ["in-app", "push"],
+      group: "Consultation",
+      actionHref: action.type === "follow_up" ? "/appointments" : "/doctor/workspace",
+    });
+  }
+
+  async function handleSendReferral() {
+    if (!referralDestination.trim()) {
+      showToast("Enter a referral destination before sending.", "warning");
+      return;
+    }
+    const action = await sendDoctorReferral(sessionPayload(`Referral to ${referralDestination}. ${plan}`));
+    recordSessionAction(action, `referral sent to ${referralDestination}`, "Referral sent");
+    showToast(`${patientSnapshot.patientName} referral sent to ${referralDestination}.`, action.status === "queued" ? "warning" : "success");
+  }
+
+  async function handleApproveDischarge() {
+    if (completionStatus !== "Completed") {
+      showToast("Set visit completion status to Completed before approving discharge.", "warning");
+      return;
+    }
+    if (!dischargeTitle.trim() || !approvalReason.trim()) {
+      showToast("Enter discharge title and approval reason before approving.", "warning");
+      return;
+    }
+    const action = await approveDoctorDischarge(sessionPayload(`${dischargeTitle}. ${approvalReason}. ${soap}`));
+    recordSessionAction(action, "discharge approved and nursing/admin teams notified", "Discharge approved");
+    showToast(`${patientSnapshot.patientName} discharge approved. Ward/reception follow-up is ready.`, action.status === "queued" ? "warning" : "success");
+  }
+
+  async function handleScheduleFollowUp() {
+    if (!followUpDate) {
+      showToast("Select a follow-up date before scheduling.", "warning");
+      return;
+    }
+    const action = await scheduleDoctorFollowUp(sessionPayload(`Follow-up scheduled for ${followUpDate}. ${referralDestination}`));
+    recordSessionAction(action, `follow-up scheduled on ${followUpDate}`, "Follow-up scheduled");
+    showToast(`${patientSnapshot.patientName} follow-up scheduled for ${followUpDate}.`, action.status === "queued" ? "warning" : "success");
   }
 
   function saveWorkspace() {
@@ -178,8 +271,33 @@ export function DoctorWorkspace() {
   }
 
   function printPrescription() {
-    downloadTextFile(timestampedFilename("consultation-prescription", "txt"), `GovCare EHR System\nPrescription Preview\n\nPatient: Nimal Silva\nDiagnosis: ${diagnosis}\nMedicine: ${medicine} 500mg TDS for 3 days\nPlan: ${plan}\nDoctor: Dr. Anjali Perera\nDigital signature: pending`, "text/plain;charset=utf-8");
-    showToast("Prescription print file downloaded.", "success");
+    const visit = activeVisit ?? {
+      visitId: "VIS-DEMO-PRESCRIPTION",
+      tokenNo: patientSnapshot.qrReference ?? "OPD-DEMO",
+      patientId: patientSnapshot.patientId,
+      patientName: patientSnapshot.patientName,
+      department: "Medical OPD",
+      hospitalId: patientSnapshot.hospitalId,
+    };
+    downloadTextFile(
+      timestampedFilename(`${visit.patientId.toLowerCase()}-consultation-prescription`, "txt"),
+      `GovCare EHR System
+Prescription Preview
+
+Patient: ${visit.patientName}
+Patient ID: ${visit.patientId}
+Gender/Age: ${patientSnapshot.gender} / ${patientSnapshot.age ?? "Not recorded"}
+NIC/QR: ${patientSnapshot.nic ?? patientSnapshot.qrReference ?? "Not recorded"}
+Visit: ${visit.tokenNo} | Department: ${visit.department}
+Diagnosis: ${diagnosis}
+Medicine: ${prescription || `${medicine} 500mg TDS for 3 days`}
+Plan: ${plan}
+Follow-up: ${followUpDate || "Not scheduled"}
+Doctor: ${profile?.displayName ?? "Dr. Anjali Perera"}
+Digital signature: pending`,
+      "text/plain;charset=utf-8",
+    );
+    showToast(`${visit.patientName} prescription print file downloaded.`, "success");
   }
 
   async function sendSignedPrescriptionToPharmacy() {
@@ -195,10 +313,10 @@ export function DoctorWorkspace() {
     const visit = activeVisit ?? {
       visitId: "VIS-DEMO-PHARMACY",
       tokenNo: "OPD-DEMO",
-      patientId: "PAT-2026-000001",
-      patientName: "Nimal Silva",
+      patientId: patientSnapshot.patientId,
+      patientName: patientSnapshot.patientName,
       department: "Medical OPD",
-      hospitalId: "hosp-colombo-national",
+      hospitalId: patientSnapshot.hospitalId,
       priority: "urgent" as const,
     };
     const priority: PharmacyPriority = visit.priority === "critical" ? "stat" : visit.priority === "urgent" ? "urgent" : "routine";
@@ -438,15 +556,30 @@ export function DoctorWorkspace() {
         <Card>
           <CardHeader><CardTitle>Referrals, discharge, and approvals</CardTitle></CardHeader>
           <CardContent className="grid gap-3">
-            <Input placeholder="Referral destination" defaultValue="Medical clinic follow-up" />
+            <Input placeholder="Referral destination" value={referralDestination} onChange={(event) => setReferralDestination(event.target.value)} />
             <Input type="date" aria-label="Follow-up date" value={followUpDate} onChange={(event) => setFollowUpDate(event.target.value)} />
             <label className="block text-sm font-medium">Visit completion status<Select value={completionStatus} onChange={(event) => setCompletionStatus(event.target.value as "Checked" | "Consulted" | "Completed")}><option>Checked</option><option>Consulted</option><option>Completed</option></Select></label>
-            <Input placeholder="Discharge summary title" defaultValue="OPD discharge note" />
-            <Input placeholder="Electronic approval reason" defaultValue="Approve lab result review and prescription" />
+            <Input placeholder="Discharge summary title" value={dischargeTitle} onChange={(event) => setDischargeTitle(event.target.value)} />
+            <Input placeholder="Electronic approval reason" value={approvalReason} onChange={(event) => setApprovalReason(event.target.value)} />
             <div className="flex flex-wrap gap-2">
-              <Button onClick={() => approve("Referral")}><Send className="h-4 w-4" />Send referral</Button>
-              <Button variant="outline" onClick={() => approve("Discharge summary")}><FileSignature className="h-4 w-4" />Approve discharge</Button>
-              <Button variant="outline" onClick={() => navigate("/appointments")}><CalendarPlus className="h-4 w-4" />Schedule follow-up</Button>
+              <Button onClick={handleSendReferral}><Send className="h-4 w-4" />Send referral</Button>
+              <Button variant="outline" onClick={handleApproveDischarge}><FileSignature className="h-4 w-4" />Approve discharge</Button>
+              <Button variant="outline" onClick={handleScheduleFollowUp}><CalendarPlus className="h-4 w-4" />Schedule follow-up</Button>
+            </div>
+            <div className="rounded-md border border-border bg-emerald-50 p-3 text-sm text-slate-800 dark:bg-slate-900 dark:text-slate-100">
+              <p className="font-semibold">After-session action trail</p>
+              {sessionActions.length ? (
+                <div className="mt-2 space-y-2">
+                  {sessionActions.map((action) => (
+                    <div key={action.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border bg-white px-3 py-2 dark:bg-slate-950">
+                      <span>{action.type.replaceAll("_", " ")} for {action.patientName}</span>
+                      <Badge tone={action.status === "queued" ? "warning" : "success"}>{action.status}</Badge>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-1 text-muted-foreground">No referral, discharge approval, or follow-up has been saved for this session yet.</p>
+              )}
             </div>
           </CardContent>
         </Card>

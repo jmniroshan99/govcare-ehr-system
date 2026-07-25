@@ -1,4 +1,4 @@
-import {
+﻿import {
   AlertTriangle,
   CheckCircle2,
   FileSignature,
@@ -23,6 +23,7 @@ import { Select } from "../components/ui/select";
 import { Table, Td, Th } from "../components/ui/table";
 import { useToast } from "../components/ui/toast-context";
 import { createPrescriptionFromConsultation, processPrescriptionIssue } from "../services/pharmacyService";
+import { getSavedPatientsForDoctors, type SavedPatientForDoctor } from "../utils/patientRegistry";
 
 type RxType = "OPD" | "Emergency" | "Discharge" | "Repeat";
 type IssueStatus = "pending" | "verified" | "partially issued" | "issued";
@@ -63,8 +64,18 @@ const history = [
   ["RX-366", "2026-04-14", "Losartan repeat", "partially issued"],
 ];
 
+const fallbackPrescriptionPatients: SavedPatientForDoctor[] = [
+  { patientId: "PAT-2026-000001", hospitalId: "hosp-colombo-national", name: "Nimal Silva", nicOrPassport: "812345678V", phone: "0771234567", sex: "Male", age: 44, district: "Colombo", bloodGroup: "B+", riskCategory: "high", allergies: "Penicillin", chronicDiseases: "Diabetes", assignedDoctor: "Dr. Anjali Perera", visitReason: "Diabetes follow-up", status: "assigned", registeredAt: "2026-06-10T08:30:00.000Z" },
+];
+
 export function EPrescription() {
   const { showToast } = useToast();
+  const prescriptionPatients = useMemo(() => {
+    const saved = getSavedPatientsForDoctors();
+    const byId = new Map([...saved, ...fallbackPrescriptionPatients].map((patient) => [patient.patientId, patient]));
+    return Array.from(byId.values());
+  }, []);
+  const [selectedPatientId, setSelectedPatientId] = useState(prescriptionPatients[0]?.patientId ?? "PAT-2026-000001");
   const [query, setQuery] = useState("metformin");
   const [rxType, setRxType] = useState<RxType>("OPD");
   const [diagnosis, setDiagnosis] = useState("Type 2 diabetes mellitus with viral URTI");
@@ -79,6 +90,7 @@ export function EPrescription() {
     { ...medicines[1], route: "Oral", frequency: "TDS", duration: "3 days", quantity: "9", instructions: "For fever only.", meals: "After meals", prn: true, status: "pending" },
   ]);
   const [pharmacyLog, setPharmacyLog] = useState<string[]>([]);
+  const selectedPatient = prescriptionPatients.find((patient) => patient.patientId === selectedPatientId) ?? prescriptionPatients[0] ?? fallbackPrescriptionPatients[0];
 
   const filteredMedicines = useMemo(() => {
     const q = query.toLowerCase();
@@ -112,21 +124,21 @@ export function EPrescription() {
     try {
       const queued = await createPrescriptionFromConsultation({
         consultationId: "CON-EPRESCRIPTION",
-        visitId: "OPD-126",
-        patientId: "PAT-2026-000001",
-        patientName: "Nimal Silva",
-        age: 44,
-        gender: "Male",
-        phone: "0771234567",
-        nic: "812345678V",
-        allergies: ["Penicillin"],
+        visitId: selectedPatient.visitReason || "OPD prescription",
+        patientId: selectedPatient.patientId,
+        patientName: selectedPatient.name,
+        age: selectedPatient.age ?? 0,
+        gender: selectedPatient.sex,
+        phone: selectedPatient.phone,
+        nic: selectedPatient.nicOrPassport || selectedPatient.passportNumber || selectedPatient.birthCertificateNo || "not-recorded",
+        allergies: selectedPatient.allergies ? selectedPatient.allergies.split(",").map((item) => item.trim()).filter(Boolean) : [],
         diagnosis,
         clinicalNotes: `${rxType} e-prescription generated from the prescription workspace.`,
         doctorId: "demo-doctor",
         doctorName: "Dr. Anjali Perera",
         department: "Medical OPD",
         hospitalId: "hosp-colombo-national",
-        opdToken: "OPD-126",
+        opdToken: selectedPatient.visitReason || "OPD",
         priority: rxType === "Emergency" ? "stat" : "routine",
         lines: lines.map((line) => ({
           medicineId: line.id,
@@ -175,10 +187,10 @@ export function EPrescription() {
     doc.text("Patient Details", 14, 40);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
-    doc.text("Name: Nimal Silva", 14, 48);
-    doc.text("Patient ID: PAT-2026-000001", 14, 55);
-    doc.text("Age/Sex: 44 / Male", 14, 62);
-    doc.text("Allergy: Penicillin", 14, 69);
+    doc.text(`Name: ${selectedPatient.name}`, 14, 48);
+    doc.text(`Patient ID: ${selectedPatient.patientId}`, 14, 55);
+    doc.text(`Age/Sex: ${selectedPatient.age ?? "Not recorded"} / ${selectedPatient.sex || "Not recorded"}`, 14, 62);
+    doc.text(`Allergy: ${selectedPatient.allergies || "No known allergies"}`, 14, 69);
 
     doc.setFont("helvetica", "bold");
     doc.text("Doctor / Hospital", 82, 40);
@@ -186,7 +198,7 @@ export function EPrescription() {
     doc.text("Doctor: Dr. Anjali Perera", 82, 48);
     doc.text("Department: Medical OPD", 82, 55);
     doc.text("Hospital: National Hospital", 82, 62);
-    doc.text("Visit: OPD-126", 82, 69);
+    doc.text(`Visit: ${selectedPatient.visitReason || "Prescription workspace"}`, 82, 69);
 
     doc.setFont("helvetica", "bold");
     doc.text("Diagnosis", 14, 82);
@@ -238,12 +250,12 @@ export function EPrescription() {
     doc.setFont("helvetica", "bold");
     doc.text("Digital Signature", 120, finalY + 58);
     doc.setFont("helvetica", "normal");
-    doc.text("Dr. Anjali Perera", 120, finalY + 66);
+    doc.text(selectedPatient.assignedDoctor || "Dr. Anjali Perera", 120, finalY + 66);
     doc.text("Firebase custom-claim signing required in production", 120, finalY + 73);
 
     doc.setFontSize(8);
     doc.setTextColor(95, 111, 105);
-    doc.text("This demo PDF is generated client-side. Production signing/issuing should be validated by Firebase Cloud Functions with audit logs.", 14, 286);
+    doc.text("This demo PDF is generated client-side. Production signing/issuing should be validated by Firebase Spring Boot services with audit logs.", 14, 286);
 
     doc.save(`${prescriptionId}.pdf`);
     showToast("Prescription PDF generated and downloaded.", "success");
@@ -272,7 +284,7 @@ export function EPrescription() {
           items: [{ medicineId: line.id, quantity: issuedQuantity }],
         });
       } catch (error) {
-        console.warn("Pharmacy Cloud Function unavailable; applying demo stock update.", error);
+        console.warn("Pharmacy Spring Boot service unavailable; applying demo stock update.", error);
       }
     }
 
@@ -294,7 +306,7 @@ export function EPrescription() {
         items: issuable.map((line) => ({ medicineId: line.id, quantity: Math.min(Number(line.quantity || 0), line.stock) })),
       });
     } catch (error) {
-      console.warn("Pharmacy Cloud Function unavailable; issuing locally.", error);
+      console.warn("Pharmacy Spring Boot service unavailable; issuing locally.", error);
     }
 
     setLines((current) => current.map((line) => {
@@ -323,7 +335,7 @@ export function EPrescription() {
         </div>
 
         <div className="help-strip grid gap-3 p-4 text-sm md:grid-cols-4">
-          {["Safety checks before signing", "Pharmacy stock connected", "QR verified prescription", "Cloud Function issuing workflow"].map((item) => (
+          {["Safety checks before signing", "Pharmacy stock connected", "QR verified prescription", "Spring Boot service issuing workflow"].map((item) => (
             <div key={item} className="flex items-center gap-2 font-semibold"><CheckCircle2 className="h-4 w-4" />{item}</div>
           ))}
         </div>
@@ -358,9 +370,15 @@ export function EPrescription() {
           <Card>
             <CardHeader><CardTitle className="flex items-center gap-2"><Stethoscope className="h-5 w-5 text-primary" />Prescription details</CardTitle></CardHeader>
             <CardContent className="space-y-3">
-              <div className="selection-panel p-3 text-sm">
-                <p className="font-bold text-slate-950">Nimal Silva | PAT-2026-000001</p>
-                <p className="text-muted-foreground">Visit OPD-126 | Doctor: Dr. Anjali Perera | Allergy: Penicillin</p>
+              <div className="selection-panel space-y-2 p-3 text-sm">
+                <label className="block text-sm font-medium">
+                  Patient selection
+                  <Select value={selectedPatientId} onChange={(event) => setSelectedPatientId(event.target.value)}>
+                    {prescriptionPatients.map((patient) => <option key={patient.patientId} value={patient.patientId}>{patient.patientId} - {patient.name}</option>)}
+                  </Select>
+                </label>
+                <p className="font-bold text-slate-950">{selectedPatient.name} | {selectedPatient.patientId}</p>
+                <p className="text-muted-foreground">Visit {selectedPatient.visitReason || "Prescription workspace"} | Doctor: {selectedPatient.assignedDoctor || "Dr. Anjali Perera"} | Allergy: {selectedPatient.allergies || "No known allergies"}</p>
               </div>
               <label className="text-sm font-medium">Prescription type<Select value={rxType} onChange={(event) => setRxType(event.target.value as RxType)}><option>OPD</option><option>Emergency</option><option>Discharge</option><option>Repeat</option></Select></label>
               <label className="text-sm font-medium">Diagnosis<Input value={diagnosis} onChange={(event) => setDiagnosis(event.target.value)} /></label>
@@ -475,8 +493,8 @@ export function EPrescription() {
             <CardHeader><CardTitle className="flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-primary" />Security, issuing, and audit model</CardTitle></CardHeader>
             <CardContent className="grid gap-3 text-sm md:grid-cols-3">
               <p className="help-strip p-3">Doctors create/sign prescriptions using Firebase custom claims; pharmacists verify, substitute approved alternatives, issue, and update stock.</p>
-              <p className="help-strip p-3">Cloud Functions should validate signing, issuing, substitution, stock deduction, QR verification, and audit log writes.</p>
-              <p className="help-strip p-3">Firestore rules, React Query caching, pharmacy status listeners, AES-sensitive fields, and multilingual labels support production deployment.</p>
+              <p className="help-strip p-3">Spring Boot services should validate signing, issuing, substitution, stock deduction, QR verification, and audit log writes.</p>
+              <p className="help-strip p-3">Spring Boot API authorization, React Query caching, pharmacy status listeners, AES-sensitive fields, and multilingual labels support production deployment.</p>
             </CardContent>
           </Card>
         </SectionReveal>
@@ -496,3 +514,4 @@ function SafetyItem({ label, active, detail }: { label: string; active?: boolean
     </div>
   );
 }
+

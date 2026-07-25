@@ -124,11 +124,11 @@
     "loginButton": "පිවිසෙන්න",
     "openDoctorCenter": "වෛද්‍ය මධ්‍යස්ථානය විවෘත කරන්න",
     "openAdminPrivileges": "පරිපාලන අයිතිවාසිකම් විවෘත කරන්න",
-    "patientGoogleLogin": "Google මඟින් රෝගී පිවිසුම",
+    "patientGoogleLogin": "SSO මඟින් රෝගී පිවිසුම",
     "fullName": "සම්පූර්ණ නම",
     "confirmPassword": "මුරපදය තහවුරු කරන්න",
     "createPatient": "රෝගී ගිණුම සාදන්න",
-    "createLoginGoogle": "Google මඟින් සාදන්න / පිවිසෙන්න",
+    "createLoginGoogle": "SSO මඟින් සාදන්න / පිවිසෙන්න",
     "patientPrivacyNote": "රෝගී ගිණුම්වලින් තමන්ගේ නිකුත් කළ වාර්තා, හමුවීම්, ඖෂධ නියම සහ පැතිකඩ විස්තර පමණක් දැකිය හැක.",
     "staffClaimNote": "කාර්ය මණ්ඩල ගිණුම් Hospital Admin හෝ Super Admin විසින් නිර්මාණය කළ යුතුය.",
     "openAdminUserManagement": "පරිපාලන පරිශීලක කළමනාකරණය විවෘත කරන්න",
@@ -138,7 +138,7 @@
     "passwordTooShort": "??? ????? 12??, ????? ??????, ???? ??????, ?????? ?? ????? ???????? ?????? ?????.",
     "passwordMismatch": "මුරපද නොගැලපේ.",
     "firebaseMissing": "Firebase සකසා නැත. .env වෙත Firebase web config එක එක් කර Vite නැවත ආරම්භ කරන්න.",
-    "popupBlocked": "Popup අවහිර විය. Google පිවිසුමට යොමු කරමින්..."
+    "popupBlocked": "Popup අවහිර විය. ආරක්ෂිත SSO පිවිසුමට යොමු කරමින්..."
   },
   "portal": {
     "title": "මගේ සෞඛ්‍ය ද්වාරය",

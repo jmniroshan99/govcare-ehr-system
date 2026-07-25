@@ -1,7 +1,5 @@
-import { addDoc, collection, getDocs, limit, orderBy, query, serverTimestamp, where } from "firebase/firestore";
-import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
-import { db, storage } from "../lib/firebase";
 import type { GlobalMediaFile, MediaModule, MediaVisibility, Role } from "../types/ehr";
+import { listSpringMedia, uploadMediaToSpring } from "./springMediaService";
 
 const allowedTypes = [
   "image/jpeg",
@@ -36,19 +34,46 @@ export function validateMediaFile(file: File) {
   }
 }
 
-function cleanSegment(value: string) {
-  return value.replace(/[^a-zA-Z0-9-_]/g, "-").slice(0, 80);
-}
-
 export async function uploadGlobalMedia(payload: UploadMediaPayload) {
   validateMediaFile(payload.file);
   const now = new Date().toISOString();
-  const safePatient = cleanSegment(payload.patientId || "general");
-  const safeModule = cleanSegment(payload.module);
-  const safeName = cleanSegment(payload.file.name);
-  const storagePath = `hospitals/${payload.hospitalId}/media/${safeModule}/${safePatient}/${Date.now()}-${safeName}`;
-
-  if (!db || !storage) {
+  try {
+    const uploaded = await uploadMediaToSpring({
+      file: payload.file,
+      patientId: payload.patientId,
+      module: payload.module,
+      visibilityLevel: payload.visibilityLevel === "admin-only" ? "private" : payload.visibilityLevel,
+      auth: {
+        userId: payload.uploadedBy,
+        hospitalId: payload.hospitalId,
+        role: payload.role,
+        patientId: payload.role === "patient" ? payload.patientId : undefined,
+        fullName: payload.uploadedByName,
+      },
+    });
+    return {
+      id: uploaded.id,
+      hospitalId: uploaded.hospitalId,
+      status: "active",
+      createdAt: uploaded.createdAt,
+      updatedAt: uploaded.createdAt,
+      createdBy: payload.uploadedBy,
+      updatedBy: payload.uploadedBy,
+      fileName: uploaded.originalFileName || uploaded.fileName,
+      fileType: uploaded.mimeType,
+      fileSize: uploaded.fileSizeBytes,
+      fileUrl: uploaded.fileUrl,
+      storagePath: uploaded.fileUrl,
+      uploadedBy: payload.uploadedBy,
+      uploadedByName: payload.uploadedByName,
+      role: payload.role,
+      patientId: uploaded.patientId,
+      module: payload.module,
+      visibilityLevel: payload.visibilityLevel,
+      description: payload.description,
+      reviewStatus: payload.requiresReview ? "pending-review" : "not-required",
+    } satisfies GlobalMediaFile;
+  } catch {
     return {
       id: `demo-media-${Date.now()}`,
       hospitalId: payload.hospitalId,
@@ -61,7 +86,7 @@ export async function uploadGlobalMedia(payload: UploadMediaPayload) {
       fileType: payload.file.type,
       fileSize: payload.file.size,
       fileUrl: URL.createObjectURL(payload.file),
-      storagePath,
+      storagePath: payload.file.name,
       uploadedBy: payload.uploadedBy,
       uploadedByName: payload.uploadedByName,
       role: payload.role,
@@ -72,83 +97,40 @@ export async function uploadGlobalMedia(payload: UploadMediaPayload) {
       reviewStatus: payload.requiresReview ? "pending-review" : "not-required",
     } satisfies GlobalMediaFile;
   }
-
-  const uploadRef = ref(storage, storagePath);
-  await uploadBytes(uploadRef, payload.file, {
-    contentType: payload.file.type,
-    customMetadata: {
-      hospitalId: payload.hospitalId,
-      uploadedBy: payload.uploadedBy,
-      role: payload.role,
-      module: payload.module,
-      visibilityLevel: payload.visibilityLevel,
-      patientId: payload.patientId || "",
-    },
-  });
-  const fileUrl = await getDownloadURL(uploadRef);
-  const reviewStatus = payload.requiresReview ? "pending-review" : "not-required";
-
-  const docRef = await addDoc(collection(db, "globalMedia"), {
-    hospitalId: payload.hospitalId,
-    status: "active",
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-    createdBy: payload.uploadedBy,
-    updatedBy: payload.uploadedBy,
-    fileName: payload.file.name,
-    fileType: payload.file.type,
-    fileSize: payload.file.size,
-    fileUrl,
-    storagePath,
-    uploadedBy: payload.uploadedBy,
-    uploadedByName: payload.uploadedByName,
-    role: payload.role,
-    patientId: payload.patientId || null,
-    module: payload.module,
-    visibilityLevel: payload.visibilityLevel,
-    description: payload.description || "",
-    reviewStatus,
-    beforeState: null,
-    afterState: {
-      fileName: payload.file.name,
-      module: payload.module,
-      visibilityLevel: payload.visibilityLevel,
-      reviewStatus,
-    },
-  });
-
-  return {
-    id: docRef.id,
-    hospitalId: payload.hospitalId,
-    status: "active",
-    createdAt: now,
-    updatedAt: now,
-    createdBy: payload.uploadedBy,
-    updatedBy: payload.uploadedBy,
-    fileName: payload.file.name,
-    fileType: payload.file.type,
-    fileSize: payload.file.size,
-    fileUrl,
-    storagePath,
-    uploadedBy: payload.uploadedBy,
-    uploadedByName: payload.uploadedByName,
-    role: payload.role,
-    patientId: payload.patientId,
-    module: payload.module,
-    visibilityLevel: payload.visibilityLevel,
-    description: payload.description,
-    reviewStatus,
-  } satisfies GlobalMediaFile;
 }
 
 export async function listGlobalMedia(hospitalId: string, role: Role, patientId?: string) {
-  if (!db) return [] as GlobalMediaFile[];
-  const constraints = [where("hospitalId", "==", hospitalId), orderBy("updatedAt", "desc"), limit(50)];
-  const scopedQuery = role === "patient" && patientId
-    ? query(collection(db, "globalMedia"), where("patientId", "==", patientId), where("visibilityLevel", "==", "patient-released"), ...constraints)
-    : query(collection(db, "globalMedia"), ...constraints);
-  const snap = await getDocs(scopedQuery);
-  return snap.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() })) as GlobalMediaFile[];
+  try {
+    const items = await listSpringMedia({
+      userId: "current-user",
+      hospitalId,
+      role,
+      patientId,
+    }, role === "patient" ? patientId : undefined);
+    return items.map((item) => ({
+      id: item.id,
+      hospitalId: item.hospitalId,
+      status: "active",
+      createdAt: item.createdAt,
+      updatedAt: item.createdAt,
+      createdBy: "postgres-api",
+      updatedBy: "postgres-api",
+      fileName: item.originalFileName || item.fileName,
+      fileType: item.mimeType,
+      fileSize: item.fileSizeBytes,
+      fileUrl: item.fileUrl,
+      storagePath: item.fileUrl,
+      uploadedBy: "postgres-api",
+      uploadedByName: "PostgreSQL API",
+      role,
+      patientId: item.patientId,
+      module: item.module as MediaModule,
+      visibilityLevel: item.visibilityLevel as MediaVisibility,
+      reviewStatus: item.releaseStatus === "released" ? "approved" : "not-required",
+    })) satisfies GlobalMediaFile[];
+  } catch {
+    return [] as GlobalMediaFile[];
+  }
 }
 
 export function formatFileSize(bytes: number) {

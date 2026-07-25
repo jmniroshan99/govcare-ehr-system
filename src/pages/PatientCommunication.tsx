@@ -1,4 +1,4 @@
-import {
+﻿import {
   AlertTriangle,
   Bell,
   Camera,
@@ -133,7 +133,7 @@ export function PatientCommunication() {
         threadId: "care-thread-demo",
       });
     } catch (error) {
-      console.warn("Secure chat Cloud Function unavailable; message kept in local care thread.", error);
+      console.warn("Secure chat Spring Boot service unavailable; message kept in local care thread.", error);
     }
     showToast(priorityOverride === "emergency" ? "Emergency message sent to the care team and patient thread." : "Secure message sent to the conversation.", priorityOverride === "emergency" ? "danger" : "success");
   }
@@ -165,7 +165,7 @@ export function PatientCommunication() {
   function prepareVoiceNote() {
     setVoiceNoteReady(true);
     setDraft((current) => current || "[Voice note] Patient reports symptoms verbally. Please review and respond.");
-    showToast("Voice note mode enabled. Browser recording can be connected to Firebase Storage in production.", "info");
+    showToast("Voice note mode enabled. Browser recording can be connected to Spring Boot file storage in production.", "info");
   }
 
   function sendEmergencyMessage() {
@@ -466,7 +466,7 @@ export function PatientCommunication() {
                 <Badge tone="warning">Emergency escalation</Badge>
                 <Badge tone="neutral">Offline read cache</Badge>
               </div>
-              <p className="text-muted-foreground">Production storage should use Firestore rules, role custom claims, App Check, encrypted message payloads, and immutable audit logs for every view, send, edit, upload, and download.</p>
+              <p className="text-muted-foreground">Production storage should use Spring Boot API authorization, role custom claims, App Check, encrypted message payloads, and immutable audit logs for every view, send, edit, upload, and download.</p>
             </CardContent>
           </Card>
         </section>
@@ -514,3 +514,4 @@ export function PatientCommunication() {
 function ActivityIcon() {
   return <ClipboardList className="h-5 w-5 text-primary" />;
 }
+

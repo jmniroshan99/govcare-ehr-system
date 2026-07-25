@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+﻿import { useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { AlertTriangle, CheckCircle2, FileImage, FileText, ImageUp, LockKeyhole, ShieldCheck, UploadCloud } from "lucide-react";
 import { Badge } from "../components/ui/badge";
@@ -271,10 +271,10 @@ export function MediaCenter() {
           <CardContent className="space-y-3">
             {[
               ["1", "Validate file", "Type, size, module, patient ID, role, and hospital scope are checked before upload."],
-              ["2", "Store in cloud storage", "Files are saved under hospital-scoped paths with custom metadata."],
+              ["2", "Store in Spring Boot storage", "Files are saved under hospital-scoped paths with custom metadata."],
               ["3", "Write metadata", "globalMedia records include hospitalId, uploadedBy, role, module, visibility, timestamps, and review status."],
               ["4", "Review if critical", "Critical or patient-released media can enter a review queue before release."],
-              ["5", "Audit and notify", "Production Cloud Functions should append audit logs and notify care teams or patients."],
+              ["5", "Audit and notify", "Production Spring Boot services should append audit logs and notify care teams or patients."],
             ].map((step) => (
               <div key={step[0]} className="flex gap-3 rounded-md border border-border bg-slate-50 p-3 dark:bg-slate-900">
                 <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary text-sm font-bold text-white">{step[0]}</span>
@@ -334,3 +334,4 @@ export function MediaCenter() {
     </div>
   );
 }
+

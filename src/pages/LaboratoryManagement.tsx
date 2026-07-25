@@ -16,7 +16,6 @@ import {
   Microscope,
   QrCode,
   ScanLine,
-  Search,
   ShieldCheck,
   TestTube2,
   Upload,
@@ -29,6 +28,7 @@ import { Badge } from "../components/ui/badge";
 import type { BadgeTone } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { SmartSearch } from "../components/search/SmartSearch";
 import { Input } from "../components/ui/input";
 import { Select } from "../components/ui/select";
 import { Table, Td, Th } from "../components/ui/table";
@@ -482,10 +482,7 @@ export function LaboratoryManagement() {
                   </div>
                 </div>
                 <div className="grid gap-3 md:grid-cols-[1fr_190px_auto]">
-                  <div className="relative">
-                    <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input className="pl-9" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search patient, request, test, barcode" />
-                  </div>
+                  <SmartSearch value={search} onChange={setSearch} placeholder="Search patient, request, test, barcode" />
                   <Select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as "all" | SampleStatus)}>
                     <option value="all">All statuses</option>
                     <option value="requested">Requested</option>

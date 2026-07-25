@@ -19,6 +19,7 @@ import { PageTransition, SectionReveal } from "../components/motion/PageTransiti
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { SmartSearch } from "../components/search/SmartSearch";
 import { Input } from "../components/ui/input";
 import { Select } from "../components/ui/select";
 import { useToast } from "../components/ui/toast-context";
@@ -161,10 +162,7 @@ export function PatientAppointments() {
                   </div>
                   <Badge tone="success">{selectedDoctor.name} selected</Badge>
                 </div>
-                <div className="relative mb-3">
-                  <Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input className="pl-9" value={doctorSearch} onChange={(event) => setDoctorSearch(event.target.value)} placeholder="Search doctor, specialty, language..." />
-                </div>
+                <SmartSearch className="mb-3" value={doctorSearch} onChange={setDoctorSearch} placeholder="Search doctor, specialty, language..." />
                 <div className="grid gap-3 md:grid-cols-2">
                   {searchableDoctors.map((doctor) => (
                     <button

@@ -2,9 +2,7 @@ import { lazy, Suspense, useEffect } from "react";
 import { BrowserRouter, Navigate, Route, Routes, useNavigate } from "react-router-dom";
 import { AppShell } from "../components/layout/AppShell";
 import { Skeleton } from "../components/ui/skeleton";
-import { Login } from "../pages/Login";
 import { ModulePage } from "../pages/ModulePage";
-import { ResetPassword } from "../pages/ResetPassword";
 import { roleGroups } from "../lib/rbac";
 import { defaultHomeForRole, isActiveAccount } from "../lib/accessControl";
 import { identifyAuthenticatedUser, logout, watchAuth } from "../services/authService";
@@ -17,6 +15,8 @@ const lazyPage = <T extends Record<string, React.ComponentType>>(
   exportName: keyof T,
 ) => lazy(async () => ({ default: (await loader())[exportName] }));
 
+const Login = lazyPage(() => import("../pages/Login"), "Login");
+const ResetPassword = lazyPage(() => import("../pages/ResetPassword"), "ResetPassword");
 const AdmissionsManagement = lazyPage(() => import("../pages/AdmissionsManagement"), "AdmissionsManagement");
 const AuditLogs = lazy(() => import("../pages/AuditLogs"));
 const CareSummary = lazyPage(() => import("../pages/CareSummary"), "CareSummary");
@@ -46,6 +46,7 @@ const PatientPortal = lazyPage(() => import("../pages/PatientPortal"), "PatientP
 const PatientProfile = lazyPage(() => import("../pages/PatientProfile"), "PatientProfile");
 const PatientRegistration = lazyPage(() => import("../pages/PatientRegistration"), "PatientRegistration");
 const PatientReports = lazyPage(() => import("../pages/PatientReports"), "PatientReports");
+const PatientSelfRegistration = lazyPage(() => import("../pages/PatientSelfRegistration"), "PatientSelfRegistration");
 const PatientWorkbench = lazyPage(() => import("../pages/PatientWorkbench"), "PatientWorkbench");
 const PharmacyModule = lazyPage(() => import("../pages/PharmacyModule"), "PharmacyModule");
 const Profile = lazyPage(() => import("../pages/Profile"), "Profile");
@@ -145,6 +146,8 @@ export function AppRouter() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/self-register" element={<PatientSelfRegistration />} />
+          <Route path="/self-register/:token" element={<PatientSelfRegistration />} />
           <Route path="/verify-medical-report" element={<MedicalReportVerification />} />
           <Route path="/super-admin" element={<Protected roles={["super_admin"]}><SuperAdminDashboard /></Protected>} />
           <Route path="/efficiency" element={<Protected roles={["super_admin", "hospital_admin", "doctor", "nurse", "pharmacist", "pathologist", "lab_manager", "lab_technician", "radiologist", "radiology_technician", "receptionist", "ict_admin", "records_officer"]}><EfficiencyCommandCenter /></Protected>} />

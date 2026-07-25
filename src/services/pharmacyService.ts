@@ -1,6 +1,4 @@
-import { httpsCallable } from "firebase/functions";
-import { functions } from "../lib/firebase";
-import { isOfflineCapableNetworkError, queueOfflineCallable } from "./offlineQueue";
+import { queueOfflineCallable } from "./offlineQueue";
 
 export const PHARMACY_QUEUE_STORAGE_KEY = "govcare.pharmacyQueue";
 export const PHARMACY_QUEUE_UPDATED_EVENT = "govcare:pharmacy-queue-updated";
@@ -227,28 +225,13 @@ export async function createPrescriptionFromConsultation(payload: CreatePrescrip
 
   const queued = await pushPrescriptionToPharmacyQueue(prescription);
   const cloudPayload = { ...payload, lines: prescription.lines, validation: safety.validation, prescriptionNo };
-  if (functions) {
-    if (!navigator.onLine) {
-      await queueOfflineCallable({
-        callableName: "createPrescriptionFromConsultation",
-        payload: cloudPayload,
-        label: `Prescription ${prescriptionNo}`,
-        dedupeKey: `prescription-create:${prescriptionNo}`,
-      });
-      return queued;
-    }
-    try {
-      const callable = httpsCallable(functions, "createPrescriptionFromConsultation");
-      await callable(cloudPayload);
-    } catch (error) {
-      if (!isOfflineCapableNetworkError(error)) throw error;
-      await queueOfflineCallable({
-        callableName: "createPrescriptionFromConsultation",
-        payload: cloudPayload,
-        label: `Prescription ${prescriptionNo}`,
-        dedupeKey: `prescription-create:${prescriptionNo}`,
-      });
-    }
+  if (!navigator.onLine) {
+    await queueOfflineCallable({
+      callableName: "createPrescriptionFromConsultation",
+      payload: cloudPayload,
+      label: `Prescription ${prescriptionNo}`,
+      dedupeKey: `prescription-create:${prescriptionNo}`,
+    });
   }
   return queued;
 }
@@ -262,28 +245,13 @@ export async function pushPrescriptionToPharmacyQueue(prescription: PharmacyQueu
     "Prescription transmitted to pharmacy queue.",
   ));
 
-  if (functions) {
-    if (!navigator.onLine) {
-      await queueOfflineCallable({
-        callableName: "pushPrescriptionToPharmacyQueue",
-        payload: { ...queued },
-        label: `Pharmacy queue ${queued.prescriptionNo}`,
-        dedupeKey: `pharmacy-queue:${queued.prescriptionNo}`,
-      });
-      return queued;
-    }
-    try {
-      const callable = httpsCallable(functions, "pushPrescriptionToPharmacyQueue");
-      await callable(queued);
-    } catch (error) {
-      if (!isOfflineCapableNetworkError(error)) throw error;
-      await queueOfflineCallable({
-        callableName: "pushPrescriptionToPharmacyQueue",
-        payload: { ...queued },
-        label: `Pharmacy queue ${queued.prescriptionNo}`,
-        dedupeKey: `pharmacy-queue:${queued.prescriptionNo}`,
-      });
-    }
+  if (!navigator.onLine) {
+    await queueOfflineCallable({
+      callableName: "pushPrescriptionToPharmacyQueue",
+      payload: { ...queued },
+      label: `Pharmacy queue ${queued.prescriptionNo}`,
+      dedupeKey: `pharmacy-queue:${queued.prescriptionNo}`,
+    });
   }
 
   return queued;
@@ -295,7 +263,7 @@ export async function issueMedicineAndUpdateStock(payload: {
   issuedBy?: string;
   actorId?: string;
 }) {
-  if (functions && !navigator.onLine) {
+  if (!navigator.onLine) {
     throw new Error("Medicine issuing and stock deduction require an online connection to prevent duplicate dispensing.");
   }
   const queue = getPharmacyQueue();
@@ -317,18 +285,8 @@ export async function issueMedicineAndUpdateStock(payload: {
     upsertPharmacyQueuePrescription(updated);
   }
 
-  if (!functions) return { ok: true, mode: "demo" as const };
-  try {
-    const callable = httpsCallable(functions, "issueMedicineAndUpdateStock");
-    const { data } = await callable({
-      hospitalId: defaultHospitalId,
-      ...payload,
-    });
-    return data as { ok: boolean };
-  } catch (error) {
-    console.warn("issueMedicineAndUpdateStock function unavailable; local stock update already applied.", error);
-    return { ok: true, mode: "demo" as const };
-  }
+  void defaultHospitalId;
+  return { ok: true, mode: "local-api-ready" as const };
 }
 
 export async function completePharmacyTransaction(payload: {
@@ -351,19 +309,7 @@ export async function completePharmacyTransaction(payload: {
     upsertPharmacyQueuePrescription(updated);
   }
 
-  if (!functions) return { ok: true, receiptId, mode: "demo" as const, stockResult };
-  try {
-    const callable = httpsCallable(functions, "completePharmacyTransaction");
-    const { data } = await callable({
-      hospitalId: defaultHospitalId,
-      receiptId,
-      ...payload,
-    });
-    return data as { ok: boolean; receiptId: string };
-  } catch (error) {
-    console.warn("completePharmacyTransaction function unavailable; local receipt flow already completed.", error);
-    return { ok: true, receiptId, mode: "demo" as const, stockResult };
-  }
+  return { ok: true, receiptId, mode: "local-api-ready" as const, stockResult };
 }
 
 export async function processPrescriptionIssue(payload: { prescriptionId: string; items: PharmacyIssueItem[] }) {

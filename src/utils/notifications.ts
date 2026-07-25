@@ -1,5 +1,4 @@
 import type { Role } from "../types/ehr";
-import { showDesktopNotification } from "../services/pushService";
 
 export type NotificationPriority = "information" | "warning" | "urgent" | "critical";
 export type NotificationChannel = "in-app" | "push" | "email" | "sms" | "sound";
@@ -82,7 +81,9 @@ export function addNotification(notification: Omit<GovCareNotification, "id" | "
   window.dispatchEvent(new CustomEvent(NOTIFICATION_POPUP_EVENT, { detail: item }));
   playNotificationSound(item.priority);
   if (item.channels.includes("push")) {
-    void showDesktopNotification(item);
+    void import("../services/pushService")
+      .then(({ showDesktopNotification }) => showDesktopNotification(item))
+      .catch(() => false);
   }
   return item;
 }

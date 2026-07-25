@@ -1,13 +1,13 @@
 # GovCare EHR System
 
-Production-minded React, TypeScript, Tailwind CSS, ShadCN-style UI, Firebase EHR starter for government hospitals.
+Production-minded React, TypeScript, Spring Boot, PostgreSQL, and Keycloak EHR starter for Sri Lankan government and private hospitals.
 
 ## What is included
 
 - Vite React app with TypeScript, React Router, TanStack Query, Zustand, React Hook Form, Zod, Framer Motion, Recharts, i18next, QR patient cards, and accessible UI primitives.
 - Role-based shell for Super Admin, Hospital Admin, Doctor, Nurse, Pharmacist, Lab Technician, Radiologist, Receptionist, and Records Officer.
 - Pages for login, dashboard, patient registration/profile, OPD, consultation, nurse notes, wards, pharmacy, lab, radiology, emergency, appointments, reports, users, settings, and audit logs.
-- Firebase client configuration, App Check support, Firestore and Storage rules, indexes, Hosting headers, PWA service worker, seed data, and Cloud Functions.
+- PostgreSQL schema, Sri Lanka seed data, Spring Boot media/document service, API-ready frontend services, and PWA service worker.
 - Security utilities for input sanitization and AES-256-GCM sensitive-field encryption.
 
 ## Setup
@@ -19,51 +19,79 @@ copy .env.example .env
 npm run dev
 ```
 
-Fill `.env` with your Firebase web app keys. These are client identifiers, not Admin SDK credentials.
+Fill `.env` with API, media, and Keycloak settings. Do not commit real credentials.
 
-## Firebase setup
+## PostgreSQL database
 
-For the full Windows setup, emulator, App Check, indexes, deployment, and security guide, see:
+GovCare EHR uses PostgreSQL for relational hospital data.
 
-`docs/FIREBASE_SETUP_WINDOWS.md`
+Added files:
 
-1. Create a Firebase project.
-2. Enable Authentication with email/password. Google login is wired but optional.
-3. Enable Firestore, Storage, Cloud Functions, Hosting, Cloud Messaging, and App Check.
-4. Install Firebase CLI and log in:
+- `database/postgresql/schema.sql` - production-minded PostgreSQL schema.
+- `database/postgresql/seed-production-sri-lanka.sql` - Sri Lanka government/private hospital demo seed with at least 10 connected rows for every table.
+- `server/` - Node.js + Express + PostgreSQL API scaffold.
+- `docs/POSTGRESQL_MIGRATION_PLAN.md` - step-by-step migration guide.
 
-```bash
-npm install -g firebase-tools
-firebase login
-firebase use --add
-npm run functions:install
+Recommended architecture:
+
+```text
+React frontend -> Spring Boot / REST API -> PostgreSQL
 ```
 
-5. Deploy rules and indexes:
+Run PostgreSQL locally:
 
-```bash
-firebase deploy --only firestore:rules,firestore:indexes,storage
+```powershell
+createdb govcare_ehr
+psql "postgres://postgres:postgres@localhost:5432/govcare_ehr" -f database/postgresql/schema.sql
+psql "postgres://postgres:postgres@localhost:5432/govcare_ehr" -f database/postgresql/seed-production-sri-lanka.sql
 ```
 
-6. Deploy the full app:
+The Sri Lanka production-demo seed includes government and private hospitals, Sinhala/Tamil/English settings, hospital-local doctors, nurses, pharmacists, lab staff, radiology staff, receptionists, ICT users, adult and pediatric patients with guardians, OPD visits, consultations, prescriptions, pharmacy receipts, lab/radiology requests and results, wards, beds, admissions, appointments, notifications, audit logs, login activities, media/documents, and system settings.
 
-```bash
-npm run firebase:deploy
+Run the new API:
+
+```powershell
+npm run postgres:install
+copy server\.env.example server\.env
+npm run postgres:api
+```
+
+Then add this to `.env` for the React app:
+
+```env
+VITE_API_BASE_URL=http://127.0.0.1:4001
+```
+
+The Firebase implementation has been removed. Frontend services are now API-ready for Spring Boot/PostgreSQL and Keycloak.
+
+## Spring Boot media and document service
+
+Documents, images, reports, scans, profile photos, emergency evidence, lab PDFs, radiology files, and pharmacy receipts should be managed by the Spring Boot API with PostgreSQL metadata.
+
+Added files:
+
+- `spring-api/` - Spring Boot + PostgreSQL API.
+- `docs/SPRING_BOOT_POSTGRESQL_MEDIA.md` - media/document management guide.
+- `src/services/springMediaService.ts` - React service wrapper for Spring media upload/list/download.
+
+Run:
+
+```powershell
+cd "C:\wamp64\www\wholesale vegetable\govcare-ehr-system"
+npm run spring:api
+```
+
+Add this to `.env`:
+
+```env
+VITE_MEDIA_API_BASE_URL=http://127.0.0.1:4002
 ```
 
 ## Data model
 
-Recommended top-level Firestore collections:
+Recommended PostgreSQL tables:
 
-`hospitals`, `departments`, `users`, `patients`, `appointments`, `consultations`, `prescriptions`, `medicines`, `labRequests`, `labResults`, `radiologyRequests`, `radiologyReports`, `admissions`, `wards`, `beds`, `emergencyCases`, `notifications`, `secureChats`, `auditLogs`.
-
-For the complete production Firestore collection structure, required fields, release rules, and indexes, see:
-
-`docs/FIRESTORE_DATABASE_DESIGN.md`
-
-Supporting/internal workflow collections used by the current app:
-
-`visits`, `opdQueues`, `consultationDrafts`, `doctorApprovals`, `telemedicineSessions`, `reports`, `vaccinationRecords`, `billingRecords`, `patientDocuments`, `operationTheatreCases`, `surgeryReports`, `futureCarePlans`, `mortuaryCases`, `mortuaryCertificates`.
+`hospitals`, `departments`, `app_users`, `guardians`, `patients`, `visits`, `opd_queue`, `consultations`, `prescriptions`, `prescription_items`, `medicines`, `pharmacy_stock`, `pharmacy_receipts`, `lab_requests`, `lab_results`, `radiology_requests`, `radiology_reports`, `wards`, `beds`, `admissions`, `appointments`, `notifications`, `audit_logs`, `login_activities`, `global_media`, `system_settings`.
 
 Every operational document should include:
 
@@ -71,36 +99,35 @@ Every operational document should include:
 
 ## Security strategy
 
-- Firebase Auth owns passwords and identity.
-- Staff roles and hospital isolation are enforced with Firebase custom claims.
+- Keycloak owns passwords, OAuth 2.0, OpenID Connect, MFA, and identity sessions.
+- Staff roles and hospital isolation should be enforced with Keycloak roles/claims plus backend authorization checks.
 - Client routes deny access by default. Every protected route must declare allowed roles, and patients are redirected to the patient portal if they try to open staff pages.
 - Default patient access includes only `My Health`, `Care Summary`, `My Reports`, and `My Profile`.
 - Default staff access is split by role: admins manage settings/users, doctors handle consultations and clinical records, nurses handle ward/vitals notes, pharmacists handle pharmacy, diagnostics staff handle lab/radiology, reception handles registration/appointments, and records officers handle patient records/reports/audit views.
-- Doctor module access is limited to `doctor`, `hospital_admin`, and `super_admin`. Consultation drafts and electronic approvals are written only through Cloud Functions, with audit entries for every save/approval.
-- Sensitive writes like user creation, claims, patient ID generation, stock updates, report creation, and notifications go through Cloud Functions.
-- Firestore rules restrict users to their hospital and role-specific collections.
+- Doctor module access is limited to `doctor`, `hospital_admin`, and `super_admin`. Consultation drafts and electronic approvals should be written through Spring Boot services with audit entries for every save/approval.
+- Sensitive writes like user creation, patient ID generation, stock updates, report creation, and notifications go through backend REST services.
+- PostgreSQL row filtering and backend authorization restrict users to their hospital and role-specific records.
 - Audit logs are append-only from trusted backend paths and cannot be edited by normal users.
 - Highly sensitive clinical fields can be encrypted in the browser with AES-256-GCM before storage. For production, protect key material with a hospital key-management workflow rather than storing passphrases in frontend code.
-- App Check is initialized when `VITE_FIREBASE_APPCHECK_SITE_KEY` is present.
 - Inputs are validated with Zod and sanitized before persistence.
 
 ## Performance and caching strategy
 
 - TanStack Query centralizes client cache policy.
 - Routes are code split with `lazy`/`Suspense`.
-- Firestore service helpers use pagination and indexed query patterns.
+- API service helpers should use pagination and indexed PostgreSQL query patterns.
 - Real-time listeners should be limited to queues, emergency alerts, and bed availability.
 - Debounced search should be used for patient and medicine lookup before production traffic.
-- Firebase Hosting serves static assets with immutable cache headers.
+- Nginx or your static host should serve built assets with immutable cache headers.
 - PWA service worker provides offline shell caching for read-only access.
 
 ## Seed data
 
-Sample hospital, department, patient, and medicine records are in:
+Sample Sri Lanka hospital data is in:
 
-`firebase/seed/sample-data.json`
+`database/postgresql/seed-production-sri-lanka.sql`
 
-Import them with your preferred admin script or Firestore import workflow after creating the Firebase project.
+Import it after loading the PostgreSQL schema.
 
 ## Local hard-drive backup
 
@@ -120,7 +147,7 @@ Create a compressed ZIP backup:
 npm run backup:local:zip
 ```
 
-The backup excludes generated/heavy folders such as `node_modules`, `dist`, `.git`, `.firebase`, and log files. The local `.env` file is included by default for full project restore. To exclude `.env` from a manual backup, run:
+The backup excludes generated/heavy folders such as `node_modules`, `dist`, `.git`, and log files. The local `.env` file is included by default for full project restore. To exclude `.env` from a manual backup, run:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/local-backup.ps1 -ExcludeEnv
@@ -134,10 +161,9 @@ Restore method:
 
 ## Production checklist
 
-- Replace demo fallback login with mandatory Firebase Auth profiles.
+- Replace demo fallback login with mandatory Keycloak profiles.
 - Enforce MFA enrollment for privileged roles.
-- Configure App Check enforcement in Firebase console.
-- Add Cloud Function tests for all sensitive operations.
-- Review Firestore rules with the emulator before launch.
+- Add Spring Boot integration tests for all sensitive operations.
+- Review backend authorization and PostgreSQL row-scope tests before launch.
 - Add clinical terminology/code tables required by your Ministry of Health workflow.
 - Configure SMS/email providers in `sendNotification` or dedicated notification functions.

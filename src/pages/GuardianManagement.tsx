@@ -1,10 +1,10 @@
-import { Baby, CalendarDays, FileText, QrCode, Search, ShieldCheck, UsersRound } from "lucide-react";
+import { Baby, CalendarDays, FileText, QrCode, ShieldCheck, UsersRound } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Input } from "../components/ui/input";
+import { SmartSearch } from "../components/search/SmartSearch";
 import { useToast } from "../components/ui/toast-context";
 import { PatientCodeScanner } from "../components/patient/PatientCodeScanner";
 import { getDependentsForGuardian, getGuardianDependentLinks, getGuardianProfiles, getPatientClinicalClassification, syncGuardianPatientClassification } from "../utils/patientRegistry";
@@ -32,10 +32,7 @@ export function GuardianManagement() {
 
       <Card>
         <CardContent className="grid gap-3 md:grid-cols-[1fr_auto]">
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input className="pl-9" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search guardian ID, NIC, name, phone, or email" />
-          </div>
+          <SmartSearch value={query} onChange={setQuery} placeholder="Search guardian ID, NIC, name, phone, or email" />
           <Button type="button" variant="outline" onClick={() => setScannerOpen(true)}><QrCode className="h-4 w-4" />Scan guardian QR</Button>
         </CardContent>
       </Card>

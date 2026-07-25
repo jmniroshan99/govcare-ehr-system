@@ -1,4 +1,4 @@
-import type { Role } from "../types/ehr";
+﻿import type { Role } from "../types/ehr";
 
 export type EcosystemModuleId =
   | "authentication"
@@ -53,7 +53,7 @@ export const ecosystemModules: EcosystemModule[] = [
     purpose: "Create, identify, update, and link patient records across OPD, laboratory, pharmacy, and hospitals.",
     capabilities: ["Patient demographics", "Profile image", "QR/barcode identity", "Guardian links", "Duplicate prevention"],
     roles: ["super_admin", "hospital_admin", "doctor", "nurse", "receptionist", "records_officer", "patient"],
-    onlineMode: "Patient records sync through Firestore using patientId and hospitalId.",
+    onlineMode: "Patient records sync through PostgreSQL using patientId and hospitalId.",
     offlineMode: "QR-based patient retrieval and cached profiles support safe lookup during connectivity loss.",
   },
   {
@@ -80,7 +80,7 @@ export const ecosystemModules: EcosystemModule[] = [
     purpose: "Support decision-making with patient statistics, disease trends, outcomes, and exports.",
     capabilities: ["Real-time dashboards", "PDF reports", "Excel CSV exports", "Predictive risk cards", "Treatment outcomes"],
     roles: ["super_admin", "hospital_admin", "records_officer"],
-    onlineMode: "Aggregated Firestore queries and Cloud Functions generate validated reports.",
+    onlineMode: "Aggregated PostgreSQL queries and Spring Boot services generate validated reports.",
     offlineMode: "Cached dashboards preserve the latest approved reports for read-only review.",
   },
   {
@@ -114,3 +114,4 @@ export const healthcareCentres: HealthcareCentre[] = [
   { id: "lab-western-regional", name: "Regional Diagnostic Laboratory", type: "laboratory", city: "Colombo", shareScope: ["approved lab results"], status: "restricted" },
   { id: "pharm-colombo-hub", name: "Government Pharmacy Hub", type: "pharmacy", city: "Colombo", shareScope: ["prescriptions", "dispensing receipts"], status: "active" },
 ];
+

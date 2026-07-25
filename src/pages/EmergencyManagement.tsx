@@ -1,4 +1,4 @@
-import {
+﻿import {
   Activity,
   AlertTriangle,
   Ambulance,
@@ -26,7 +26,7 @@ import { GenderBadge } from "../components/patient/GenderBadge";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Input } from "../components/ui/input";
+import { SmartSearch } from "../components/search/SmartSearch";
 import { Select } from "../components/ui/select";
 import { Table, Td, Th } from "../components/ui/table";
 import { useToast } from "../components/ui/toast-context";
@@ -191,7 +191,7 @@ export function EmergencyManagement() {
                 <Badge tone={selected.risk >= 80 ? "danger" : selected.risk >= 60 ? "warning" : "success"}>Risk {selected.risk}</Badge>
               </div>
               <div className="grid gap-3 md:grid-cols-[1fr_190px]">
-                <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search patient, ED case, pathway, ambulance" />
+                <SmartSearch value={search} onChange={setSearch} placeholder="Search patient, ED case, pathway, ambulance" />
                 <Select value={triageFilter} onChange={(event) => setTriageFilter(event.target.value as "all" | TriageLevel)}>
                   <option value="all">All triage</option>
                   <option value="Resuscitation">Resuscitation</option>
@@ -350,8 +350,8 @@ export function EmergencyManagement() {
         <Card>
           <CardHeader><CardTitle>Security, performance, and offline resilience</CardTitle></CardHeader>
           <CardContent className="grid gap-3 text-sm md:grid-cols-3">
-            <p className="help-strip p-3">Low-latency ED queues should use Firestore listeners only for critical cases, ambulance arrivals, and bed availability, with React Query for cached lists.</p>
-            <p className="help-strip p-3">Cloud Functions should validate code activations, blood requests, ICU transfers, and notifications before writing hospital records.</p>
+            <p className="help-strip p-3">Low-latency ED queues should use PostgreSQL API refreshs only for critical cases, ambulance arrivals, and bed availability, with React Query for cached lists.</p>
+            <p className="help-strip p-3">Spring Boot services should validate code activations, blood requests, ICU transfers, and notifications before writing hospital records.</p>
             <p className="help-strip p-3">MFA, App Check, AES-256 encrypted sensitive fields, role claims, and immutable audit logs protect emergency data access.</p>
           </CardContent>
         </Card>
@@ -371,3 +371,4 @@ function Snapshot({ label, value, tone }: { label: string; value: string; tone: 
     </div>
   );
 }
+

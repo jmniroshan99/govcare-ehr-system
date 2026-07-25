@@ -124,21 +124,21 @@
     "loginButton": "Login",
     "openDoctorCenter": "Open Doctor Center",
     "openAdminPrivileges": "Open Admin Privileges",
-    "patientGoogleLogin": "Patient login with Google",
+    "patientGoogleLogin": "Patient login with SSO",
     "fullName": "Full name",
     "confirmPassword": "Confirm password",
     "createPatient": "Create patient account",
-    "createLoginGoogle": "Create / login with Google",
+    "createLoginGoogle": "Create / login with SSO",
     "patientPrivacyNote": "Patient accounts can view only their own released reports, appointments, prescriptions, and profile details.",
     "staffClaimNote": "Staff accounts must be created by Hospital Admin or Super Admin so Firebase custom claims can assign the correct role.",
     "openAdminUserManagement": "Open Admin User Management",
     "requestStaffAccess": "Request staff access",
-    "staffRequestSaved": "Staff request noted. In production this should call a secure Cloud Function for admin approval.",
+    "staffRequestSaved": "Staff request noted. In production this should call a secure Spring Boot service for admin approval.",
     "enterSignupDetails": "Enter name, email, and password to create a patient account.",
     "passwordTooShort": "Use at least 12 characters with uppercase, lowercase, number, and special character.",
     "passwordMismatch": "Passwords do not match.",
     "firebaseMissing": "Firebase is not configured. Add your Firebase web config to .env and restart Vite.",
-    "popupBlocked": "Popup was blocked. Redirecting to Google sign-in..."
+    "popupBlocked": "Popup was blocked. Redirecting to secure SSO sign-in..."
   },
   "portal": {
     "title": "My health portal",
@@ -161,7 +161,7 @@
   "notificationsPage": {
     "eyebrow": "Notification Center",
     "title": "Real-time hospital alerts and updates",
-    "subtitle": "Role-based in-app alerts with Firebase Cloud Messaging-ready channels for push, email, SMS, sound, and Firestore listener updates.",
+    "subtitle": "Role-based in-app alerts with Firebase Cloud Messaging-ready channels for push, email, SMS, sound, and PostgreSQL API refresh updates.",
     "testSound": "Test sound",
     "archiveRead": "Archive read",
     "markAllRead": "Mark all read",
@@ -181,9 +181,9 @@
     "noResults": "No notifications match the selected filters.",
     "deliveryArchitecture": "Delivery architecture",
     "deliveryPoints": [
-      "Firestore notifications collection stores hospitalId, target roles, priority, channels, read state, archive state, timestamps, and action links.",
+      "PostgreSQL notifications collection stores hospitalId, target roles, priority, channels, read state, archive state, timestamps, and action links.",
       "Firebase Cloud Messaging sends push alerts to registered staff and patient devices.",
-      "Email and SMS providers can be called from Cloud Functions for appointment, emergency, result, and maintenance alerts.",
+      "Email and SMS providers can be called from Spring Boot services for appointment, emergency, result, and maintenance alerts.",
       "Real-time listeners should subscribe only to current user's role and hospital active notifications with indexed queries.",
       "Critical alerts use sound and popup toasts; lower-priority alerts stay in the notification center and dashboard widgets.",
       "Every notification creation, read, archive, and delivery failure should be audit logged."
@@ -264,3 +264,4 @@
     "devVerified": "Development OTP accepted."
   }
 }
+

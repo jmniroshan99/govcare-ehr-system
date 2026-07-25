@@ -1,4 +1,4 @@
-import {
+﻿import {
   AlertTriangle,
   CalendarDays,
   Camera,
@@ -15,7 +15,6 @@ import {
   Radio,
   RotateCw,
   ScanLine,
-  Search,
   Send,
   ShieldCheck,
   Upload,
@@ -29,6 +28,7 @@ import { GenderBadge } from "../components/patient/GenderBadge";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { SmartSearch } from "../components/search/SmartSearch";
 import { Input } from "../components/ui/input";
 import { Select } from "../components/ui/select";
 import { Table, Td, Th } from "../components/ui/table";
@@ -224,7 +224,7 @@ export function RadiologyManagement() {
   function uploadImages() {
     updateSelected({ status: "images uploaded" });
     void updateDiagnosticOrderStatus(selected.id, "radiology", { status: "in-progress" }, "radiology-workstation", "radiology_technician");
-    showToast("DICOM images and PDF report uploaded to secure Firebase Storage.", "success");
+    showToast("DICOM images and PDF report uploaded to secure Spring Boot file storage.", "success");
   }
 
   function approveReport() {
@@ -313,10 +313,7 @@ export function RadiologyManagement() {
                 <Badge tone={flagTone(selected.flag)}>{selected.flag}</Badge>
               </div>
               <div className="grid gap-3 md:grid-cols-[1fr_190px_auto]">
-                <div className="relative">
-                  <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input className="pl-9" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search patient, request, scan, doctor" />
-                </div>
+                <SmartSearch value={search} onChange={setSearch} placeholder="Search patient, request, scan, doctor" />
                 <Select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as "all" | ImagingStatus)}>
                   <option value="all">All statuses</option>
                   <option value="requested">Requested</option>
@@ -420,7 +417,7 @@ export function RadiologyManagement() {
                   <Button variant="outline" onClick={() => showToast("Radiology report QR verification generated.", "success")}><QrCode className="h-4 w-4" />QR verification</Button>
                   <Button onClick={approveReport}><Send className="h-4 w-4" />Sign and notify doctor</Button>
                 </div>
-                <p className="help-strip p-3 text-sm">Approval should run through a Cloud Function that signs the report, writes audit logs, shares approved reports to patient profile, and sends FCM notifications.</p>
+                <p className="help-strip p-3 text-sm">Approval should run through a Spring Boot service that signs the report, writes audit logs, shares approved reports to patient profile, and sends FCM notifications.</p>
               </CardContent>
             </Card>
           </section>
@@ -452,7 +449,7 @@ export function RadiologyManagement() {
           <Card>
             <CardHeader><CardTitle className="flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-primary" />Security and audit</CardTitle></CardHeader>
             <CardContent className="space-y-2 text-sm text-muted-foreground">
-              <p>Firebase custom claims restrict radiologist and technician workflows. Firestore rules enforce hospitalId isolation. Storage uploads should use encrypted paths, App Check, signed report approval, and audit logs for every view, upload, edit, print, and download.</p>
+              <p>Firebase custom claims restrict radiologist and technician workflows. Spring Boot API authorization enforce hospitalId isolation. Storage uploads should use encrypted paths, App Check, signed report approval, and audit logs for every view, upload, edit, print, and download.</p>
               <div className="flex flex-wrap gap-2"><Badge tone="success">App Check</Badge><Badge tone="info">DICOM ready</Badge><Badge tone="warning">Audit every access</Badge></div>
             </CardContent>
           </Card>
@@ -476,3 +473,4 @@ export function RadiologyManagement() {
     </PageTransition>
   );
 }
+

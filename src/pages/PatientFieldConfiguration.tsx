@@ -1,4 +1,4 @@
-import { Eye, EyeOff, Lock, Plus, Save, Settings2, SlidersHorizontal } from "lucide-react";
+﻿import { Eye, EyeOff, Lock, Plus, Save, Settings2, SlidersHorizontal } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
@@ -75,10 +75,10 @@ export function PatientFieldConfiguration() {
           <Card>
             <CardHeader><CardTitle className="flex items-center gap-2"><Settings2 className="h-5 w-5 text-primary" />Production storage</CardTitle></CardHeader>
             <CardContent className="space-y-3 text-sm">
-              <p className="text-muted-foreground">Firestore-ready collection: <span className="font-mono font-semibold text-foreground">patientFieldConfigurations/{config.hospitalId}</span></p>
+              <p className="text-muted-foreground">PostgreSQL-ready table: <span className="font-mono font-semibold text-foreground">patientFieldConfigurations/{config.hospitalId}</span></p>
               <div className="grid gap-2">
                 <Badge tone="success">Hospital isolation: {config.hospitalId}</Badge>
-                <Badge tone="info">Admin writes through Cloud Function</Badge>
+                <Badge tone="info">Admin writes through Spring Boot service</Badge>
                 <Badge tone="warning">Sensitive fields can be hidden by role</Badge>
               </div>
             </CardContent>
@@ -158,3 +158,4 @@ export function PatientFieldConfiguration() {
     </div>
   );
 }
+

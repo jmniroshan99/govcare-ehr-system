@@ -1,2 +1,21 @@
 cd "C:\wamp64\www\wholesale vegetable\govcare-ehr-system"
-npm run dev -- --host 127.0.0.1
+npm run dev 
+
+
+
+
+superadmin@govcare.gov.lk
+GovCare@123
+
+doctor@govcare.gov.lk
+GovCare@123
+
+npm run build
+npm run postgres:build
+npm run dev:full
+
+Frontend: http://127.0.0.1:5173
+PostgreSQL API: http://127.0.0.1:4001
+
+cd "C:\wamp64\www\wholesale vegetable\govcare-ehr-system"
+npm run dev:full

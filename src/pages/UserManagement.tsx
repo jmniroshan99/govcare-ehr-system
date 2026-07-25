@@ -1,4 +1,4 @@
-import { KeyRound, Lock, Save, ShieldCheck, UserCog, UserPlus, UsersRound } from "lucide-react";
+﻿import { KeyRound, Lock, Save, ShieldCheck, UserCog, UserPlus, UsersRound } from "lucide-react";
 import { useMemo, useState } from "react";
 import { PageTransition, Reveal, SectionReveal, Stagger } from "../components/motion/PageTransition";
 import { Badge } from "../components/ui/badge";
@@ -45,16 +45,16 @@ export function UserManagement() {
   })), [selectedRole]);
 
   function savePrivileges() {
-    showToast(`${roleLabels[selectedRole]} privileges saved. Deploy Cloud Function custom claims to enforce in Firebase.`, "success");
+    showToast(`${roleLabels[selectedRole]} privileges saved. Deploy Spring Boot service custom claims to enforce in Firebase.`, "success");
     refreshAndRedirectToMainMenu();
   }
 
   function grantAdmin() {
-    showToast("Admin privilege grant queued for secure Cloud Function approval.", "warning");
+    showToast("Admin privilege grant queued for secure Spring Boot service approval.", "warning");
   }
 
   function inviteStaff() {
-    showToast("Staff invitation workflow opened. In production this sends an email invite through Cloud Functions.", "info");
+    showToast("Staff invitation workflow opened. In production this sends an email invite through Spring Boot services.", "info");
   }
 
   return (
@@ -73,8 +73,8 @@ export function UserManagement() {
         </div>
 
         <div className="help-strip grid gap-3 p-4 text-sm md:grid-cols-3">
-          <div className="flex items-center gap-2 font-semibold"><ShieldCheck className="h-4 w-4" />Admin actions require Cloud Functions</div>
-          <div className="flex items-center gap-2 font-semibold"><Lock className="h-4 w-4" />Firestore rules enforce hospital isolation</div>
+          <div className="flex items-center gap-2 font-semibold"><ShieldCheck className="h-4 w-4" />Admin actions require Spring Boot services</div>
+          <div className="flex items-center gap-2 font-semibold"><Lock className="h-4 w-4" />Spring Boot API authorization enforce hospital isolation</div>
           <div className="flex items-center gap-2 font-semibold"><UserCog className="h-4 w-4" />Custom claims control module access</div>
         </div>
 
@@ -127,7 +127,7 @@ export function UserManagement() {
             <CardHeader><CardTitle className="flex items-center gap-2"><UsersRound className="h-5 w-5 text-primary" />Staff access</CardTitle></CardHeader>
             <CardContent className="space-y-3">
               <div className="flex flex-wrap justify-between gap-3">
-                <p className="text-sm text-muted-foreground">Role changes must be written through a secure Cloud Function that updates Firebase Auth custom claims and creates an audit log.</p>
+                <p className="text-sm text-muted-foreground">Role changes must be written through a secure Spring Boot service that updates Firebase Auth custom claims and creates an audit log.</p>
                 <Button variant="outline" onClick={inviteStaff}><UserPlus className="h-4 w-4" />Invite staff</Button>
               </div>
               <div className="overflow-x-auto">
@@ -154,3 +154,4 @@ export function UserManagement() {
     </PageTransition>
   );
 }
+

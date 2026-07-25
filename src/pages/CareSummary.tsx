@@ -31,13 +31,17 @@ import { uploadPatientReport, updateCareSummary } from "../services/profileServi
 import { useAuthStore } from "../stores/authStore";
 import { refreshAndRedirectToMainMenu } from "../utils/navigation";
 import { downloadTextFile, timestampedFilename } from "../utils/download";
+import { getSavedPatientsForDoctors } from "../utils/patientRegistry";
 
 const vitals = [
-  { time: "08:00", bp: 132, pulse: 86, spo2: 98, sugar: 142 },
-  { time: "10:00", bp: 136, pulse: 90, spo2: 97, sugar: 164 },
-  { time: "12:00", bp: 142, pulse: 96, spo2: 97, sugar: 188 },
-  { time: "14:00", bp: 138, pulse: 92, spo2: 98, sugar: 176 },
-  { time: "16:00", bp: 134, pulse: 88, spo2: 99, sugar: 158 },
+  { time: "Day 1 06:00", bp: 132, pulse: 86, spo2: 98, sugar: 142 },
+  { time: "Day 1 12:00", bp: 136, pulse: 90, spo2: 97, sugar: 164 },
+  { time: "Day 1 18:00", bp: 142, pulse: 96, spo2: 97, sugar: 188 },
+  { time: "Day 1 22:00", bp: 138, pulse: 92, spo2: 98, sugar: 176 },
+  { time: "Day 2 06:00", bp: 134, pulse: 88, spo2: 99, sugar: 158 },
+  { time: "Day 2 12:00", bp: 136, pulse: 88, spo2: 98, sugar: 148 },
+  { time: "Day 2 18:00", bp: 140, pulse: 94, spo2: 96, sugar: 176 },
+  { time: "Day 2 22:00", bp: 128, pulse: 82, spo2: 99, sugar: 132 },
 ];
 
 const riskScores = [
@@ -84,6 +88,17 @@ export function CareSummary() {
   const [currentSituation, setCurrentSituation] = useState("Stable but requires diabetic control, fall prevention, and repeat lab review.");
   const [futureTreatments, setFutureTreatments] = useState("Follow-up in diabetes clinic, repeat HbA1c in 3 months, review medication interactions.");
   const isClinicalStaff = profile?.role === "doctor" || profile?.role === "nurse";
+  const latestSavedPatient = useMemo(() => getSavedPatientsForDoctors()[0], []);
+  const summaryPatient = {
+    name: profile?.role === "patient" ? profile.displayName : latestSavedPatient?.name ?? "Nimal Silva",
+    patientId: profile?.patientId ?? latestSavedPatient?.patientId ?? "PAT-2026-000001",
+    age: latestSavedPatient?.age ?? 44,
+    gender: latestSavedPatient?.sex ?? "Male",
+    bloodGroup: latestSavedPatient?.bloodGroup ?? "B+",
+    nic: latestSavedPatient?.nicOrPassport ?? "812345678V",
+    allergies: latestSavedPatient?.allergies ?? "Penicillin",
+    chronicDiseases: latestSavedPatient?.chronicDiseases ?? "Diabetes, hypertension",
+  };
   const bmi = useMemo(() => (78 / (1.72 * 1.72)).toFixed(1), []);
 
   async function uploadReport() {
@@ -121,7 +136,7 @@ export function CareSummary() {
   }
 
   function exportSummary() {
-    downloadTextFile(timestampedFilename("smart-patient-snapshot", "txt"), `GovCare EHR System\nSmart Patient Snapshot\n\nPatient: Nimal Silva\nCurrent situation: ${currentSituation}\nFuture treatments: ${futureTreatments}\nActive diagnoses: ${activeItems.diagnoses.join(", ")}\nCurrent medications: ${activeItems.medications.join(", ")}\nLaboratory highlights: ${activeItems.labs.join(", ")}\nRadiology findings: ${activeItems.radiology.join(", ")}`, "text/plain;charset=utf-8");
+    downloadTextFile(timestampedFilename(`${summaryPatient.patientId.toLowerCase()}-smart-patient-snapshot`, "txt"), `GovCare EHR System\nSmart Patient Snapshot\n\nPatient: ${summaryPatient.name}\nPatient ID: ${summaryPatient.patientId}\nGender/Age: ${summaryPatient.gender} / ${summaryPatient.age}\nBlood group: ${summaryPatient.bloodGroup}\nNIC/Identifier: ${summaryPatient.nic}\nAllergies: ${summaryPatient.allergies}\nChronic diseases: ${summaryPatient.chronicDiseases}\nCurrent situation: ${currentSituation}\nFuture treatments: ${futureTreatments}\nActive diagnoses: ${activeItems.diagnoses.join(", ")}\nCurrent medications: ${activeItems.medications.join(", ")}\nLaboratory highlights: ${activeItems.labs.join(", ")}\nRadiology findings: ${activeItems.radiology.join(", ")}`, "text/plain;charset=utf-8");
     showToast("Care summary exported.", "success");
   }
 
@@ -135,8 +150,8 @@ export function CareSummary() {
             </div>
             <div>
               <p className="text-sm font-semibold text-primary">Smart Patient Snapshot</p>
-              <h1 className="mt-1 text-2xl font-bold text-slate-950">Nimal Silva</h1>
-              <p className="mt-1 text-sm text-muted-foreground">44 years | Male | B+ | PAT-2026-000001 | NIC 812345678V</p>
+              <h1 className="mt-1 text-2xl font-bold text-slate-950">{summaryPatient.name}</h1>
+              <p className="mt-1 text-sm text-muted-foreground">{summaryPatient.age} years | {summaryPatient.gender} | {summaryPatient.bloodGroup} | {summaryPatient.patientId} | NIC {summaryPatient.nic}</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <Badge tone="danger">Penicillin allergy</Badge>
                 <Badge tone="warning">Diabetes</Badge>
@@ -219,7 +234,7 @@ export function CareSummary() {
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={vitals}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="time" />
+                  <XAxis dataKey="time" tick={{ fontSize: 10 }} />
                   <YAxis />
                   <Tooltip />
                   <Line type="monotone" dataKey="bp" stroke="#0f766e" strokeWidth={2} />

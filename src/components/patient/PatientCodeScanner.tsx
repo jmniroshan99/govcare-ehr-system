@@ -44,6 +44,11 @@ export function PatientCodeScanner({ open, mode, onClose, onDetected }: PatientC
       setCameraEnabled(false);
 
       try {
+        if (!window.isSecureContext) {
+          setStatus("Camera access needs HTTPS or localhost/127.0.0.1. Open this page using localhost during development or deploy with HTTPS.");
+          return;
+        }
+
         if (!navigator.mediaDevices?.getUserMedia) {
           setStatus("Camera scanning is not supported in this browser. Enter the code manually.");
           return;
@@ -78,7 +83,16 @@ export function PatientCodeScanner({ open, mode, onClose, onDetected }: PatientC
           onDetected(code);
           onClose();
         }, 700);
-      } catch {
+      } catch (error) {
+        const name = error instanceof DOMException ? error.name : "";
+        if (name === "NotAllowedError" || name === "PermissionDeniedError") {
+          setStatus("Camera permission was denied. Click the browser lock icon, allow Camera permission, then reload this page.");
+          return;
+        }
+        if (name === "NotFoundError" || name === "DevicesNotFoundError") {
+          setStatus("No camera device was found. Connect a webcam or enter the QR/barcode value manually.");
+          return;
+        }
         setStatus("Camera permission was blocked or unavailable. Enter the QR/barcode value manually.");
       }
     }

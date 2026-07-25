@@ -10,7 +10,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Input } from "../components/ui/input";
 import { languageOptions } from "../i18n";
 import { defaultHomeForRole, isActiveAccount } from "../lib/accessControl";
-import { hasFirebaseConfig } from "../lib/firebase";
 import { createPatientAccountWithEmail, getGoogleRedirectUser, identifyAuthenticatedUser, loginWithEmail, loginWithGoogle, loginWithGoogleRedirect, logout, requestEmailOtp, resetPasswordWithEmailOtp, sendSecurePasswordReset, verifyEmailOtp } from "../services/authService";
 import { ensurePatientPortalProfile } from "../services/profileService";
 import { recordLoginActivity } from "../services/loginActivityService";
@@ -139,6 +138,10 @@ export function Login() {
       enterDemoStaff(values.email);
       return;
     }
+    if (import.meta.env.DEV && isDemoPatientEmail(values.email)) {
+      enterDemoPatient(values.email);
+      return;
+    }
     window.sessionStorage.setItem("govcare-login-intent", "staff");
     try {
       const user = await loginWithEmail(values.email, values.password);
@@ -190,16 +193,12 @@ export function Login() {
     setLoginError("");
     setGoogleError("");
     clearAuth();
-    window.sessionStorage.setItem("govcare-auth-mode", "firebase");
+    window.sessionStorage.setItem("govcare-auth-mode", "keycloak");
     window.sessionStorage.setItem("govcare-login-intent", "patient");
     try {
       const user = await loginWithGoogle();
       await finishGooglePatientLogin(user);
     } catch (error) {
-      if (!hasFirebaseConfig) {
-        setGoogleError(t("login.firebaseMissing"));
-        return;
-      }
       if (shouldUseRedirect(error)) {
         setGoogleError(t("login.popupBlocked"));
         await loginWithGoogleRedirect();
@@ -209,7 +208,7 @@ export function Login() {
       await logout();
       clearAuth();
       void recordLoginActivity({ email: "google-patient", loginStatus: "failed", authenticationMethod: "google", failureReason: firebaseGoogleErrorMessage(error) });
-      setGoogleError(firebaseGoogleErrorMessage(error));
+      setGoogleError("Google/Firebase login was removed. Use Keycloak OAuth/OIDC for production authentication.");
     }
   }
 
@@ -223,7 +222,7 @@ export function Login() {
       } else {
         await verifyEmailOtp({ purpose: "login_verification", otp: otpCode });
       }
-      window.sessionStorage.setItem("govcare-auth-mode", "firebase");
+      window.sessionStorage.setItem("govcare-auth-mode", "keycloak");
       setProfile(pendingProfile);
       void recordLoginActivity({ email: pendingProfile.email, loginStatus: "success", authenticationMethod: pendingAuthMethod, profile: pendingProfile });
       window.sessionStorage.removeItem("govcare-login-intent");
@@ -287,7 +286,8 @@ export function Login() {
         displayName: signupValues.name,
         photoURL: user.photoURL,
       });
-      setProfile(profile);
+      const patientProfile = profile.role === "patient" ? profile : createDemoPatientProfile(signupValues.email, signupValues.name, user.uid);
+      setProfile(patientProfile);
       window.sessionStorage.setItem("govcare-auth-mode", "firebase");
       window.sessionStorage.removeItem("govcare-login-intent");
       navigate("/portal", { replace: true });

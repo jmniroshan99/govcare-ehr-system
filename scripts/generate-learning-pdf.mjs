@@ -1,460 +1,536 @@
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
 
-const outputDir = path.resolve("docs");
-const outputFile = path.join(outputDir, "GovCare-EHR-Learning-Guide.pdf");
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const projectRoot = path.resolve(__dirname, "..");
+const docsDir = path.join(projectRoot, "docs");
+const outputFile = path.join(docsDir, "GovCare_EHR_Easy_Mode_Learner_Guide.pdf");
+const logoFile = path.join(projectRoot, "public", "ministry-health-logo.png");
+const fontRegular = "C:\\Windows\\Fonts\\Nirmala.ttf";
+const fontBold = "C:\\Windows\\Fonts\\NirmalaB.ttf";
 
-fs.mkdirSync(outputDir, { recursive: true });
+fs.mkdirSync(docsDir, { recursive: true });
 
-const doc = new jsPDF({ unit: "pt", format: "a4" });
-const page = {
-  width: doc.internal.pageSize.getWidth(),
-  height: doc.internal.pageSize.getHeight(),
-  marginX: 54,
-  marginTop: 58,
-  marginBottom: 54,
+const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4", compress: true });
+const W = doc.internal.pageSize.getWidth();
+const H = doc.internal.pageSize.getHeight();
+const M = 14;
+
+const C = {
+  ink: [23, 35, 35],
+  muted: [88, 105, 105],
+  teal: [0, 128, 112],
+  tealDark: [0, 82, 75],
+  tealSoft: [225, 247, 243],
+  blue: [35, 91, 167],
+  amber: [181, 118, 18],
+  red: [180, 50, 58],
+  green: [25, 135, 85],
+  line: [205, 219, 217],
+  card: [248, 252, 251],
+  white: [255, 255, 255],
 };
 
-let y = page.marginTop;
-let pageNumber = 1;
+if (fs.existsSync(fontRegular)) {
+  doc.addFileToVFS("Nirmala.ttf", fs.readFileSync(fontRegular).toString("base64"));
+  doc.addFont("Nirmala.ttf", "Nirmala", "normal");
+}
+if (fs.existsSync(fontBold)) {
+  doc.addFileToVFS("NirmalaB.ttf", fs.readFileSync(fontBold).toString("base64"));
+  doc.addFont("NirmalaB.ttf", "Nirmala", "bold");
+}
 
-const colors = {
-  primary: [15, 118, 110],
-  secondary: [21, 94, 117],
-  text: [31, 41, 55],
-  muted: [100, 116, 139],
-  light: [240, 253, 250],
-  border: [203, 213, 225],
-  danger: [190, 18, 60],
-};
+let pageNo = 1;
+let y = 0;
+
+function font(size = 10, style = "normal", color = C.ink) {
+  doc.setFont("Nirmala", style);
+  doc.setFontSize(size);
+  doc.setTextColor(...color);
+}
 
 function footer() {
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
-  doc.setTextColor(...colors.muted);
-  doc.text("GovCare EHR System Learning Guide", page.marginX, page.height - 28);
-  doc.text(`Page ${pageNumber}`, page.width - page.marginX, page.height - 28, { align: "right" });
+  doc.setDrawColor(...C.line);
+  doc.line(M, H - 13, W - M, H - 13);
+  font(7.4, "normal", C.muted);
+  doc.text("GovCare EHR - Easy Mode Learner Guide", M, H - 8);
+  doc.text(`Page ${pageNo}`, W - M, H - 8, { align: "right" });
 }
 
-function addPage() {
-  footer();
-  doc.addPage();
-  pageNumber += 1;
-  y = page.marginTop;
-}
-
-function ensureSpace(height) {
-  if (y + height > page.height - page.marginBottom) addPage();
-}
-
-function title(text, subtitle) {
-  doc.setFillColor(...colors.primary);
-  doc.rect(0, 0, page.width, 180, "F");
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(28);
-  doc.setTextColor(255, 255, 255);
-  doc.text(text, page.marginX, 78);
-  doc.setFontSize(12);
-  doc.setFont("helvetica", "normal");
-  doc.text(subtitle, page.marginX, 106, { maxWidth: page.width - page.marginX * 2 });
-  doc.setFillColor(255, 255, 255);
-  doc.roundedRect(page.marginX, 130, page.width - page.marginX * 2, 74, 8, 8, "F");
-  doc.setTextColor(...colors.primary);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(13);
-  doc.text("Modern React + TypeScript + Firebase EHR blueprint for public hospitals", page.marginX + 18, 158);
-  doc.setTextColor(...colors.text);
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(10);
-  doc.text(`Generated from the local project on ${new Date().toLocaleString("en-LK")}`, page.marginX + 18, 180);
-  y = 246;
-}
-
-function h1(text) {
-  ensureSpace(48);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(18);
-  doc.setTextColor(...colors.primary);
-  doc.text(text, page.marginX, y);
-  y += 22;
-  doc.setDrawColor(...colors.border);
-  doc.line(page.marginX, y, page.width - page.marginX, y);
-  y += 18;
-}
-
-function h2(text) {
-  ensureSpace(34);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(13);
-  doc.setTextColor(...colors.secondary);
-  doc.text(text, page.marginX, y);
-  y += 18;
-}
-
-function p(text, options = {}) {
-  const fontSize = options.fontSize ?? 10;
-  const lineHeight = options.lineHeight ?? 14;
-  const maxWidth = options.maxWidth ?? page.width - page.marginX * 2;
-  doc.setFont("helvetica", options.bold ? "bold" : "normal");
-  doc.setFontSize(fontSize);
-  doc.setTextColor(...(options.color ?? colors.text));
-  const lines = doc.splitTextToSize(text, maxWidth);
-  ensureSpace(lines.length * lineHeight + 6);
-  doc.text(lines, options.x ?? page.marginX, y);
-  y += lines.length * lineHeight + 8;
-}
-
-function bullets(items) {
-  for (const item of items) {
-    const lines = doc.splitTextToSize(item, page.width - page.marginX * 2 - 16);
-    ensureSpace(lines.length * 13 + 4);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9.5);
-    doc.setTextColor(...colors.text);
-    doc.circle(page.marginX + 3, y - 3, 2, "F");
-    doc.text(lines, page.marginX + 14, y);
-    y += lines.length * 13 + 5;
+function checkSpace(need = 20) {
+  if (y + need > H - 18) {
+    footer();
+    doc.addPage();
+    pageNo += 1;
+    y = 18;
   }
-  y += 3;
 }
 
-function callout(label, text, tone = "primary") {
-  const fill = tone === "danger" ? [255, 241, 242] : [240, 253, 250];
-  const stroke = tone === "danger" ? [254, 205, 211] : [153, 246, 228];
-  const heading = tone === "danger" ? colors.danger : colors.primary;
-  const width = page.width - page.marginX * 2;
-  const lines = doc.splitTextToSize(text, width - 28);
-  const height = 36 + lines.length * 13;
-  ensureSpace(height + 10);
-  doc.setFillColor(...fill);
-  doc.setDrawColor(...stroke);
-  doc.roundedRect(page.marginX, y, width, height, 7, 7, "FD");
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(10);
-  doc.setTextColor(...heading);
-  doc.text(label, page.marginX + 14, y + 18);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(...colors.text);
-  doc.text(lines, page.marginX + 14, y + 34);
-  y += height + 12;
+function page(title, subtitle = "") {
+  if (pageNo > 1) doc.addPage();
+  doc.setFillColor(...C.white);
+  doc.rect(0, 0, W, H, "F");
+  font(15.5, "bold", C.tealDark);
+  doc.text(title, M, 17);
+  if (subtitle) {
+    font(8.3, "normal", C.muted);
+    doc.text(subtitle, M, 23);
+  }
+  doc.setDrawColor(...C.line);
+  doc.line(M, 27, W - M, 27);
+  footer();
+  y = 36;
+  pageNo += 1;
 }
 
-function table(head, body, options = {}) {
-  ensureSpace(90);
-  autoTable(doc, {
-    startY: y,
-    head: [head],
-    body,
-    theme: "grid",
-    styles: { font: "helvetica", fontSize: options.fontSize ?? 8.5, cellPadding: 5, textColor: colors.text },
-    headStyles: { fillColor: colors.primary, textColor: [255, 255, 255], fontStyle: "bold" },
-    alternateRowStyles: { fillColor: [248, 250, 252] },
-    margin: { left: page.marginX, right: page.marginX },
+function addLogo(x, top, size) {
+  if (!fs.existsSync(logoFile)) return;
+  const image = fs.readFileSync(logoFile).toString("base64");
+  doc.addImage(`data:image/png;base64,${image}`, "PNG", x, top, size, size);
+}
+
+function p(text, opts = {}) {
+  const width = opts.width ?? W - M * 2;
+  const x = opts.x ?? M;
+  const size = opts.size ?? 9.2;
+  const lineHeight = opts.lineHeight ?? 5.2;
+  font(size, opts.style ?? "normal", opts.color ?? C.ink);
+  const lines = doc.splitTextToSize(text, width);
+  for (const line of lines) {
+    checkSpace(lineHeight + 2);
+    doc.text(line, x, y);
+    y += lineHeight;
+  }
+  y += opts.after ?? 2;
+}
+
+function h(text) {
+  checkSpace(12);
+  font(11.3, "bold", C.tealDark);
+  doc.text(text, M, y);
+  y += 7;
+}
+
+function bullet(items) {
+  font(8.6, "normal", C.ink);
+  for (const item of items) {
+    const lines = doc.splitTextToSize(item, W - M * 2 - 8);
+    checkSpace(lines.length * 5 + 3);
+    doc.setFillColor(...C.teal);
+    doc.circle(M + 2, y - 1.5, 1, "F");
+    doc.text(lines, M + 7, y);
+    y += lines.length * 5 + 1.2;
+  }
+  y += 2;
+}
+
+function box(title, text, color = C.teal) {
+  const lines = doc.splitTextToSize(text, W - M * 2 - 10);
+  const height = Math.max(20, 12 + lines.length * 5);
+  checkSpace(height + 7);
+  doc.setFillColor(...C.tealSoft);
+  doc.setDrawColor(...color);
+  doc.roundedRect(M, y, W - M * 2, height, 2, 2, "FD");
+  font(9, "bold", color);
+  doc.text(title, M + 5, y + 7);
+  font(8.2, "normal", C.ink);
+  doc.text(lines, M + 5, y + 13);
+  y += height + 6;
+}
+
+function table(headers, rows, widths) {
+  const rowH = 9;
+  checkSpace((rows.length + 2) * rowH);
+  let x = M;
+  doc.setFillColor(...C.tealDark);
+  doc.rect(M, y, W - M * 2, rowH, "F");
+  font(7.2, "bold", C.white);
+  headers.forEach((head, i) => {
+    doc.text(head, x + 2, y + 5.8);
+    x += widths[i];
   });
-  y = doc.lastAutoTable.finalY + 18;
+  y += rowH;
+  rows.forEach((row, index) => {
+    x = M;
+    doc.setFillColor(index % 2 === 0 ? 250 : 244, 252, 251);
+    doc.setDrawColor(...C.line);
+    doc.rect(M, y, W - M * 2, rowH, "FD");
+    font(6.9, "normal", C.ink);
+    row.forEach((cell, i) => {
+      doc.text(doc.splitTextToSize(String(cell), widths[i] - 4).slice(0, 2), x + 2, y + 4.8);
+      x += widths[i];
+    });
+    y += rowH;
+  });
+  y += 5;
 }
 
-title("GovCare EHR System", "Production-learning PDF covering the Government Hospital EHR project architecture, modules, Firebase backend, role-based workflows, security controls, standards alignment, performance strategy, and deployment path.");
+function workflow(labels) {
+  checkSpace(35);
+  const boxW = 31;
+  const gap = 5;
+  const top = y + 8;
+  labels.forEach((label, i) => {
+    const x = M + i * (boxW + gap);
+    doc.setFillColor(i % 2 === 0 ? C.tealSoft[0] : 240, i % 2 === 0 ? C.tealSoft[1] : 248, i % 2 === 0 ? C.tealSoft[2] : 255);
+    doc.setDrawColor(...(i % 2 === 0 ? C.teal : C.blue));
+    doc.roundedRect(x, top, boxW, 17, 2, 2, "FD");
+    font(6.7, "bold", i % 2 === 0 ? C.tealDark : C.blue);
+    doc.text(doc.splitTextToSize(label, boxW - 5), x + boxW / 2, top + 6, { align: "center" });
+    if (i < labels.length - 1) {
+      doc.setDrawColor(...C.teal);
+      doc.line(x + boxW + 1, top + 8.5, x + boxW + gap - 1, top + 8.5);
+    }
+  });
+  y += 35;
+}
 
-h1("1. Executive Overview");
-p("GovCare EHR System is a modern government hospital Electronic Health Record web application built with React, TypeScript, Tailwind CSS, ShadCN-style UI primitives, Framer Motion, React Router, TanStack Query, Zustand, React Hook Form, Zod validation, and Firebase services. It is designed as a learning and implementation blueprint for secure patient records, OPD, wards, pharmacy, diagnostics, emergency care, reporting, and hospital administration.");
-callout("Learning Purpose", "This PDF explains how the project is structured and how each module should be understood, extended, secured, and deployed. It is not a legal certification document. Production launch still requires local Ministry of Health approval, privacy impact assessment, clinical safety review, penetration testing, data protection review, and operational governance.");
+function mock(title, subtitle, items) {
+  const height = 54;
+  checkSpace(height + 8);
+  doc.setFillColor(246, 250, 250);
+  doc.setDrawColor(...C.line);
+  doc.roundedRect(M, y, W - M * 2, height, 3, 3, "FD");
+  doc.setFillColor(...C.teal);
+  doc.roundedRect(M + 4, y + 4, W - M * 2 - 8, 10, 2, 2, "F");
+  font(7.8, "bold", C.white);
+  doc.text(title, M + 8, y + 11);
+  font(6.4, "normal", [230, 255, 250]);
+  doc.text(subtitle, W - M - 8, y + 11, { align: "right" });
+  const colW = (W - M * 2 - 16) / items.length;
+  const top = y + 20;
+  items.forEach((item, i) => {
+    const x = M + 6 + i * colW;
+    doc.setFillColor(...C.white);
+    doc.setDrawColor(...C.line);
+    doc.roundedRect(x, top, colW - 4, 27, 2, 2, "FD");
+    doc.setFillColor(...(item.color ?? C.teal));
+    doc.circle(x + 8, top + 8, 5.2, "F");
+    font(6.3, "bold", C.white);
+    doc.text(item.icon, x + 8, top + 10, { align: "center" });
+    font(7.1, "bold", C.ink);
+    doc.text(item.title, x + 16, top + 8);
+    font(6.1, "normal", C.muted);
+    doc.text(doc.splitTextToSize(item.text, colW - 20), x + 16, top + 14);
+  });
+  y += height + 8;
+}
 
-h2("Core Goals");
-bullets([
-  "Create a role-based EHR experience for public hospitals with distinct staff and patient portals.",
-  "Keep patients limited to their own released health information, appointments, care messages, reports, and profile updates.",
-  "Use Firebase Authentication, Firestore, Cloud Functions, Storage, Hosting, Cloud Messaging, App Check, Firestore rules, and Storage rules.",
-  "Support multilingual user experience for English, Sinhala, and Tamil through i18next and a visible translate control.",
-  "Teach a production-minded architecture: validation, sanitization, audit logs, encryption-ready utilities, hospital-level isolation, secure writes, and least privilege.",
-]);
+function databaseDiagram() {
+  checkSpace(70);
+  const centerX = W / 2;
+  const centerY = y + 31;
+  doc.setFillColor(255, 249, 235);
+  doc.setDrawColor(...C.amber);
+  doc.roundedRect(centerX - 24, centerY - 10, 48, 20, 2, 2, "FD");
+  font(8.2, "bold", C.amber);
+  doc.text("patients", centerX, centerY - 1, { align: "center" });
+  font(6.2, "normal", C.ink);
+  doc.text("central record", centerX, centerY + 5, { align: "center" });
+  const nodes = [
+    ["users", 28, centerY - 22],
+    ["visits", 28, centerY + 22],
+    ["prescriptions", 72, centerY - 37],
+    ["lab_results", 114, centerY - 37],
+    ["radiology", 156, centerY - 22],
+    ["appointments", 156, centerY + 22],
+    ["media_files", 114, centerY + 38],
+    ["audit_logs", 72, centerY + 38],
+  ];
+  nodes.forEach(([label, x, ny]) => {
+    doc.setDrawColor(...C.line);
+    doc.line(centerX, centerY, x, ny);
+    doc.setFillColor(...C.card);
+    doc.roundedRect(x - 18, ny - 7, 36, 14, 2, 2, "FD");
+    font(6.7, "bold", C.tealDark);
+    doc.text(label, x, ny + 2, { align: "center" });
+  });
+  y += 70;
+}
 
-h1("2. Technology Stack");
-table(["Layer", "Technology", "Usage in GovCare"], [
-  ["Frontend framework", "React.js + Vite", "Fast component development, routing shell, pages, dashboards, and module workspaces."],
-  ["Language", "TypeScript", "Typed roles, patient models, component props, services, validations, and safer refactoring."],
-  ["Styling", "Tailwind CSS + ShadCN-style primitives", "Professional health dashboard surfaces, cards, tables, inputs, badges, and responsive layouts."],
-  ["Motion", "Framer Motion", "Page transitions, reveal animations, and modern but serious clinical UI movement."],
-  ["Routing", "React Router", "Protected staff/patient routes and role-based redirects."],
-  ["Data fetching/cache", "TanStack Query", "Centralized client caching model for production Firestore calls."],
-  ["State", "Zustand", "Authentication profile, role, hospital ID, session timeout state, and local profile overrides."],
-  ["Forms", "React Hook Form + Zod", "Validated login and patient registration with typed schemas."],
-  ["Charts", "Recharts", "Vitals trends, analytics, workload graphs, reports, and dashboards."],
-  ["Firebase client", "Firebase Web SDK", "Auth, Firestore, Functions, Storage, Messaging, App Check, emulator connection."],
-  ["Firebase backend", "Cloud Functions + Admin SDK", "Sensitive writes, custom claims, patient profile creation, chat messages, reports, approvals, and audit logs."],
-  ["PDF/exports", "jsPDF, jsPDF AutoTable, FileSaver, PapaParse", "Prescription/report downloads, CSV exports, and this generated learning PDF."],
-]);
+function cover() {
+  doc.setFillColor(4, 93, 83);
+  doc.rect(0, 0, W, H, "F");
+  doc.setFillColor(17, 131, 115);
+  doc.circle(W - 24, 36, 45, "F");
+  doc.setFillColor(0, 71, 66);
+  doc.circle(10, H - 24, 55, "F");
+  addLogo(M, 23, 32);
+  font(24, "bold", C.white);
+  doc.text("GovCare EHR System", M, 74);
+  font(13, "bold", [232, 255, 249]);
+  doc.text("Easy Mode Learner Guide", M, 87);
+  font(10, "normal", [232, 255, 249]);
+  doc.text("Electronic Health Record Web Application for Sri Lankan Government Hospitals", M, 99);
+  doc.setFillColor(232, 247, 243);
+  doc.roundedRect(M, 118, W - M * 2, 58, 4, 4, "F");
+  font(11, "bold", C.tealDark);
+  doc.text("ආරම්භක සිසුන් සඳහා පහසු ඉගෙනුම් PDF", M + 7, 132);
+  font(8.8, "normal", C.ink);
+  doc.text(doc.splitTextToSize("මෙම මාර්ගෝපදේශය GovCare EHR project එක සරලව ඉගෙනගැනීමට සකස් කර ඇත. Technical words English වලින් තබා Sinhala explanation එක සරල කර ඇත.", W - M * 2 - 14), M + 7, 144);
+  font(8.5, "bold", [235, 255, 249]);
+  doc.text("React + Spring Boot + PostgreSQL + Tailwind CSS + PWA", M, H - 20);
+  font(7.5, "normal", [220, 245, 239]);
+  doc.text(`Generated: ${new Date().toLocaleDateString("en-GB")}`, M, H - 13);
+  pageNo += 1;
+}
 
-h1("3. Project Structure");
-p("The codebase is organized around a scalable EHR frontend with Firebase backend configuration. The important folders are:");
-table(["Path", "Responsibility"], [
-  ["src/app", "Application providers and global setup."],
-  ["src/components", "Reusable layout, motion, patient scanner, and UI primitives."],
-  ["src/pages", "Feature pages such as Dashboard, Patient Registration, Doctor Center, Laboratory, Radiology, ED, Wards, Reports, Settings, and Patient Portal."],
-  ["src/routes", "Protected routing and role-based access entry points."],
-  ["src/services", "Firebase auth, profile, Firestore, and doctor service calls."],
-  ["src/stores", "Zustand auth/session store."],
-  ["src/types", "EHR domain types including Role, Patient, PatientReport, QueueItem, Medicine, AuditLog."],
-  ["src/utils", "Sanitization, encryption, downloads, local demo registries, navigation helpers, and care messages."],
-  ["src/validations", "Zod schemas for login and patient data."],
-  ["firebase/functions", "Cloud Functions source for secure backend operations."],
-  ["firebase/firestore.rules", "Firestore authorization policy."],
-  ["firebase/storage.rules", "Storage authorization policy."],
-  ["firebase/indexes.json", "Composite indexes for query performance."],
-  ["firebase/seed", "Sample hospital, department, patient, and medicine records."],
-]);
+cover();
 
-h1("4. Authentication and Role-Based Access");
-p("Authentication is handled by Firebase Auth. The frontend protects routes using the authenticated profile and role, while production authorization must be enforced by Firestore rules and Cloud Functions custom claims.");
-table(["Role", "Main Access"], [
-  ["Super Admin", "Full platform control, users, roles, settings, reports, audit logs, hospital administration."],
-  ["Hospital Admin", "Hospital-scoped administration, departments, users, wards, reports, settings."],
-  ["Doctor", "Doctor Center, patient search/profile, consultations, prescriptions, lab/radiology review, care messages."],
-  ["Nurse", "Assigned patients, wards, vitals, MAR, nursing notes, care plans, handover, critical alerts."],
-  ["Pharmacist", "Prescriptions, medicine issuing, stock updates, substitutions, labels, pharmacy reports."],
-  ["Lab Roles", "Lab requests, sample tracking, result entry, approval workflow, LIMS dashboards."],
-  ["Radiology Roles", "Imaging requests, scan queue, DICOM-ready image workflow, report upload, signing, release."],
-  ["Receptionist", "Patient registration, OPD queue, appointments, check-in, token generation."],
-  ["Records Officer", "Patient records, reports, document workflows, selected audit/report access."],
-  ["Patient", "Own released profile, appointments, prescriptions, reports, care summary, care messages, documents."],
-]);
-callout("Important Access Rule", "Patients should only see their own released information. They must not see other patients, doctor private notes, staff schedules, medicine stock, audit logs, security settings, or unreleased diagnostics.");
+page("1. EHR කියන්නේ මොකක්ද?", "Beginner explanation");
+p("EHR means Electronic Health Record. සරලව කිව්වොත්, patient කෙනෙකුගේ medical file එක computer system එකක secure ලෙස තබන ක්‍රමයයි.");
+p("Paper file එකක් නැතිව patient details, visits, doctor notes, prescriptions, lab reports, radiology reports, admissions, appointments සහ documents එකම system එකකින් access කරන්න පුළුවන්.");
+box("Easy idea", "Patient record එක system එකේ මධ්‍යස්ථානය. අනෙක් modules සියල්ල patientId එකට connect වෙනවා.");
+workflow(["Register Patient", "Create Visit", "Doctor Check", "Orders", "Reports"]);
 
-h1("5. Main EHR Modules");
-table(["Module", "Key Functions", "Files to Study"], [
-  ["Dashboard", "Hospital KPI cards, patient flow analytics, operational overview.", "src/pages/Dashboard.tsx"],
-  ["Patient Registration", "Unique patient ID, duplicate checks, QR/barcode card, demographics, medical background.", "src/pages/PatientRegistration.tsx"],
-  ["Patient Profile", "Health summary, QR/barcode identity, timeline, vitals, documents, alerts, downloads.", "src/pages/PatientProfile.tsx"],
-  ["Patient Portal", "Own health area, reports, appointments, care messages, profile defaults.", "src/pages/PatientPortal.tsx"],
-  ["Doctor Center", "OPD queue, assigned/new patients, telemedicine, secure chat, consultation launch.", "src/pages/DoctorDashboard.tsx"],
-  ["Doctor Workspace", "SOAP consultation, diagnosis, clinical summary, approvals.", "src/pages/DoctorWorkspace.tsx"],
-  ["Nurse Module", "Vitals, nursing notes, MAR, ward tasks, handover, bedside workflow.", "src/pages/NurseModule.tsx"],
-  ["Ward Management", "10 wards, 25 beds each, bed updates, patient assignment, inpatient status.", "src/pages/WardManagement.tsx"],
-  ["OPD Queue", "Tokens, queue states, priority sorting, digital ticket, real-time queue model.", "src/pages/OPDQueueManagement.tsx"],
-  ["E-Prescription", "Medicine search, warnings, signature, QR, pharmacy flow, PDF output.", "src/pages/EPrescription.tsx"],
-  ["Laboratory LIMS", "Departments, specimens, results, critical alerts, approvals, trends, reports.", "src/pages/LaboratoryManagement.tsx"],
-  ["Radiology", "X-ray/CT/MRI/US/ECG/Echo requests, viewer tools, reports, critical release.", "src/pages/RadiologyManagement.tsx"],
-  ["Emergency Department", "Triage, alerts, ambulance, code pathways, escalation, urgent orders.", "src/pages/EmergencyManagement.tsx"],
-  ["Appointments", "Patient booking by hospital, department, doctor, type, date, slot, QR ticket.", "src/pages/PatientAppointments.tsx"],
-  ["Care Messages", "Two-way doctor-patient conversation, priority messages, context-linked care.", "src/pages/PatientCommunication.tsx"],
-  ["Reports", "Analytics, export-ready tables, hospital reports.", "src/pages/Reports.tsx"],
-  ["Admin/User Management", "Roles, permissions matrix, admin privilege learning.", "src/pages/UserManagement.tsx"],
-  ["Operation Theatre", "Surgery scheduling, checklist, theatre availability, transfers.", "src/pages/OperationTheatre.tsx"],
-  ["Future Care", "Follow-ups, rehab, chronic monitoring, reminders, referrals.", "src/pages/FutureCareWorkflow.tsx"],
-  ["Mortuary", "Death registration, confirmation, storage, release, certificates.", "src/pages/MortuaryManagement.tsx"],
+page("2. GovCare EHR එකේ අරමුණ", "Why this system is useful");
+bullet([
+  "Government hospitals වල queues, reports, wards, pharmacy සහ lab workflows digital කරයි.",
+  "Doctorsට patient history ඉක්මනින් බලන්න පුළුවන්.",
+  "Nursesට vitals, medication, ward tasks සහ alerts manage කරන්න පුළුවන්.",
+  "Pharmacistsට prescriptions verify කර medicine issue කරන්න පුළුවන්.",
+  "Patientsට තමන්ට release කරපු reports සහ appointments බලන්න පුළුවන්.",
 ]);
+box("Important", "System එකේ goal එක hospital work එක faster, safer, and more organized කිරීමයි.", C.green);
 
-h1("6. Patient Management Learning Flow");
-bullets([
-  "Registration starts with validated demographic and clinical background fields using React Hook Form and Zod.",
-  "A unique patient ID and QR/barcode card are generated for identity workflows.",
-  "Duplicate detection searches existing demo records and can accept scanner input.",
-  "Newly saved demo patients are stored in a local patient registry and immediately shown to doctors.",
-  "Production should replace demo local storage with a Cloud Function that creates patients, generates IDs transactionally, validates role, writes audit logs, and returns the patient document ID.",
-  "Patient profile gives a longitudinal view: medical summary, alerts, timeline, vitals trends, documents, consent, and download actions.",
-]);
-callout("Recommended Production Pattern", "Use Cloud Functions for patient creation and patient ID generation. Do not trust a client-generated ID for the canonical record. Keep the client ID as a draft or display-only value until the backend confirms it.");
+page("3. Easy Architecture", "How the project parts connect");
+workflow(["React UI", "Spring Boot API", "PostgreSQL", "File Storage", "Reports"]);
+p("React frontend එක user interface එකයි. Spring Boot API එක backend brain එකයි. PostgreSQL database එක data store කරන place එකයි. Documents/images storage folder එක files save කරන place එකයි.");
+table(
+  ["Part", "Simple meaning", "Project use"],
+  [
+    ["React", "Screen/UI", "Login, dashboard, forms, tables"],
+    ["Spring Boot", "Backend API", "Upload, download, business rules"],
+    ["PostgreSQL", "Database", "Patients, visits, reports, audit logs"],
+    ["File Storage", "Files folder", "Images, PDFs, scans, documents"],
+    ["PWA", "Offline shell", "Basic offline-friendly app access"],
+  ],
+  [32, 58, 92],
+);
 
-h1("7. Firebase Backend Design");
-table(["Firebase Service", "Project Usage"], [
-  ["Authentication", "Email/password staff login, Google patient login, profile creation, custom claims for role/hospital/patient ID."],
-  ["Firestore", "Hospital records, patient data, queues, appointments, reports, diagnostics, chats, audit logs."],
-  ["Cloud Functions", "Sensitive writes: user creation, claims, patient profile creation, consultation drafts, approvals, chat messages, reports, notifications."],
-  ["Storage", "Patient reports, radiology images, lab PDFs, consent forms, uploaded health documents."],
-  ["Hosting", "Static Vite build deployment, cache headers, SPA fallback."],
-  ["Cloud Messaging", "Notification-ready structure for results, appointments, critical alerts, queue updates."],
-  ["App Check", "Protects Firebase resources from unauthorized clients when enforced."],
-  ["Security Rules", "Hospital isolation, role checks, patient-only-own-data checks, deny unauthorized writes."],
-  ["Emulators", "Local Firestore/UI emulator support for rule testing and development."],
-]);
+page("4. Technologies Used", "Simple technical stack");
+table(
+  ["Technology", "What it does", "Why useful"],
+  [
+    ["React + Vite", "Frontend app", "Fast development and fast UI"],
+    ["TypeScript", "Typed code", "Reduces mistakes"],
+    ["Tailwind CSS", "UI design", "Clean responsive hospital theme"],
+    ["Spring Boot", "Backend server", "Secure APIs and file handling"],
+    ["PostgreSQL", "Relational DB", "Strong data structure and reports"],
+    ["Firebase Auth", "Optional login", "Can keep during migration"],
+    ["jsPDF", "PDF exports", "Reports and learning documents"],
+  ],
+  [34, 64, 84],
+);
 
-h2("Recommended Firestore Collections");
-bullets([
-  "hospitals, departments, users, patients, appointments, consultations, prescriptions, medicines, labRequests, labResults, radiologyRequests, radiologyReports",
-  "admissions, wards, beds, emergencyCases, notifications, secureChats, auditLogs, visits, opdQueues, patientDocuments, reports",
-  "operationTheatreCases, surgeryReports, futureCarePlans, mortuaryCases, mortuaryCertificates, vaccinationRecords, billingRecords",
+page("5. Main Modules Overview", "Big picture before details");
+mock("GovCare Dashboard", "Role-based hospital workspace", [
+  { icon: "A", title: "Admin", text: "Users, roles, reports, settings.", color: C.amber },
+  { icon: "D", title: "Doctor", text: "Consultation and orders.", color: C.teal },
+  { icon: "P", title: "Patient", text: "Own released records.", color: C.blue },
 ]);
-p("Every operational document should include createdAt, updatedAt, createdBy, updatedBy, hospitalId, and status. These metadata fields support auditability, hospital isolation, query filtering, and lifecycle management.");
-
-h1("8. Security Architecture");
-p("Healthcare systems must treat all patient data as sensitive. GovCare demonstrates a zero-trust direction: do not rely on hidden UI alone, require backend authorization, validate inputs, sanitize content, and log sensitive actions.");
-table(["Control Area", "Implementation Guidance"], [
-  ["Identity", "Firebase Auth, MFA for privileged roles, separate patient/staff account handling, Google sign-in for patient portal where required."],
-  ["Authorization", "Custom claims for role, hospitalId, patientId; protected routes; Firestore rules; Cloud Function checks."],
-  ["Least privilege", "Nurses cannot prescribe; pharmacists cannot edit diagnoses; patients see only own released records; audit logs are restricted."],
-  ["Sensitive writes", "User creation, role assignment, approvals, patient IDs, stock issuing, report release, chat messages via Cloud Functions."],
-  ["Data protection", "AES-256-GCM encryption utility for highly sensitive fields; Firebase passwords handled only by Auth."],
-  ["Input safety", "Zod validation, DOMPurify-based sanitization utility, controlled form inputs."],
-  ["Auditability", "Create/read/update/delete/export/login actions should record actor UID, role, hospital, timestamp, resource, IP/device metadata where possible."],
-  ["Session safety", "Zustand session expiry model, auto logout direction, no Admin SDK credentials in frontend."],
-  ["App Check", "Initialize App Check with site key and enforce in Firebase console for production."],
-  ["Storage", "Rules must restrict reports/images to hospital-scoped roles and patient-owned released documents."],
-]);
-callout("Do Not Ship With Open Rules", "Rules such as allow read, write: if request.auth != null are not enough for healthcare. Use hospital isolation, role checks, patient ownership checks, release flags, and Cloud Functions for sensitive writes.", "danger");
-
-h1("9. Healthcare Standards and Compliance Mapping");
-p("The project should be aligned with recognized healthcare and software security standards. These standards guide design and interoperability, but formal compliance requires policy, governance, documentation, operational evidence, and external assessment.");
-table(["Standard / Framework", "Purpose", "How GovCare Should Use It"], [
-  ["HL7 FHIR R5", "Healthcare data exchange resources and APIs.", "Map Patient, Encounter, Observation, MedicationRequest, DiagnosticReport, ImagingStudy, Appointment, Communication, CarePlan."],
-  ["HL7 CDA / C-CDA", "Structured clinical documents.", "Discharge summaries, referrals, clinical notes, and portable medical summary documents."],
-  ["DICOM / DICOMweb", "Medical images and imaging metadata.", "Radiology module image storage, preview, comparison, reports, and future PACS integration."],
-  ["ICD-10 / ICD-11", "Disease classification and diagnosis coding.", "Doctor diagnosis fields, reports, disease statistics, analytics, and public health reporting."],
-  ["LOINC", "Laboratory and clinical observation codes.", "Lab test catalog, lab result interoperability, trend comparison, diagnostic reports."],
-  ["SNOMED CT", "Clinical terminology.", "Structured clinical findings, problem lists, procedures, allergies, and care summaries where licensed."],
-  ["ISO 27799 / ISO 27001", "Health information security management.", "Security controls, risk management, access control, incident response, asset management, logging."],
-  ["HIPAA Security Rule principles", "Administrative, physical, and technical safeguards for ePHI.", "Use as a security checklist even outside the US: confidentiality, integrity, availability, safeguards, workforce compliance."],
-  ["OWASP ASVS 5.0", "Application security verification.", "Authentication, session, access control, validation, API, crypto, logging, file upload, and configuration checks."],
-  ["WCAG 2.2", "Accessibility.", "Keyboard navigation, contrast, labels, readable layouts, responsive mobile workflows."],
-  ["WHO digital health guidance", "Evidence-based implementation of digital health interventions.", "Equity, acceptability, feasibility, safety, workflow fit, and monitoring of digital health outcomes."],
-]);
-
-h1("10. Module-by-Module Implementation Notes");
-h2("Doctor Center");
-bullets([
-  "Shows workload metrics, OPD/emergency queue, assigned patients, newly saved registrations, diagnostics, alerts, schedule, and analytics.",
-  "Includes actions for consultation, telemedicine, and secure chat.",
-  "Production should source active queue, assigned patients, diagnostics, and messages from hospital-scoped Firestore queries with pagination and limited real-time listeners.",
-]);
-h2("Nurse Module");
-bullets([
-  "Focused on ward and bedside workflows: vitals, nursing notes, MAR, IV fluids, wound care, intake/output, risk assessments, handover, and alerts.",
-  "Nurse restrictions must be enforced in rules and Cloud Functions: no prescribing, no diagnosis edits, no lab/radiology edits, no admin settings.",
-]);
-h2("Laboratory LIMS");
-bullets([
-  "Covers hematology, clinical chemistry, microbiology, serology, histopathology, molecular biology, blood bank, urinalysis, parasitology, virology, toxicology, and endocrinology.",
-  "Key workflows include test request, sample collection, barcode/QR labels, result entry, abnormal values, panic alerts, pathologist approval, PDF report generation, and release to doctor/patient.",
-]);
-h2("Radiology");
-bullets([
-  "Supports X-ray, CT, MRI, ultrasound, ECG, Echo, portable imaging, scan rooms, equipment availability, queue status, upload/report workflows, and critical alerts.",
-  "DICOM support should be integrated with a proper DICOMweb/PACS-compatible service for production rather than storing raw clinical imaging casually in public client paths.",
-]);
-h2("Emergency Department");
-bullets([
-  "Triage levels, ambulance arrival, critical dashboard, one-click emergency lab/imaging/pharmacy/blood/ICU/OT actions, and escalation protocols.",
-  "Use real-time listeners only for active ED cases, code alerts, bed availability, and urgent status changes.",
-]);
-h2("Patient Portal and Care Messages");
-bullets([
-  "Patients can see own profile, released reports, appointments, prescriptions, care summary, documents, and care messages.",
-  "Care Messages now supports two-way doctor/patient messaging in local demo storage and calls secure Cloud Functions when available.",
-  "Production messages should be encrypted, threaded by patient/visit, audited, and filtered so patients cannot see staff-only communication.",
+bullet([
+  "Authentication and Admin",
+  "Patient Management and OPD",
+  "Doctor Center and Consultation",
+  "Nurse and Ward Management",
+  "Pharmacy, Laboratory, Radiology",
+  "Emergency, Reports, Notifications",
+  "Documents and Images using Spring Boot + PostgreSQL",
 ]);
 
-h1("11. Validation, Sanitization, and Forms");
-bullets([
-  "Login validation lives in src/validations/auth.ts.",
-  "Patient registration validation lives in src/validations/patient.ts.",
-  "Sanitization utility lives in src/utils/sanitize.ts and helps reduce XSS risk from user-entered text.",
-  "React Hook Form keeps form state efficient and reduces unnecessary renders.",
-  "Zod schemas should be mirrored or revalidated in Cloud Functions; never rely only on client validation.",
+page("6. Authentication & Admin", "Login and control center");
+mock("Login Page", "Staff and patient access", [
+  { icon: "L", title: "Login", text: "Email/password or provider.", color: C.teal },
+  { icon: "R", title: "Role", text: "Admin, doctor, nurse, patient.", color: C.blue },
+  { icon: "S", title: "Session", text: "Timeout and logout tracking.", color: C.green },
+]);
+p("Login පසු system එක user role එක හඳුනාගනී. Role එක අනුව dashboard එක වෙනස් වේ. Adminට reports, users, settings සහ audit logs බලන්න පුළුවන්.");
+box("Learner note", "RBAC means Role-Based Access Control. User role එක අනුව permission ලැබෙන ක්‍රමයයි.");
+
+page("7. Patient Management", "Patient profile is the center");
+mock("Patient Registration", "NIC / guardian / QR", [
+  { icon: "ID", title: "Patient ID", text: "Unique patient number.", color: C.teal },
+  { icon: "NIC", title: "NIC Check", text: "Duplicate prevention.", color: C.amber },
+  { icon: "QR", title: "QR Code", text: "Fast lookup.", color: C.blue },
+]);
+bullet([
+  "Adult patient: NIC or passport validation.",
+  "Child patient: birth certificate and guardian details.",
+  "Under 16: guardian details are needed for appointments.",
+  "Patient profile includes demographics, allergies, diseases, emergency contact, photo, and documents.",
 ]);
 
-h1("12. Data Flow Examples");
-h2("Patient Registration Flow");
-bullets([
-  "Reception opens Patient Registration.",
-  "Form validates demographics, identity, emergency contact, risk, and clinical background.",
-  "QR/barcode scanning can populate search or duplicate-check fields.",
-  "Demo app stores patient in local registry and shows the patient to doctors.",
-  "Production Cloud Function should generate canonical patientId, create patient document, write audit log, and return the stored record.",
+page("8. OPD Queue", "Reception workflow");
+mock("OPD Queue Board", "Token and status", [
+  { icon: "1", title: "Waiting", text: "Patient added to queue.", color: C.amber },
+  { icon: "2", title: "Called", text: "Doctor calls patient.", color: C.teal },
+  { icon: "3", title: "Done", text: "Consultation completed.", color: C.green },
 ]);
-h2("Doctor Consultation Flow");
-bullets([
-  "Doctor starts from OPD queue, assigned patient, or newly saved patient.",
-  "Doctor opens profile and consultation workspace.",
-  "SOAP note, diagnosis, treatment plan, prescription, lab/radiology requests, and follow-up are recorded.",
-  "Sensitive actions go through Cloud Functions with audit logging.",
+workflow(["Search Patient", "Create Visit", "Assign Doctor", "Token", "Consultation"]);
+p("Receptionist patient QR/NIC/name search කර OPD visit create කරයි. Token number එක patient සහ doctor dashboard දෙකටම පෙන්විය හැක.");
+
+page("9. Doctor Center", "Consultation workflow");
+mock("Doctor Consultation", "Clinical workspace", [
+  { icon: "S", title: "SOAP", text: "Symptoms and plan.", color: C.teal },
+  { icon: "Rx", title: "Prescription", text: "Send to pharmacy.", color: C.blue },
+  { icon: "Lab", title: "Orders", text: "Lab/radiology requests.", color: C.amber },
 ]);
-h2("Diagnostic Report Flow");
-bullets([
-  "Doctor requests lab/radiology test.",
-  "Technician receives work queue and updates sample/scan status.",
-  "Result/report is entered, reviewed, signed, and released.",
-  "Doctor receives notification; patient sees only approved/released reports.",
+bullet([
+  "Doctor sees patient profile, allergies, vitals, history, reports, and previous visits.",
+  "Doctor writes diagnosis, notes, treatment plan, prescription, lab request, radiology request, and follow-up date.",
+  "After save, patient moves from active OPD queue to checked/completed list.",
 ]);
 
-h1("13. Performance and Caching Strategy");
-table(["Area", "Recommended Practice"], [
-  ["Routes", "Lazy-load large modules and keep initial bundle small."],
-  ["Firestore queries", "Use hospitalId + status + date/role filters; add composite indexes for common queries."],
-  ["Real-time updates", "Use listeners only for active queues, emergency alerts, bed availability, and chat."],
-  ["Search", "Debounce patient, medicine, appointment, and diagnostic searches."],
-  ["Tables", "Paginate or virtualize large patient, report, lab, radiology, and audit lists."],
-  ["Documents/images", "Compress before upload and use signed or rules-protected Storage paths."],
-  ["PWA/offline", "Cache shell and allow read-only offline views for safe patient/staff screens."],
-  ["Optimistic updates", "Use only for low-risk actions; avoid for clinical approvals, stock issuing, report signing, and role changes."],
+page("10. Nurse and Ward Module", "Bedside care");
+mock("Ward Dashboard", "Beds and nursing work", [
+  { icon: "V", title: "Vitals", text: "BP, pulse, temp, SpO2.", color: C.teal },
+  { icon: "MAR", title: "Medicine", text: "Medication administration.", color: C.blue },
+  { icon: "Bed", title: "Beds", text: "Assigned bed highlighted.", color: C.green },
+]);
+bullet([
+  "Nurse can record vitals, nursing notes, care plans, IV fluids, wound care, intake/output, and handover.",
+  "Nurse cannot change doctor diagnosis or prescribe medicines.",
+  "Ward allocation uses gender and age rules: male ward, female ward, children ward.",
 ]);
 
-h1("14. Deployment Guide");
-bullets([
-  "Install dependencies with npm install.",
-  "Copy .env.example to .env and set Firebase web configuration values.",
-  "Enable Firebase Authentication providers: email/password and Google if patient Google login is required.",
-  "Add localhost and 127.0.0.1 to Firebase authorized domains for local testing.",
-  "Install function dependencies with npm run functions:install.",
-  "Test locally with npm run dev and Firebase emulators where possible.",
-  "Build frontend with npm run build.",
-  "Build functions with npm run functions:build.",
-  "Deploy Firestore rules, indexes, Storage rules, Functions, and Hosting using npm run firebase:deploy or targeted firebase deploy commands.",
-  "After deploying Functions that set custom claims, users may need to sign out and sign in again to refresh tokens.",
+page("11. Nurse Advanced Features", "Safety improvements");
+table(
+  ["Feature", "Easy explanation", "Value"],
+  [
+    ["BCMA", "Scan patient QR and medicine barcode", "Prevents wrong medicine"],
+    ["Risk Alerts", "Analyze vitals and notes", "Finds falls, sepsis, deterioration risk"],
+    ["Task Board", "Assign nursing tasks by shift", "Reduces missed work and overload"],
+  ],
+  [35, 75, 72],
+);
+box("Five Rights", "BCMA helps check Right Patient, Right Drug, Right Dose, Right Route, and Right Time.", C.green);
+
+page("12. Pharmacy Module", "Prescription to medicine issue");
+workflow(["Doctor Rx", "Pharmacy Queue", "Verify", "Issue", "Receipt"]);
+bullet([
+  "Doctor sends e-prescription directly to pharmacy queue.",
+  "Pharmacist verifies patient, allergy warnings, duplicate medicine, dosage, and stock.",
+  "After issue, stock is reduced and receipt is generated.",
+  "Patient can see released prescription and medication history.",
 ]);
 
-h1("15. Firebase Emulator Learning Setup");
-p("For local Firestore emulator usage, configure firebase.json with a Firestore host and port such as 127.0.0.1:8081 and UI port 4000, then run firebase emulators:start --only firestore. In the frontend, connectFirestoreEmulator(db, '127.0.0.1', 8081) during import.meta.env.DEV.");
-callout("Common Emulator Issue", "If port 8080 is taken, use port 8081 in firebase.json and make sure the frontend emulator connection uses the same port.");
-
-h1("16. Security Testing Checklist");
-bullets([
-  "Verify patients cannot access staff routes by typing staff URLs directly.",
-  "Verify patients cannot read another patient's Firestore documents.",
-  "Verify doctors cannot access another hospital's records.",
-  "Verify nurses cannot edit diagnosis, doctor notes, prescriptions, lab results, radiology reports, users, settings, or audit logs.",
-  "Verify pharmacists can issue medicines but cannot change clinical diagnosis.",
-  "Verify lab/radiology staff can access only diagnostic workflows and cannot edit unrelated patient data.",
-  "Verify audit logs are append-only and not editable by normal users.",
-  "Run Firebase emulator rule tests for every role and collection.",
-  "Run OWASP ASVS-based checks for authentication, access control, validation, file uploads, error handling, logging, secrets, and configuration.",
-  "Review Firebase App Check enforcement, Cloud Function IAM, Storage rules, and Hosting headers.",
+page("13. Laboratory Module", "Requests and results");
+mock("Lab Report Page", "Sample to approved result", [
+  { icon: "S", title: "Sample", text: "Collected and received.", color: C.amber },
+  { icon: "R", title: "Result", text: "Normal/abnormal/critical.", color: C.teal },
+  { icon: "A", title: "Approve", text: "Release after approval.", color: C.green },
+]);
+bullet([
+  "Supports blood tests, urine tests, cultures, serology, histopathology, molecular tests, and blood bank workflows.",
+  "Critical results should notify doctors quickly.",
+  "Only approved/released results should appear in patient portal.",
 ]);
 
-h1("17. Current Demo vs Production");
-table(["Feature", "Current Demo Behavior", "Production Target"], [
-  ["New saved patients", "Stored in browser localStorage and shown to doctors.", "Cloud Function creates Firestore patients with audit logs."],
-  ["Care messages", "Shared localStorage thread plus callable attempt.", "Encrypted Firestore secureChats with per-thread patient visibility and message audit logs."],
-  ["Patient downloads", "Generated text/PDF-like demo downloads.", "Signed Firebase Storage URLs or backend-generated PDFs with immutable metadata."],
-  ["QR/barcode scanning", "Browser BarcodeDetector plus manual fallback.", "Device-tested scanner workflow with camera permissions, fallback, and audit logging."],
-  ["Authentication", "Firebase plus demo fallback paths.", "Mandatory Firebase Auth, MFA, custom claims, enforced App Check."],
-  ["Clinical data", "Rich UI mock data and local demo persistence.", "Firestore source of truth, clinical terminology tables, indexes, and backend workflows."],
+page("14. Radiology Module", "Images and scan reports");
+mock("Radiology Workspace", "Request and report", [
+  { icon: "XR", title: "Request", text: "X-ray, CT, MRI, US.", color: C.blue },
+  { icon: "IMG", title: "Upload", text: "Images and PDFs.", color: C.teal },
+  { icon: "QR", title: "Verify", text: "QR report check.", color: C.green },
 ]);
+p("Radiology staff can schedule scans, upload reports/images, add findings, mark normal/abnormal/critical, and release approved reports.");
 
-h1("18. Recommended Next Build Steps");
-bullets([
-  "Replace local demo patient registry with a createPatient Cloud Function.",
-  "Create Firestore emulator tests for every role and module.",
-  "Add secure message encryption and Firestore listener-based chat threads.",
-  "Generate real PDFs for prescriptions, lab reports, radiology reports, discharge summaries, and certificates.",
-  "Add FHIR export endpoints for Patient, Encounter, Observation, MedicationRequest, DiagnosticReport, Appointment, Communication, and CarePlan.",
-  "Add DICOMweb/PACS integration for radiology image workflows.",
-  "Add LOINC/SNOMED/ICD catalog tables and controlled terminology selection.",
-  "Add production monitoring, structured logs, error boundaries, and incident response documentation.",
-  "Conduct accessibility review, clinical safety review, privacy impact assessment, and penetration test before launch.",
+page("15. Documents and Images", "Spring Boot + PostgreSQL management");
+workflow(["React Upload", "Spring API", "Store File", "PostgreSQL Metadata", "Download"]);
+p("All documents, images, scans, reports, profile photos, emergency evidence, and receipts should go through Spring Boot API. PostgreSQL stores metadata. The actual file is saved in controlled storage folder.");
+table(
+  ["Stored in PostgreSQL", "Example"],
+  [
+    ["hospitalId", "Which hospital owns the file"],
+    ["patientId", "Which patient file belongs to"],
+    ["uploadedBy / role", "Who uploaded it"],
+    ["module", "lab, radiology, ward, profile"],
+    ["filePath / fileUrl", "Where file can be loaded from"],
+    ["visibility / releaseStatus", "Private or released to patient"],
+    ["sha256Checksum", "File integrity check"],
+  ],
+  [68, 114],
+);
+box("Important", "Do not save big images/PDFs directly inside database rows. Save files in storage, save metadata in PostgreSQL.", C.amber);
+
+page("16. PostgreSQL Database Structure", "Main tables");
+databaseDiagram();
+table(
+  ["Table", "Purpose"],
+  [
+    ["app_users", "Staff and user profiles"],
+    ["patients", "Main patient records"],
+    ["visits / opd_queue", "Hospital visits and queue"],
+    ["consultations", "Doctor notes and diagnosis"],
+    ["prescriptions", "E-prescriptions"],
+    ["lab_requests / lab_results", "Lab workflow"],
+    ["radiology_requests / reports", "Imaging workflow"],
+    ["global_media", "Documents/images metadata"],
+    ["audit_logs", "System action history"],
+  ],
+  [58, 124],
+);
+
+page("17. Role-Based Access", "Who can do what?");
+table(
+  ["Role", "Can do"],
+  [
+    ["Admin", "Users, roles, settings, reports, audit"],
+    ["Doctor", "Consultations, prescriptions, lab/radiology orders"],
+    ["Nurse", "Vitals, ward notes, MAR, care tasks"],
+    ["Pharmacist", "Verify and issue medicines"],
+    ["Lab Tech", "Enter and process lab results"],
+    ["Radiologist", "Upload imaging reports and findings"],
+    ["Receptionist", "Registration, OPD, appointments"],
+    ["Patient", "Own released records only"],
+  ],
+  [45, 137],
+);
+box("Best rule", "Patient can only see own released information. Staff can only see data allowed by role and hospital.", C.green);
+
+page("18. Security Easy Mode", "How to protect hospital data");
+bullet([
+  "Use authentication for every user.",
+  "Use roles and permissions for every module.",
+  "Use hospitalId to isolate hospital data.",
+  "Use audit logs for every important action.",
+  "Patients must not access other patient records.",
+  "Sensitive uploads must go through backend validation.",
+  "Use HTTPS in production.",
+  "Back up PostgreSQL database and file storage regularly.",
 ]);
+box("Security meaning", "Security is not only login. It is also permissions, audit logs, validation, backups, and privacy rules.", C.red);
 
-h1("19. Source References Used For Standards Mapping");
-bullets([
-  "HL7 FHIR R5 official specification: https://hl7.org/fhir/R5/",
-  "WHO guideline on digital interventions for health system strengthening: https://www.who.int/publications/i/item/9789241550505",
-  "HHS HIPAA Security Rule summary: https://www.hhs.gov/hipaa/for-professionals/security/laws-regulations/index.html",
-  "OWASP Application Security Verification Standard: https://owasp.org/www-project-application-security-verification-standard/",
-  "ISO 27799 health informatics information security management: https://www.iso.org/standard/62777.html",
-  "DICOM standard overview: https://www.dicomstandard.org/",
-  "WHO International Classification of Diseases: https://www.who.int/standards/classifications/classification-of-diseases",
+page("19. How To Run Locally", "Student setup steps");
+table(
+  ["Step", "Command / action"],
+  [
+    ["Frontend", "npm run dev -- --host 127.0.0.1"],
+    ["PostgreSQL DB", "createdb govcare_ehr"],
+    ["Apply schema", "psql ... -f database/postgresql/schema.sql"],
+    ["Spring API", "cd spring-api && mvn spring-boot:run"],
+    ["Media URL", "VITE_MEDIA_API_BASE_URL=http://127.0.0.1:4002"],
+    ["Build test", "npm run build"],
+  ],
+  [42, 140],
+);
+p("Note: Maven must be installed to run Spring Boot. PostgreSQL must be installed to use the database.");
+
+page("20. Learning Roadmap", "What to study first");
+bullet([
+  "1. Understand patient registration and patientId.",
+  "2. Learn OPD queue flow.",
+  "3. Learn doctor consultation and prescription flow.",
+  "4. Learn pharmacy, lab, and radiology integrations.",
+  "5. Learn Spring Boot media upload API.",
+  "6. Learn PostgreSQL tables and relationships.",
+  "7. Learn role-based access and audit logs.",
+  "8. Learn deployment and backups.",
 ]);
+box("Final conclusion", "GovCare EHR is a good learning project because it connects real hospital workflows with modern web development, backend APIs, PostgreSQL database, document management, and security.", C.green);
 
-footer();
 doc.save(outputFile);
 console.log(outputFile);

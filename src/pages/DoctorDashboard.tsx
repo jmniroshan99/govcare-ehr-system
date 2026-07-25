@@ -30,6 +30,7 @@ import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { PageTransition, Reveal, Stagger, SwitchPanel } from "../components/motion/PageTransition";
+import { SmartSearch } from "../components/search/SmartSearch";
 import { Input } from "../components/ui/input";
 import { Select } from "../components/ui/select";
 import { Table, Td, Th } from "../components/ui/table";
@@ -340,10 +341,7 @@ export function DoctorDashboard() {
               ))}
             </div>
             <div className="grid min-w-72 gap-2 md:grid-cols-[1fr_150px]">
-              <div className="relative">
-                <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input className="pl-9" value={queueSearch} onChange={(event) => setQueueSearch(event.target.value)} placeholder="Search token, patient, reason..." />
-              </div>
+              <SmartSearch value={queueSearch} onChange={setQueueSearch} placeholder="Search token, patient, reason..." />
               <Select value={priorityFilter} onChange={(event) => setPriorityFilter(event.target.value)}>
                 <option value="all">All status</option>
                 <option value="routine">Routine</option>
