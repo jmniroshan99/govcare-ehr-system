@@ -1,0 +1,40 @@
+server:
+  port: ${PORT:4002}
+
+spring:
+  application:
+    name: govcare-ehr-api
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/govcare_ehr
+    username: postgres
+    password: 652920
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+
+  servlet:
+    multipart:
+      max-file-size: ${MAX_FILE_SIZE:25MB}
+      max-request-size: ${MAX_REQUEST_SIZE:30MB}
+
+
+govcare:
+  storage:
+    root: C:/govcare-ehr-storage
+
+  cors:
+    allowed-origins: http://127.0.0.1:5173,http://localhost:5173
+
+
+# Debug controller mappings
+logging:
+  level:
+    org.springframework.web: DEBUG
+    org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping: TRACE

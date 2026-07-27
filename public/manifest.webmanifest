@@ -1,0 +1,22 @@
+{
+  "name": "GovCare EHR System",
+  "short_name": "GovCare",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7faf9",
+  "theme_color": "#0f766e",
+  "icons": [
+    {
+      "src": "/ministry-health-logo.png",
+      "sizes": "256x256",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/ministry-health-logo.png",
+      "sizes": "256x256",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
