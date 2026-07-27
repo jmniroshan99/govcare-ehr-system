@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Input } from "../components/ui/input";
 import { languageOptions } from "../i18n";
 import { defaultHomeForRole, isActiveAccount } from "../lib/accessControl";
-import { createPatientAccountWithEmail, getGoogleRedirectUser, identifyAuthenticatedUser, loginWithEmail, loginWithGoogle, loginWithGoogleRedirect, logout, requestEmailOtp, resetPasswordWithEmailOtp, sendSecurePasswordReset, verifyEmailOtp } from "../services/authService";
+import { createPatientAccountWithEmail, getGoogleRedirectUser, identifyAuthenticatedUser, loginWithEmail, loginWithGoogle, loginWithGoogleRedirect, logout, requestEmailOtp, resetPasswordWithEmailOtp, sendSecurePasswordReset, startLocalApiSession, verifyEmailOtp } from "../services/authService";
 import { ensurePatientPortalProfile } from "../services/profileService";
 import { recordLoginActivity } from "../services/loginActivityService";
 import { useAuthStore } from "../stores/authStore";
@@ -135,7 +135,7 @@ export function Login() {
     setGoogleError("");
     clearAuth();
     if (import.meta.env.DEV && isDemoStaffLogin(values.email, values.password)) {
-      enterDemoStaff(values.email);
+      await enterDemoStaff(values.email);
       return;
     }
     if (import.meta.env.DEV && isDemoPatientEmail(values.email)) {
@@ -152,7 +152,7 @@ export function Login() {
       window.sessionStorage.removeItem("govcare-auth-mode");
       clearAuth();
       if (import.meta.env.DEV && isDemoStaffLogin(values.email, values.password)) {
-        enterDemoStaff(values.email);
+        await enterDemoStaff(values.email);
         return;
       }
       if (import.meta.env.DEV && isDemoPatientEmail(values.email)) {
@@ -165,17 +165,19 @@ export function Login() {
   }
 
   function enterDemoDoctor() {
-    enterDemoStaff("doctor@govcare.gov.lk");
+    void enterDemoStaff("doctor@govcare.gov.lk");
   }
 
-  function enterDemoStaff(email: string) {
+  async function enterDemoStaff(email: string) {
     const normalized = email.trim().toLowerCase();
     const account = demoStaffAccounts[normalized] ?? demoStaffAccounts["doctor@govcare.gov.lk"];
+    const apiProfile = await startLocalApiSession(normalized, demoPassword);
     clearAuth();
     window.sessionStorage.setItem("govcare-auth-mode", "demo");
     window.sessionStorage.removeItem("govcare-login-intent");
-    setProfile(createDemoStaffProfile(normalized, account));
-    void recordLoginActivity({ email: normalized, loginStatus: "success", authenticationMethod: "demo", profile: createDemoStaffProfile(normalized, account) });
+    const profile = apiProfile?.role === account.role ? apiProfile : createDemoStaffProfile(normalized, account);
+    setProfile(profile);
+    void recordLoginActivity({ email: normalized, loginStatus: "success", authenticationMethod: "demo", profile });
     navigate(defaultHomeForRole(account.role), { replace: true });
   }
 

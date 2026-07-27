@@ -2,22 +2,37 @@ import "dotenv/config";
 import cors from "cors";
 import express from "express";
 import helmet from "helmet";
+import { authRouter } from "./routes/auth.js";
 import { patientsRouter } from "./routes/patients.js";
 import { searchRouter } from "./routes/search.js";
 import { selfRegistrationRouter } from "./routes/selfRegistration.js";
 
 const app = express();
 const port = Number(process.env.PORT ?? 4001);
-const allowedOrigins = (process.env.CORS_ORIGIN ?? "http://127.0.0.1:5173").split(",");
+const configuredOrigins = (process.env.CORS_ORIGIN ?? "http://127.0.0.1:5173,http://localhost:5173")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+const localDevOrigin = /^https?:\/\/(127\.0\.0\.1|localhost):(3\d{3}|4\d{3}|5\d{3})$/;
 
 app.use(helmet());
-app.use(cors({ origin: allowedOrigins, credentials: true }));
+app.use(cors({
+  origin(origin, callback) {
+    if (!origin || configuredOrigins.includes(origin) || localDevOrigin.test(origin)) {
+      callback(null, true);
+      return;
+    }
+    callback(new Error(`CORS blocked origin: ${origin}`));
+  },
+  credentials: true,
+}));
 app.use(express.json({ limit: "2mb" }));
 
 app.get("/health", (_request, response) => {
   response.json({ ok: true, service: "govcare-ehr-api", database: "postgresql" });
 });
 
+app.use("/api/auth", authRouter);
 app.use("/api/patients", patientsRouter);
 app.use("/api/search", searchRouter);
 app.use("/api/self-registration", selfRegistrationRouter);

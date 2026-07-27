@@ -1,6 +1,6 @@
 import type { AppUser, Role } from "../types/ehr";
 import { isActiveAccount } from "../lib/accessControl";
-import { apiRequest } from "./apiClient";
+import { apiRequest, setApiToken } from "./apiClient";
 
 export interface AuthenticatedUser {
   uid: string;
@@ -29,19 +29,39 @@ function writeLocalUser(user: AuthenticatedUser | null) {
   window.dispatchEvent(new CustomEvent(LOCAL_AUTH_EVENT, { detail: user }));
 }
 
+export async function startLocalApiSession(email: string, password = "GovCare@123") {
+  try {
+    const session = await apiRequest<{ token: string; user: AppUser }>("/api/auth/local-login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    });
+    setApiToken(session.token);
+    return session.user;
+  } catch {
+    setApiToken(null);
+    return null;
+  }
+}
+
 export async function loginWithEmail(email: string, _password: string) {
-  const user: AuthenticatedUser = { uid: `local-${email.toLowerCase()}`, email, displayName: email.split("@")[0], photoURL: null };
+  let user: AuthenticatedUser = { uid: `local-${email.toLowerCase()}`, email, displayName: email.split("@")[0], photoURL: null };
+  const sessionUser = await startLocalApiSession(email, _password);
+  if (sessionUser) {
+    user = { uid: sessionUser.uid, email: sessionUser.email, displayName: sessionUser.displayName, photoURL: sessionUser.photoURL ?? null, intendedRole: sessionUser.role };
+  }
   writeLocalUser(user);
   return user;
 }
 
 export async function createPatientAccountWithEmail(email: string, _password: string, displayName: string) {
+  setApiToken(null);
   const user: AuthenticatedUser = { uid: `local-${email.toLowerCase()}`, email, displayName, photoURL: null, intendedRole: "patient" };
   writeLocalUser(user);
   return user;
 }
 
 export async function loginWithGoogle(): Promise<AuthenticatedUser> {
+  setApiToken(null);
   const email = "patient@govcare.gov.lk";
   const user: AuthenticatedUser = {
     uid: `local-${email}`,
@@ -63,6 +83,7 @@ export async function getGoogleRedirectUser() {
 }
 
 export async function logout() {
+  setApiToken(null);
   writeLocalUser(null);
 }
 

@@ -17,9 +17,10 @@
     "postgres:build": "npm --prefix server run build",
     "spring:api": "cd spring-api && mvn spring-boot:run",
     "spring:build": "cd spring-api && mvn package",
-    "dev:full": "concurrently -k -n FRONTEND,POSTGRES_API -c cyan,green \"npm run dev -- --host 127.0.0.1\" \"npm run postgres:api\"",
+    "dev:full": "concurrently -k -n FRONTEND,POSTGRES_API -c cyan,green \"npm run dev -- --host 127.0.0.1 --port 5300 --strictPort\" \"npm run postgres:api\"",
+    "dev:open": "node scripts/start-full-dev.cjs",
     "dev:all-services": "concurrently -k -n FRONTEND,POSTGRES_API,MEDIA_API -c cyan,green,magenta \"npm run dev -- --host 127.0.0.1\" \"npm run postgres:api\" \"npm run spring:api\"",
-    "start:all": "npm run dev:full"
+    "start:all": "npm run dev:open"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",

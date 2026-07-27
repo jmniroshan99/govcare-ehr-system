@@ -41,6 +41,7 @@ import {
   type PharmacyQueuePrescription,
 } from "../services/pharmacyService";
 import { addNotification } from "../utils/notifications";
+import { getSavedPatientsForDoctors, PATIENTS_UPDATED_EVENT, type SavedPatientForDoctor } from "../utils/patientRegistry";
 
 type RxStatus = "pending" | "verified" | "issued" | "partially issued" | "rejected";
 type RxPriority = "routine" | "urgent" | "stat";
@@ -183,6 +184,20 @@ function mergedPrescriptions() {
   return [...queued, ...seedPrescriptions.filter((item) => !queuedIds.has(item.prescriptionNo))] as PharmacyPrescription[];
 }
 
+function normalizeCredential(value?: string) {
+  return (value ?? "").trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+}
+
+function findPatientForPrescription(prescription: PharmacyPrescription | undefined, patients: SavedPatientForDoctor[], selectedPatientId: string) {
+  if (selectedPatientId) return patients.find((patient) => patient.patientId === selectedPatientId);
+  if (!prescription) return undefined;
+  const prescriptionValues = [prescription.patientId, prescription.patientName, prescription.nic, prescription.phone, prescription.opdToken, prescription.admissionNo].map(normalizeCredential);
+  return patients.find((patient) => {
+    const patientValues = [patient.patientId, patient.name, patient.nicOrPassport, patient.passportNumber, patient.birthCertificateNo, patient.phone].map(normalizeCredential);
+    return patientValues.some((patientValue) => patientValue && prescriptionValues.some((rxValue) => rxValue && (rxValue === patientValue || rxValue.includes(patientValue) || patientValue.includes(rxValue))));
+  });
+}
+
 export function PharmacyModule() {
   const { showToast } = useToast();
   const [prescriptions, setPrescriptions] = useState<PharmacyPrescription[]>(() => mergedPrescriptions());
@@ -190,10 +205,14 @@ export function PharmacyModule() {
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<RxStatus | "all">("all");
   const [credential, setCredential] = useState("PAT-2026-000001");
+  const [savedPatients, setSavedPatients] = useState(() => getSavedPatientsForDoctors());
+  const [selectedPatientId, setSelectedPatientId] = useState("");
   const [pharmacistName, setPharmacistName] = useState("Pharmacist Jayawardena");
   const [receiptLog, setReceiptLog] = useState<string[]>([]);
 
   const selected = prescriptions.find((item) => item.id === selectedId) ?? prescriptions[0] ?? seedPrescriptions[0];
+  const identifiedPatient = useMemo(() => findPatientForPrescription(selected, savedPatients, selectedPatientId), [selected, savedPatients, selectedPatientId]);
+  const needsPatientIdentification = selected.patientId.startsWith("TEMP-") || selected.patientName.toLowerCase().includes("qr checked") || selected.patientName.toLowerCase().includes("scanned patient") || selected.nic === "not-recorded";
   const filtered = useMemo(() => {
     const q = query.toLowerCase();
     return prescriptions
@@ -236,6 +255,18 @@ export function PharmacyModule() {
     };
   }, []);
 
+  useEffect(() => {
+    function refreshPatients() {
+      setSavedPatients(getSavedPatientsForDoctors());
+    }
+    window.addEventListener(PATIENTS_UPDATED_EVENT, refreshPatients);
+    window.addEventListener("storage", refreshPatients);
+    return () => {
+      window.removeEventListener(PATIENTS_UPDATED_EVENT, refreshPatients);
+      window.removeEventListener("storage", refreshPatients);
+    };
+  }, []);
+
   function updateSelected(patch: Partial<PharmacyPrescription>) {
     setPrescriptions((current) => current.map((item) => item.id === selected.id ? { ...item, ...patch } : item));
     const queueItem = getPharmacyQueue().find((item) => item.id === selected.id || item.prescriptionNo === selected.prescriptionNo);
@@ -256,9 +287,32 @@ export function PharmacyModule() {
     showToast(`${medicineId} marked as ${status}.`, status === "unavailable" ? "warning" : "success");
   }
 
+  function identifyPrescriptionPatient() {
+    const patient = savedPatients.find((item) => item.patientId === selectedPatientId) ?? identifiedPatient;
+    if (!patient) {
+      showToast("Select the registered patient before verifying this prescription.", "warning");
+      return;
+    }
+    const patch: Partial<PharmacyPrescription> = {
+      patientId: patient.patientId,
+      patientName: patient.name,
+      age: patient.age ?? selected.age,
+      gender: patient.sex || selected.gender,
+      phone: patient.phone || selected.phone,
+      nic: patient.nicOrPassport || patient.passportNumber || patient.birthCertificateNo || selected.nic,
+      allergies: patient.allergies ? patient.allergies.split(/[,;\n]/).map((item) => item.trim()).filter(Boolean) : selected.allergies,
+    };
+    updateSelected(patch);
+    setCredential(patient.patientId);
+    setSelectedPatientId(patient.patientId);
+    showToast(`${patient.name} linked to ${selected.prescriptionNo}. Verify credential before issuing medicines.`, "success");
+  }
+
   function verifyPatient() {
-    const normalized = credential.trim().toLowerCase();
-    const identifiers = [selected.patientId, selected.nic, selected.phone, selected.opdToken, selected.admissionNo ?? ""].map((item) => item.toLowerCase());
+    const normalized = normalizeCredential(credential);
+    const identifiers = [selected.patientId, selected.nic, selected.phone, selected.opdToken, selected.admissionNo ?? "", identifiedPatient?.patientId, identifiedPatient?.nicOrPassport, identifiedPatient?.phone]
+      .map(normalizeCredential)
+      .filter(Boolean);
     if (!identifiers.includes(normalized)) {
       showToast("Patient credential does not match this prescription.", "danger");
       return;
@@ -413,7 +467,7 @@ export function PharmacyModule() {
               </div>
               <div className="max-h-[520px] space-y-2 overflow-y-auto pr-1">
                 {filtered.map((rx) => (
-                  <button key={rx.id} type="button" onClick={() => { setSelectedId(rx.id); setCredential(rx.patientId); }} className={`w-full rounded-md border p-3 text-left transition hover:border-primary ${selected.id === rx.id ? "border-primary bg-cyan-50" : "border-border bg-white"}`}>
+                  <button key={rx.id} type="button" onClick={() => { setSelectedId(rx.id); setCredential(rx.patientId); setSelectedPatientId(""); }} className={`w-full rounded-md border p-3 text-left transition hover:border-primary ${selected.id === rx.id ? "border-primary bg-cyan-50" : "border-border bg-white"}`}>
                     <div className="flex flex-wrap items-start justify-between gap-2">
                       <div>
                         <div className="flex flex-wrap items-center gap-2">
@@ -434,6 +488,22 @@ export function PharmacyModule() {
           <Card>
             <CardHeader><CardTitle className="flex items-center gap-2"><UserCheck className="h-5 w-5 text-primary" />Patient and prescription verification</CardTitle></CardHeader>
             <CardContent className="space-y-4">
+              <div className={`rounded-md border p-3 ${needsPatientIdentification && !identifiedPatient ? "border-amber-300 bg-amber-50 text-amber-950" : "border-emerald-300 bg-emerald-50 text-emerald-950"}`}>
+                <p className="text-sm font-bold">{identifiedPatient ? "Prescription patient identified" : "Prescription patient identification required"}</p>
+                <p className="mt-1 text-xs">Doctor sent: {selected.patientName} / {selected.patientId} / {selected.opdToken}</p>
+                <div className="mt-2 grid gap-2 md:grid-cols-[1fr_auto]">
+                  <Select value={selectedPatientId || identifiedPatient?.patientId || ""} onChange={(event) => setSelectedPatientId(event.target.value)} aria-label="Identify prescription patient">
+                    <option value="">Select registered patient</option>
+                    {savedPatients.map((patient) => (
+                      <option key={patient.patientId} value={patient.patientId}>{patient.patientId} - {patient.name} - {patient.nicOrPassport || patient.phone || "No identifier"}</option>
+                    ))}
+                  </Select>
+                  <Button type="button" variant={identifiedPatient ? "outline" : "secondary"} onClick={identifyPrescriptionPatient}>
+                    Identify patient
+                  </Button>
+                </div>
+              </div>
+
               <div className="grid gap-3 rounded-md border border-border bg-white p-4 md:grid-cols-3">
                 <div className="md:col-span-2">
                   <div className="flex flex-wrap items-center gap-2">

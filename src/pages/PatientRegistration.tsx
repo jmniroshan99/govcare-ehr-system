@@ -12,6 +12,8 @@ import { SmartSearch } from "../components/search/SmartSearch";
 import { Input } from "../components/ui/input";
 import { Select } from "../components/ui/select";
 import { useToast } from "../components/ui/toast-context";
+import { createPatientRecord } from "../services/patientService";
+import { addPatientActivity } from "../services/patientActivityService";
 import { fieldPolicy, getPatientFieldConfiguration, type PatientFieldId } from "../utils/patientFieldPolicy";
 import { findDuplicatePatient, getSavedPatientsForDoctors, guardianRelationships, savePatientForDoctors, syncGuardianPatientClassification, upsertGuardianForPatient } from "../utils/patientRegistry";
 import { sanitizeInput } from "../utils/sanitize";
@@ -36,6 +38,13 @@ function calculateAge(dateOfBirth: string) {
   const hasBirthdayPassed = today.getMonth() > birthday.getMonth() || (today.getMonth() === birthday.getMonth() && today.getDate() >= birthday.getDate());
   if (!hasBirthdayPassed) age -= 1;
   return age >= 0 ? age : undefined;
+}
+
+function listFromText(value: unknown) {
+  return String(value ?? "")
+    .split(/[,;\n]/)
+    .map((item) => item.trim())
+    .filter(Boolean);
 }
 
 export function PatientRegistration() {
@@ -81,7 +90,7 @@ export function PatientRegistration() {
     );
   }
 
-  function onSubmit(values: PatientInput) {
+  async function onSubmit(values: PatientInput) {
     const sanitized = Object.fromEntries(Object.entries(values).map(([key, value]) => [key, typeof value === "string" ? sanitizeInput(value) : value]));
     const firstName = String(sanitized.firstName ?? "");
     const lastName = String(sanitized.lastName ?? "");
@@ -120,6 +129,42 @@ export function PatientRegistration() {
           emergencyContactPhone: String(sanitized.emergencyContactPhone ?? ""),
         })
       : undefined;
+    let databaseMessage = "";
+    try {
+      const saved = await createPatientRecord({
+        patientId: generatedId,
+        title: String(sanitized.title ?? ""),
+        fullName: patientName,
+        preferredName: String(sanitized.preferredName ?? ""),
+        dateOfBirth: String(sanitized.dateOfBirth ?? ""),
+        gender: String(sanitized.sex ?? ""),
+        nic: adultIdentifier,
+        passportNo: passportNumber,
+        birthCertificateNo: String(sanitized.birthCertificateNo ?? ""),
+        bloodGroup: String(sanitized.bloodGroup ?? ""),
+        nationality: String(sanitized.nationality ?? ""),
+        phone: String(sanitized.phone ?? ""),
+        email: String(sanitized.email ?? ""),
+        address: String(sanitized.address ?? ""),
+        district: String(sanitized.district ?? ""),
+        province: String(sanitized.province ?? ""),
+        languagePreference: String(sanitized.preferredLanguage ?? "English"),
+        emergencyContact: {
+          name: String(sanitized.emergencyContactName ?? ""),
+          relationship: String(sanitized.emergencyContactRelationship ?? ""),
+          phone: String(sanitized.emergencyContactPhone ?? ""),
+        },
+        allergies: listFromText(sanitized.allergies),
+        chronicDiseases: listFromText(sanitized.chronicDiseases),
+        disabilities: listFromText(sanitized.disabilityStatus),
+        familyHistory: listFromText(sanitized.familyHistory),
+        riskFlags: [values.riskCategory ?? "routine"].filter(Boolean),
+      });
+      databaseMessage = saved.duplicate ? "Existing PostgreSQL patient found; local profile opened." : "Saved to PostgreSQL database.";
+    } catch (error) {
+      databaseMessage = `Saved locally only. PostgreSQL did not record it: ${error instanceof Error ? error.message : "database connection failed"}`;
+    }
+
     savePatientForDoctors({
       patientId: generatedId,
       hospitalId: "hosp-colombo-national",
@@ -145,9 +190,21 @@ export function PatientRegistration() {
       status: "new",
       registeredAt: new Date().toISOString(),
     });
+    addPatientActivity({
+      patientId: generatedId,
+      hospitalId: "hosp-colombo-national",
+      type: "Registration",
+      date: new Date().toISOString().slice(0, 10),
+      unit: "Patient Registration",
+      note: `${patientName} registered with ${requiresGuardian ? "guardian-linked pediatric" : "adult"} profile. ${databaseMessage}`,
+      sourceModule: "Patient Registration",
+      createdBy: "registration-counter",
+      status: databaseMessage.startsWith("Saved locally") ? "pending" : "completed",
+      linkedRecordId: generatedId,
+    });
     if (guardian?.guardianId) syncGuardianPatientClassification(generatedId, guardian.guardianId);
     console.info("Validated advanced patient payload ready for Cloud Function:", { patientId: generatedId, ...sanitized, photoName });
-    showToast(`${patientName} saved and profile opened.`, "success");
+    showToast(`${patientName} saved and profile opened. ${databaseMessage}`, databaseMessage.startsWith("Saved locally") ? "warning" : "success");
     navigate(`/patients/${encodeURIComponent(generatedId)}`);
     const nextId = nextPatientId();
     reset({ sex: config.genderOptions[0] ?? "Female", riskCategory: "routine", consentToShare: false, patientId: nextId, preferredLanguage: "English", nationality: "Sri Lankan" });

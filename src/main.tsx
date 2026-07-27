@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
 import { AppProviders } from './app/providers.tsx'
+import { ErrorBoundary } from './components/ErrorBoundary.tsx'
 import { initializeTheme } from './hooks/useTheme.ts'
 import { registerOfflineSynchronization } from './services/offlineQueue.ts'
 import { scheduleAfterFirstPaint } from './utils/schedule.ts'
@@ -31,8 +32,10 @@ scheduleAfterFirstPaint(() => {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <AppProviders>
-      <App />
-    </AppProviders>
+    <ErrorBoundary>
+      <AppProviders>
+        <App />
+      </AppProviders>
+    </ErrorBoundary>
   </StrictMode>,
 )

@@ -149,6 +149,28 @@ export function enqueueDoctorVisit(visit: DoctorQueueVisit) {
   return nextVisit;
 }
 
+export function updateVisitPatientIdentity(visitId: string, patient: { patientId: string; patientName: string; patientGender?: string; patientAge?: number }) {
+  const state = getDoctorWorkflowState();
+  const visit = state.activeQueue.find((item) => item.visitId === visitId);
+  if (!visit) throw new Error("Active visit was not found for patient identification.");
+  const now = new Date().toISOString();
+  visit.patientId = patient.patientId;
+  visit.patientName = patient.patientName;
+  visit.patientGender = patient.patientGender;
+  visit.patientAge = patient.patientAge;
+  visit.updatedAt = now;
+  state.auditLogs.unshift({
+    id: crypto.randomUUID(),
+    action: "identify_patient",
+    actorRole: "doctor",
+    actorId: visit.assignedDoctorId,
+    visitId,
+    timestamp: now,
+  });
+  saveDoctorWorkflowState(state);
+  return visit;
+}
+
 export function completeDoctorConsultation(payload: Omit<CompletedConsultation, "id" | "timestamp"> & { actorRole: Role }) {
   const state = getDoctorWorkflowState();
   const previousState = structuredClone(state);

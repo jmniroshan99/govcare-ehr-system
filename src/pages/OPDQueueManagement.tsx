@@ -12,8 +12,10 @@ import { Select } from "../components/ui/select";
 import { Table, Td, Th } from "../components/ui/table";
 import { useToast } from "../components/ui/toast-context";
 import { createIntegratedOpdVisit, type OrderPriority } from "../services/clinicalIntegrationService";
+import { addPatientActivity } from "../services/patientActivityService";
 import { ADMISSION_WORKFLOW_UPDATED_EVENT, addAdmissionCounterRequest, getAdmissionCounterRequests, type AdmissionCounterRequest, type AdmissionPriority } from "../utils/admissionWorkflow";
 import { DOCTOR_WORKFLOW_UPDATED_EVENT, enqueueDoctorVisit, getDoctorWorkflowState } from "../utils/doctorWorkflow";
+import { getSavedPatientsForDoctors, type SavedPatientForDoctor } from "../utils/patientRegistry";
 
 type QueueStatus = "waiting" | "called" | "in-consultation" | "completed" | "skipped" | "transferred" | "cancelled" | "emergency-priority";
 type SortMode = "arrival" | "appointment" | "priority" | "age" | "disability" | "pregnancy" | "emergency" | "doctor";
@@ -72,6 +74,33 @@ function sortQueue(rows: QueueRow[], mode: SortMode) {
   return sorted.sort((a, b) => a.arrival.localeCompare(b.arrival));
 }
 
+function normalizeScanValue(value: string) {
+  return value.trim().replace(/^\*/, "").replace(/\*$/, "");
+}
+
+function patientIdFromPayload(value: string) {
+  const clean = normalizeScanValue(value);
+  try {
+    const parsed = JSON.parse(clean) as { patientId?: unknown };
+    if (typeof parsed.patientId === "string" && parsed.patientId.trim()) return parsed.patientId.trim();
+  } catch {
+    // Plain barcode or text scan.
+  }
+  return clean.match(/PAT-\d{4}-\d+/i)?.[0] ?? clean.match(/PHR-\d+/i)?.[0];
+}
+
+function findScannedPatient(code: string): SavedPatientForDoctor | undefined {
+  const clean = normalizeScanValue(code);
+  const patientId = patientIdFromPayload(clean);
+  const compact = clean.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  return getSavedPatientsForDoctors().find((patient) => {
+    const values = [patient.patientId, patient.nicOrPassport, patient.passportNumber, patient.birthCertificateNo, patient.phone, patient.name]
+      .filter(Boolean)
+      .map((value) => String(value).toUpperCase());
+    return values.some((value) => value === patientId?.toUpperCase() || value.replace(/[^A-Z0-9]/g, "") === compact || compact.includes(value.replace(/[^A-Z0-9]/g, "")));
+  });
+}
+
 export function OPDQueueManagement() {
   const { showToast } = useToast();
   const [queue, setQueue] = useState<QueueRow[]>(queueRows);
@@ -125,7 +154,7 @@ export function OPDQueueManagement() {
   }
 
   function patientIdFromCode(code: string) {
-    return code.match(/PAT-\d{4}-\d+/)?.[0] ?? code.match(/PHR-\d+/)?.[0] ?? `TEMP-${Date.now().toString().slice(-6)}`;
+    return findScannedPatient(code)?.patientId ?? patientIdFromPayload(code) ?? `TEMP-${Date.now().toString().slice(-6)}`;
   }
 
   async function createTicketFromCode(code: string) {
@@ -136,17 +165,18 @@ export function OPDQueueManagement() {
     }
     const prefix = tokenPrefix(department);
     const token = `${prefix}-${String(queue.length + 20).padStart(3, "0")}`;
+    const identifiedPatient = findScannedPatient(cleanCode);
     const ticket: QueueRow = {
       token,
-      patient: cleanCode.includes("PAT-") ? "Scanned patient" : "QR checked patient",
-      gender: "Not recorded",
-      searchKey: `${cleanCode} / QR check-in`,
+      patient: identifiedPatient?.name ?? (patientIdFromPayload(cleanCode) ? "Scanned patient" : "QR checked patient"),
+      gender: identifiedPatient?.sex ?? "Not recorded",
+      searchKey: `${identifiedPatient?.patientId ?? cleanCode} / QR check-in`,
       department,
       doctor,
       arrival: "Now",
       appointment: "Walk-in",
       priority: department.includes("Emergency") ? 5 : 2,
-      age: 0,
+      age: identifiedPatient?.age ?? 0,
       wait: Math.max(5, queue.filter((row) => row.department === department && row.status === "waiting").length * 6 + 5),
       status: department.includes("Emergency") ? "emergency-priority" : "waiting",
       flags: department.includes("Emergency") ? ["qr check-in", "emergency"] : ["qr check-in"],
@@ -156,7 +186,7 @@ export function OPDQueueManagement() {
     const { visit } = await createIntegratedOpdVisit({
       patient: {
         patientId,
-        patientName: ticket.patient,
+        patientName: identifiedPatient?.name ?? ticket.patient,
         qrReference: cleanCode,
         age: ticket.age,
         gender: ticket.gender,
@@ -175,7 +205,7 @@ export function OPDQueueManagement() {
       visitId: visit.visitId,
       tokenNo: token,
       patientId,
-      patientName: ticket.patient,
+      patientName: identifiedPatient?.name ?? ticket.patient,
       patientGender: ticket.gender,
       patientAge: ticket.age,
       reason: visit.reason,
@@ -187,6 +217,19 @@ export function OPDQueueManagement() {
       status: "Waiting",
       arrivalTime: visit.createdAt,
       updatedAt: visit.updatedAt,
+    });
+    addPatientActivity({
+      patientId,
+      hospitalId: visit.hospitalId,
+      type: "OPD",
+      date: visit.createdAt.slice(0, 10),
+      unit: department,
+      note: `${token} created for ${visit.reason}. Assigned to ${doctor}.`,
+      sourceModule: "OPD Queue",
+      createdBy: "opd-reception",
+      status: "active",
+      linkedRecordId: visit.visitId,
+      createdAt: visit.createdAt,
     });
     setQueue((current) => [ticket, ...current]);
     setSearch(cleanCode);

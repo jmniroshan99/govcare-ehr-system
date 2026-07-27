@@ -38,8 +38,9 @@ import {
 import { createDiagnosticOrdersFromConsultation, type OrderPriority, type PatientIdentitySnapshot } from "../services/clinicalIntegrationService";
 import { createPrescriptionFromConsultation, type PharmacyPriority } from "../services/pharmacyService";
 import { downloadTextFile, timestampedFilename } from "../utils/download";
-import { completeDoctorConsultation, getDoctorVisitBuckets } from "../utils/doctorWorkflow";
+import { completeDoctorConsultation, getDoctorVisitBuckets, updateVisitPatientIdentity } from "../utils/doctorWorkflow";
 import { addNotification } from "../utils/notifications";
+import { getSavedPatientsForDoctors, PATIENTS_UPDATED_EVENT, type SavedPatientForDoctor } from "../utils/patientRegistry";
 import { useAuthStore } from "../stores/authStore";
 
 const timeline = [
@@ -59,11 +60,28 @@ const vitals = [
 
 const medicines = ["Metformin", "Losartan", "Paracetamol", "Omeprazole", "Amoxicillin", "Atorvastatin"];
 
+function normalizeIdentifier(value?: string) {
+  return (value ?? "").trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+}
+
+function findPatientForVisit(visit: ReturnType<typeof getDoctorVisitBuckets>["checking"][number] | undefined, patients: SavedPatientForDoctor[], selectedPatientId: string) {
+  if (selectedPatientId) return patients.find((patient) => patient.patientId === selectedPatientId);
+  if (!visit) return undefined;
+  const visitPatientId = normalizeIdentifier(visit.patientId);
+  const visitName = normalizeIdentifier(visit.patientName);
+  return patients.find((patient) => {
+    const values = [patient.patientId, patient.name, patient.nicOrPassport, patient.passportNumber, patient.birthCertificateNo, patient.phone].map(normalizeIdentifier);
+    return values.some((value) => value && (value === visitPatientId || value === visitName || visitPatientId.includes(value) || value.includes(visitPatientId)));
+  });
+}
+
 export function DoctorWorkspace() {
   const { showToast } = useToast();
   const navigate = useNavigate();
   const profile = useAuthStore((state) => state.profile);
   const activeVisit = getDoctorVisitBuckets().checking[0];
+  const [savedPatients, setSavedPatients] = useState(() => getSavedPatientsForDoctors());
+  const [selectedPatientId, setSelectedPatientId] = useState("");
   const [symptoms, setSymptoms] = useState("Fever, cough, tiredness");
   const [history, setHistory] = useState("Diabetes mellitus, penicillin allergy");
   const [exam, setExam] = useState("Temp 37.8 C. Chest clear. No respiratory distress.");
@@ -84,19 +102,21 @@ export function DoctorWorkspace() {
   const [referralDestination, setReferralDestination] = useState("Medical clinic follow-up");
   const [dischargeTitle, setDischargeTitle] = useState("OPD discharge note");
   const [approvalReason, setApprovalReason] = useState("Approve lab result review and prescription");
+  const identifiedPatient = useMemo(() => findPatientForVisit(activeVisit, savedPatients, selectedPatientId), [activeVisit, savedPatients, selectedPatientId]);
+  const isUnidentifiedVisit = Boolean(activeVisit && (activeVisit.patientId.startsWith("TEMP-") || activeVisit.patientName.toLowerCase().includes("qr checked") || activeVisit.patientName.toLowerCase().includes("scanned patient")));
   const aiSummary = useMemo(() => "44-year-old with diabetes and penicillin allergy. Stable vitals, likely viral URTI. Avoid penicillin-class antibiotics; monitor sugar and follow up if fever persists.", []);
   const patientSnapshot: PatientIdentitySnapshot = useMemo(() => ({
-    patientId: activeVisit?.patientId ?? "PAT-2026-000001",
-    patientName: activeVisit?.patientName ?? "Nimal Silva",
-    age: activeVisit?.patientAge ?? 44,
-    gender: activeVisit?.patientGender ?? "Male",
-    phone: "0771234567",
-    nic: activeVisit?.patientId === "PAT-2026-000001" ? "812345678V" : undefined,
+    patientId: identifiedPatient?.patientId ?? activeVisit?.patientId ?? "PAT-2026-000001",
+    patientName: identifiedPatient?.name ?? activeVisit?.patientName ?? "Nimal Silva",
+    age: identifiedPatient?.age ?? activeVisit?.patientAge ?? 44,
+    gender: identifiedPatient?.sex ?? activeVisit?.patientGender ?? "Male",
+    phone: identifiedPatient?.phone ?? "0771234567",
+    nic: identifiedPatient?.nicOrPassport ?? (activeVisit?.patientId === "PAT-2026-000001" ? "812345678V" : undefined),
     qrReference: activeVisit?.tokenNo ?? "RX-DRAFT",
-    allergies: history.toLowerCase().includes("penicillin") ? ["Penicillin"] : [],
-    chronicDiseases: history.toLowerCase().includes("diabetes") ? ["Diabetes"] : [],
+    allergies: identifiedPatient?.allergies ? identifiedPatient.allergies.split(/[,;\n]/).map((item) => item.trim()).filter(Boolean) : history.toLowerCase().includes("penicillin") ? ["Penicillin"] : [],
+    chronicDiseases: identifiedPatient?.chronicDiseases ? identifiedPatient.chronicDiseases.split(/[,;\n]/).map((item) => item.trim()).filter(Boolean) : history.toLowerCase().includes("diabetes") ? ["Diabetes"] : [],
     hospitalId: activeVisit?.hospitalId ?? "hosp-colombo-national",
-  }), [activeVisit, history]);
+  }), [activeVisit, history, identifiedPatient]);
   const [sessionActions, setSessionActions] = useState<DoctorSessionActionRecord[]>(() => getDoctorSessionActions(patientSnapshot.patientId).slice(0, 3));
 
   function diagnosticPriority(value: string): OrderPriority {
@@ -104,6 +124,18 @@ export function DoctorWorkspace() {
     if (value === "urgent") return "urgent";
     return "routine";
   }
+
+  useEffect(() => {
+    function refreshPatients() {
+      setSavedPatients(getSavedPatientsForDoctors());
+    }
+    window.addEventListener(PATIENTS_UPDATED_EVENT, refreshPatients);
+    window.addEventListener("storage", refreshPatients);
+    return () => {
+      window.removeEventListener(PATIENTS_UPDATED_EVENT, refreshPatients);
+      window.removeEventListener("storage", refreshPatients);
+    };
+  }, []);
 
   useEffect(() => {
     const timer = window.setTimeout(async () => {
@@ -122,6 +154,26 @@ export function DoctorWorkspace() {
     setDraftState(`${type} approved`);
   }
 
+  function identifyActivePatient() {
+    if (!activeVisit) {
+      showToast("No active patient check is open.", "warning");
+      return;
+    }
+    const patient = savedPatients.find((item) => item.patientId === selectedPatientId) ?? identifiedPatient;
+    if (!patient) {
+      showToast("Select a registered patient before identifying this consultation.", "warning");
+      return;
+    }
+    updateVisitPatientIdentity(activeVisit.visitId, {
+      patientId: patient.patientId,
+      patientName: patient.name,
+      patientGender: patient.sex,
+      patientAge: patient.age,
+    });
+    setSelectedPatientId(patient.patientId);
+    showToast(`${patient.name} identified and linked to ${activeVisit.tokenNo}.`, "success");
+  }
+
   function sessionPayload(notes: string) {
     const visit = activeVisit ?? {
       visitId: "VIS-DEMO-SESSION",
@@ -132,8 +184,8 @@ export function DoctorWorkspace() {
     };
     return {
       visitId: visit.visitId,
-      patientId: visit.patientId,
-      patientName: visit.patientName,
+      patientId: patientSnapshot.patientId,
+      patientName: patientSnapshot.patientName,
       hospitalId: visit.hospitalId,
       department: visit.department,
       doctorId: profile?.uid ?? "demo-doctor",
@@ -225,14 +277,16 @@ export function DoctorWorkspace() {
       showToast("No active Currently Checking patient found. Start a patient check from Doctor Center first.", "danger");
       return;
     }
-    const confirmed = window.confirm(`Mark ${activeVisit.patientName} (${activeVisit.tokenNo}) as ${completionStatus}? This removes the patient from the active OPD queue.`);
+    const confirmed = window.confirm(`Mark ${patientSnapshot.patientName} (${activeVisit.tokenNo}) as ${completionStatus}? This removes the patient from the active OPD queue.`);
     if (!confirmed) return;
     try {
       const completed = completeDoctorConsultation({
         visitId: activeVisit.visitId,
         tokenNo: activeVisit.tokenNo,
-        patientId: activeVisit.patientId,
-        patientName: activeVisit.patientName,
+        patientId: patientSnapshot.patientId,
+        patientName: patientSnapshot.patientName,
+        patientGender: patientSnapshot.gender,
+        patientAge: patientSnapshot.age,
         status: completionStatus,
         consultationNotes: soap,
         symptoms,
@@ -263,7 +317,7 @@ export function DoctorWorkspace() {
       });
       await saveConsultationDraft({ symptoms, history, exam, diagnosis, soap, plan });
       setDraftState(`${completed.status} at ${new Date(completed.timestamp).toLocaleTimeString()}`);
-      showToast(`${activeVisit.tokenNo} marked as ${completed.status}. OPD queue updated.`, "success");
+      showToast(`${activeVisit.tokenNo} ${patientSnapshot.patientName} marked as ${completed.status}. OPD queue updated.`, "success");
       navigate("/doctor");
     } catch (error) {
       showToast(error instanceof Error ? error.message : "Failed to save consultation. Queue state rolled back.", "danger");
@@ -402,6 +456,23 @@ Digital signature: pending`,
       <section className="grid gap-4 xl:grid-cols-[360px_1fr]">
         <Card>
           <CardContent className="space-y-4">
+            {activeVisit && (
+              <div className={`rounded-md border p-3 ${isUnidentifiedVisit && !identifiedPatient ? "border-amber-300 bg-amber-50 text-amber-950" : "border-emerald-300 bg-emerald-50 text-emerald-950"}`}>
+                <p className="text-sm font-bold">{identifiedPatient ? "Patient identified" : "Patient identification required"}</p>
+                <p className="mt-1 text-xs">Token {activeVisit.tokenNo}: {activeVisit.patientName} / {activeVisit.patientId}</p>
+                <div className="mt-2 grid gap-2">
+                  <Select value={selectedPatientId || identifiedPatient?.patientId || ""} onChange={(event) => setSelectedPatientId(event.target.value)} aria-label="Identify patient">
+                    <option value="">Select registered patient</option>
+                    {savedPatients.map((patient) => (
+                      <option key={patient.patientId} value={patient.patientId}>{patient.patientId} - {patient.name} - {patient.nicOrPassport || patient.phone || "No identifier"}</option>
+                    ))}
+                  </Select>
+                  <Button type="button" variant={identifiedPatient ? "outline" : "secondary"} onClick={identifyActivePatient}>
+                    Identify patient
+                  </Button>
+                </div>
+              </div>
+            )}
             <div className="flex items-center justify-between">
               <QRCodeSVG value={`${patientSnapshot.patientId}|${patientSnapshot.qrReference ?? "RX-DRAFT"}`} size={104} />
               <div className="text-right">

@@ -10,6 +10,7 @@ import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Table, Td, Th } from "../components/ui/table";
 import { useToast } from "../components/ui/toast-context";
+import { getPatientActivities, PATIENT_ACTIVITIES_UPDATED_EVENT, type PatientActivityRecord } from "../services/patientActivityService";
 import { downloadTextFile, timestampedFilename } from "../utils/download";
 import { normaliseGenderLabel } from "../utils/gender";
 import { getSavedPatientsForDoctors, PATIENTS_UPDATED_EVENT } from "../utils/patientRegistry";
@@ -55,13 +56,11 @@ const seedPatients: SavedPatientForDoctor[] = [
   },
 ];
 
-const timeline = [
-  ["OPD", "2026-06-13", "Medical OPD", "Fever and cough, diagnosis pending"],
-  ["Lab", "2026-06-12", "Haematology", "FBC uploaded"],
-  ["Prescription", "2026-06-10", "Pharmacy", "Metformin continued"],
-  ["Emergency", "2026-05-29", "ED", "Hypoglycaemia observation"],
-  ["Admission", "2026-05-20", "Ward 12", "Discharged with follow-up"],
-  ["Referral", "2026-05-18", "Cardiology", "Clinic review requested"],
+const seedTimeline: PatientActivityRecord[] = [
+  { id: "seed-opd-1", patientId: "PAT-2026-000001", hospitalId: "hosp-colombo-national", type: "OPD", date: "2026-06-13", unit: "Medical OPD", note: "Fever and cough, diagnosis pending", sourceModule: "OPD", createdBy: "seed", createdAt: "2026-06-13T08:20:00+05:30", status: "completed" },
+  { id: "seed-lab-1", patientId: "PAT-2026-000001", hospitalId: "hosp-colombo-national", type: "Laboratory", date: "2026-06-12", unit: "Haematology", note: "FBC uploaded", sourceModule: "Laboratory", createdBy: "seed", createdAt: "2026-06-12T10:00:00+05:30", status: "completed" },
+  { id: "seed-rx-1", patientId: "PAT-2026-000001", hospitalId: "hosp-colombo-national", type: "Prescription", date: "2026-06-10", unit: "Pharmacy", note: "Metformin continued", sourceModule: "Pharmacy", createdBy: "seed", createdAt: "2026-06-10T12:00:00+05:30", status: "completed" },
+  { id: "seed-ed-1", patientId: "PAT-2026-000001", hospitalId: "hosp-colombo-national", type: "Admission", date: "2026-05-20", unit: "Ward 12", note: "Discharged with follow-up", sourceModule: "Admission", createdBy: "seed", createdAt: "2026-05-20T15:00:00+05:30", status: "completed" },
 ];
 
 const vitals = [
@@ -106,6 +105,8 @@ export function PatientProfile() {
   const patientDistrict = profilePatient.district;
   const patientBloodGroup = profilePatient.bloodGroup;
   const bmi = (72 / ((1.68 * 1.68))).toFixed(1);
+  const [patientActivities, setPatientActivities] = useState(() => getPatientActivities(patientId));
+  const visibleTimeline = patientActivities.length ? patientActivities : seedTimeline.filter((activity) => isSamePatientId(activity.patientId, patientId));
 
   useEffect(() => {
     function refreshPatients() {
@@ -122,6 +123,19 @@ export function PatientProfile() {
       window.removeEventListener("storage", refreshPatients);
     };
   }, []);
+
+  useEffect(() => {
+    function refreshActivities() {
+      setPatientActivities(getPatientActivities(patientId));
+    }
+    refreshActivities();
+    window.addEventListener(PATIENT_ACTIVITIES_UPDATED_EVENT, refreshActivities);
+    window.addEventListener("storage", refreshActivities);
+    return () => {
+      window.removeEventListener(PATIENT_ACTIVITIES_UPDATED_EVENT, refreshActivities);
+      window.removeEventListener("storage", refreshActivities);
+    };
+  }, [patientId]);
 
   function downloadMedicalSummary() {
     downloadTextFile(timestampedFilename("patient-medical-summary", "txt"), `GovCare EHR System\nMedical Summary\n\nPatient: ${patientName}\nPatient ID: ${patientId}\nGender: ${patientGender}\nAge: ${patientAge}\nBlood group: ${patientBloodGroup}\nAllergies: Penicillin\nActive problems: Diabetes, hypertension\nLatest vitals: BP 136/86, BMI ${bmi}\nFollow-up: Diabetes clinic in 14 days`, "text/plain;charset=utf-8");
@@ -242,13 +256,17 @@ export function PatientProfile() {
         <Card>
           <CardHeader><CardTitle className="flex items-center gap-2"><Activity className="h-5 w-5 text-primary" />Smart medical timeline</CardTitle></CardHeader>
           <CardContent className="space-y-3">
-            {timeline.map(([type, date, unit, note]) => (
-              <div key={`${type}-${date}`} className="grid gap-2 rounded-md border border-border bg-white p-3 sm:grid-cols-[110px_120px_1fr]">
-                <Badge tone={type === "Emergency" ? "danger" : type === "Lab" ? "info" : "neutral"}>{type}</Badge>
-                <p className="text-sm font-semibold">{date}</p>
-                <p className="text-sm text-slate-700"><span className="font-semibold">{unit}</span> - {note}</p>
+            {visibleTimeline.length ? visibleTimeline.map((activity) => (
+              <div key={activity.id} className="grid gap-2 rounded-md border border-border bg-white p-3 sm:grid-cols-[130px_120px_1fr]">
+                <Badge tone={activity.type === "Admission" ? "danger" : activity.type === "Laboratory" ? "info" : activity.status === "pending" ? "warning" : "neutral"}>{activity.type}</Badge>
+                <p className="text-sm font-semibold">{activity.date}</p>
+                <p className="text-sm text-slate-700"><span className="font-semibold">{activity.unit}</span> - {activity.note}</p>
               </div>
-            ))}
+            )) : (
+              <div className="rounded-md border border-dashed border-border bg-white p-4 text-sm text-muted-foreground">
+                No patient activities recorded yet. Create an OPD ticket, appointment, consultation, prescription, lab request, or admission for this patient to build the timeline.
+              </div>
+            )}
           </CardContent>
         </Card>
 
