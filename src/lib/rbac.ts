@@ -86,3 +86,4 @@ export function can(role: Role | undefined, permission: string) {
   const allowed = permissions[role] ?? [];
   return allowed.includes("*") || allowed.includes(permission) || allowed.some((item) => item.endsWith(":*") && permission.startsWith(item.replace("*", "")));
 }
+//
