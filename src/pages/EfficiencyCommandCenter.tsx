@@ -47,7 +47,7 @@ const upgrades = [
     priority: "Critical",
     route: "/wards",
   },
-  
+
   {
     name: "Discharge Planning Dashboard",
     purpose: "Coordinate discharge tasks across doctors, nurses, pharmacy, lab, radiology, and records.",
@@ -57,6 +57,8 @@ const upgrades = [
     icon: ClipboardCheck,
     priority: "High",
     route: "/admissions",
+
+    
   },
   {
     name: "Hospital Command Center",
