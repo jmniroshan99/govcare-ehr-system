@@ -21,6 +21,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
         },
       }),
   );
+  
 
   return (
     <I18nextProvider i18n={i18n}>
