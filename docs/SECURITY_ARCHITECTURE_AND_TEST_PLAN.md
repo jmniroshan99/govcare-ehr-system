@@ -38,6 +38,9 @@ Core controls:
 2. Seed users with custom claims for every role.
 3. Run allow/deny Firestore rule tests for each role and collection.
 4. Run Storage rule tests for staff upload, patient upload, released patient download, and unreleased patient denial.
+
+
+
 5. Run Cloud Function tests for OTP rate limits, bed assignment locks, stock deduction, prescription issuing, and report release.
 6. Confirm App Check enforcement is enabled in production and debug tokens are used only in local development.
 
