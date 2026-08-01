@@ -111,6 +111,7 @@ export function CareSummary() {
       patientUid: profile.role === "patient" ? profile.uid : "patient-demo-1",
       currentSituation,
       futureTreatments,
+      
     }).catch((error) => console.warn("Care summary background save failed.", error));
     showToast("Smart patient snapshot updated.", "success");
     refreshAndRedirectToMainMenu(800, {
