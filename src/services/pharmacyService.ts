@@ -26,6 +26,7 @@ export interface StructuredPrescriptionLine {
   expiry: string;
   alternative?: string;
   status: PrescriptionLineStatus;
+  
 }
 
 export interface PharmacyAuditTrailItem {
