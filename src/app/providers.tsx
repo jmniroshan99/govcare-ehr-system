@@ -28,5 +28,5 @@ export function AppProviders({ children }: { children: ReactNode }) {
         <ToastProvider>{children}</ToastProvider>
       </QueryClientProvider>
     </I18nextProvider>
-  );
+  );//
 }
