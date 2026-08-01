@@ -71,6 +71,7 @@ export const permissions: Record<Role, string[]> = {
   patient: ["portal:read", "profile:self", "reports:self", "appointments:self", "media:upload", "media:self"],
 };
 
+
 export const roleGroups = {
   staff: ["super_admin", "hospital_admin", "doctor", "surgeon", "anesthetist", "nurse", "pharmacist", "pathologist", "lab_manager", "lab_technician", "radiologist", "radiology_technician", "receptionist", "mortuary_officer", "ict_admin", "records_officer"] as Role[],
   clinical: ["super_admin", "hospital_admin", "doctor", "surgeon", "anesthetist", "nurse"] as Role[],

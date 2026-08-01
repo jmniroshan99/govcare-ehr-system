@@ -30,3 +30,6 @@ export function AppProviders({ children }: { children: ReactNode }) {
     </I18nextProvider>
   );
 }
+
+
+//545S
