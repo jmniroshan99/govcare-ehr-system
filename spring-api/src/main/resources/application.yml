@@ -1,0 +1,65 @@
+server:
+  port: ${PORT:4001}
+  error:
+    include-message: always
+
+spring:
+  application:
+    name: govcare-ehr-spring-api
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/govcare_ehr_v2}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:12}
+      minimum-idle: 2
+      connection-timeout: 10000
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        format_sql: false
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: ${FLYWAY_ENABLED:true}
+    baseline-on-migrate: true
+    baseline-version: 3
+    locations: classpath:db/migration
+    validate-on-migrate: true
+  servlet:
+    multipart:
+      max-file-size: ${MAX_FILE_SIZE:25MB}
+      max-request-size: ${MAX_REQUEST_SIZE:30MB}
+  jackson:
+    default-property-inclusion: non_null
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+govcare:
+  jwt:
+    secret: ${JWT_SECRET:change-this-development-secret-to-at-least-32-characters}
+    expiration-minutes: ${JWT_EXPIRATION_MINUTES:480}
+  cors:
+    allowed-origins: ${CORS_ORIGIN:http://127.0.0.1:5300,http://localhost:5300,http://127.0.0.1:5173,http://localhost:5173}
+  storage:
+    root: ${STORAGE_ROOT:./govcare-storage}
+  documents:
+    max-bytes: ${DOCUMENT_MAX_BYTES:26214400}
+  pdf:
+    hospital-logo: ${HOSPITAL_LOGO:}
+
+logging:
+  level:
+    root: INFO
+    lk.gov.health.govcare: INFO
+    org.springframework.security: WARN

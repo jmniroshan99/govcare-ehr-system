@@ -1,0 +1,34 @@
+Spring Boot migration summary
+
+Backend replacement:
+- spring-api/pom.xml
+- spring-api/src/main/java/lk/gov/health/govcare/**
+- spring-api/src/main/resources/application.yml
+- spring-api/src/main/resources/db/migration/V1__base_schema.sql
+- spring-api/src/main/resources/db/migration/V2__workflow_extensions.sql
+- spring-api/src/main/resources/db/migration/V3__prescription_compatibility.sql
+- spring-api/src/main/resources/db/migration/V4__role_based_access_control.sql
+- spring-api/src/main/resources/db/migration/V5__allow_multiple_active_patient_tokens.sql
+- spring-api/src/main/resources/db/migration/V6__minimum_reference_seed.sql
+- spring-api/.env.example
+
+Frontend RBAC integration:
+- src/lib/roleAccess.ts
+- src/lib/accessControl.ts
+- src/routes/AppRouter.tsx
+- src/components/layout/AppShell.tsx
+- src/services/springMediaService.ts
+
+Run/build integration:
+- package.json
+- scripts/run-spring.mjs
+- scripts/check-spring.mjs
+- scripts/start-full-dev.cjs
+- run-windows.bat
+- run-linux.sh
+- setup-database-windows.bat
+
+Documentation:
+- README.md
+- SPRING_BOOT_MIGRATION_REPORT.md
+- ROLE_PERMISSION_TEST_CHECKLIST.md

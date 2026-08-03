@@ -1,0 +1,48 @@
+Added backend files:
+spring-api/src/main/java/lk/gov/health/govcare/documents/DepartmentDocumentController.java
+spring-api/src/main/java/lk/gov/health/govcare/documents/DepartmentSharingService.java
+spring-api/src/main/java/lk/gov/health/govcare/documents/DocumentAccessService.java
+spring-api/src/main/java/lk/gov/health/govcare/documents/DocumentAuditService.java
+spring-api/src/main/java/lk/gov/health/govcare/documents/DocumentDirectoryController.java
+spring-api/src/main/java/lk/gov/health/govcare/documents/DocumentDtos.java
+spring-api/src/main/java/lk/gov/health/govcare/documents/DocumentPdfService.java
+spring-api/src/main/java/lk/gov/health/govcare/documents/DocumentPolicy.java
+spring-api/src/main/java/lk/gov/health/govcare/documents/DocumentStorageService.java
+spring-api/src/main/java/lk/gov/health/govcare/documents/PatientDocumentController.java
+spring-api/src/main/java/lk/gov/health/govcare/documents/PatientDocumentService.java
+spring-api/src/main/java/lk/gov/health/govcare/documents/PatientTimelineController.java
+spring-api/src/main/resources/db/migration/V9__inter_department_patient_documents.sql
+
+Modified backend files:
+spring-api/src/main/java/lk/gov/health/govcare/common/ApiException.java
+spring-api/src/main/java/lk/gov/health/govcare/media/MediaService.java
+spring-api/.env.example
+spring-api/src/main/resources/application.yml
+
+Added frontend files:
+src/types/document.ts
+src/services/documentService.ts
+src/components/documents/DocumentAuditModal.tsx
+src/components/documents/DocumentCard.tsx
+src/components/documents/DocumentShareModal.tsx
+src/components/documents/DocumentTable.tsx
+src/components/documents/DocumentUploadModal.tsx
+src/components/documents/PdfPreviewModal.tsx
+src/pages/patients/PatientDocuments.tsx
+src/pages/departments/DepartmentDocuments.tsx
+
+Modified frontend files:
+src/routes/AppRouter.tsx
+src/lib/roleAccess.ts
+src/components/layout/navItems.ts
+src/pages/PatientProfile.tsx
+src/pages/PatientPortal.tsx
+src/i18n/locales/en.json
+src/i18n/locales/si.json
+src/i18n/locales/ta.json
+
+Documentation:
+INTER_DEPARTMENT_DOCUMENT_SHARING_IMPLEMENTATION.md
+INTER_DEPARTMENT_DOCUMENT_SHARING_TEST_CHECKLIST.md
+VALIDATION_INTER_DEPARTMENT_DOCUMENTS.md
+CHANGED_FILES_INTER_DEPARTMENT_DOCUMENTS.txt
