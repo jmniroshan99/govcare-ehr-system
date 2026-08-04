@@ -20,4 +20,5 @@ public class ApiException extends RuntimeException {
     public static ApiException notFound(String message) { return new ApiException(HttpStatus.NOT_FOUND, message); }
     public static ApiException conflict(String message) { return new ApiException(HttpStatus.CONFLICT, message); }
     public static ApiException payloadTooLarge(String message) { return new ApiException(HttpStatus.PAYLOAD_TOO_LARGE, message); }
+    public static ApiException unprocessable(String message) { return new ApiException(HttpStatus.UNPROCESSABLE_ENTITY, message); }
 }

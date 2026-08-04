@@ -11,6 +11,12 @@ type LoginEventInput = {
   failureReason?: string;
 };
 
+
+export function openLoginSession(sessionId: string) {
+  if (!sessionId) return;
+  localStorage.setItem(SESSION_KEY, JSON.stringify({ sessionId, loginTime: Date.now() }));
+}
+
 function randomId(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
@@ -24,7 +30,7 @@ function clientContext() {
 
 export async function recordLoginActivity(input: LoginEventInput) {
   const sessionId = randomId("SESSION");
-  if (input.loginStatus === "success") localStorage.setItem(SESSION_KEY, JSON.stringify({ sessionId, loginTime: Date.now() }));
+  if (input.loginStatus === "success") openLoginSession(sessionId);
   await apiRequest("/api/login-activities", {
     method: "POST",
     body: JSON.stringify({
@@ -39,13 +45,23 @@ export async function recordLoginActivity(input: LoginEventInput) {
 }
 
 export async function closeLoginSession(logoutStatus: Exclude<LogoutActivityStatus, "active" | "unknown"> = "logged_out") {
-  const stored = JSON.parse(localStorage.getItem(SESSION_KEY) ?? "null") as { sessionId?: string; loginTime?: number } | null;
+  let stored: { sessionId?: string; loginTime?: number } | null = null;
+  try {
+    stored = JSON.parse(localStorage.getItem(SESSION_KEY) ?? "null") as { sessionId?: string; loginTime?: number } | null;
+  } catch {
+    localStorage.removeItem(SESSION_KEY);
+    return;
+  }
   if (!stored?.sessionId) return;
-  await apiRequest("/api/login-activities/session/close", {
-    method: "POST",
-    body: JSON.stringify({ sessionId: stored.sessionId, logoutStatus, ...clientContext() }),
-  });
-  localStorage.removeItem(SESSION_KEY);
+  try {
+    await apiRequest("/api/login-activities/session/close", {
+      method: "POST",
+      body: JSON.stringify({ sessionId: stored.sessionId, logoutStatus, ...clientContext() }),
+    });
+  } finally {
+    // A stale or expired JWT must not leave a stale local session marker behind.
+    localStorage.removeItem(SESSION_KEY);
+  }
 }
 
 export function subscribeToLoginActivities(_hospitalId: string, _role: Role, callback: (rows: LoginActivity[]) => void, onError: (error: Error) => void) {

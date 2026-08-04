@@ -27,7 +27,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBound
           <p className="text-sm font-bold uppercase tracking-wide text-rose-700">GovCare interface recovery</p>
           <h1 className="mt-2 text-2xl font-bold">The page could not open safely.</h1>
           <p className="mt-3 text-sm text-slate-700">
-            The browser had an old application module cached. Use Reload app, or open Login and sign in again.
+            The interface received an unexpected module or data format. Reload the app to clear stale browser data, or open Login and sign in again.
           </p>
           <pre className="mt-4 max-h-32 overflow-auto rounded-md bg-rose-50 p-3 text-xs text-rose-950">
             {this.state.error.message}

@@ -59,7 +59,18 @@ govcare:
     hospital-logo: ${HOSPITAL_LOGO:}
 
 logging:
+  file:
+    name: ${LOG_FILE:logs/govcare-spring-api.log}
   level:
     root: INFO
     lk.gov.health.govcare: INFO
     org.springframework.security: WARN
+    org.hibernate.SQL: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{48} - %msg%n"
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 14
+      total-size-cap: 200MB

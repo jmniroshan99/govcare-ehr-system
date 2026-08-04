@@ -1,6 +1,8 @@
 import type { AppUser, Role } from "../types/ehr";
 import { isActiveAccount } from "../lib/accessControl";
 import { apiRequest, setApiToken } from "./apiClient";
+import { closeLoginSession, openLoginSession } from "./loginActivityService";
+import type { LogoutActivityStatus } from "../types/ehr";
 
 export interface AuthenticatedUser {
   uid: string;
@@ -29,34 +31,60 @@ function writeLocalUser(user: AuthenticatedUser | null) {
   window.dispatchEvent(new CustomEvent(LOCAL_AUTH_EVENT, { detail: user }));
 }
 
+function localLoginClientContext() {
+  if (typeof navigator === "undefined") return {};
+  const ua = navigator.userAgent;
+  const browser = /Edg\//.test(ua) ? "Microsoft Edge" : /Chrome\//.test(ua) ? "Google Chrome" : /Firefox\//.test(ua) ? "Mozilla Firefox" : /Safari\//.test(ua) ? "Safari" : "Unknown browser";
+  const operatingSystem = /Windows NT/.test(ua) ? "Windows" : /Android/.test(ua) ? "Android" : /iPhone|iPad/.test(ua) ? "iOS" : /Mac OS X/.test(ua) ? "macOS" : /Linux/.test(ua) ? "Linux" : "Unknown OS";
+  return {
+    deviceBrowser: `${browser} / ${navigator.platform || "device"}`,
+    operatingSystem,
+  };
+}
+
 export async function startLocalApiSession(email: string, password = "GovCare@123") {
-  const session = await apiRequest<{ token: string; user: AppUser }>("/api/auth/local-login", {
+  // Close any previous browser session, then ensure its JWT cannot survive a failed sign-in.
+  await closeLoginSession("logged_out").catch(() => undefined);
+  setApiToken(null);
+  writeLocalUser(null);
+  const session = await apiRequest<{ token: string; sessionId: string; user: AppUser }>("/api/auth/local-login", {
     method: "POST",
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ email, password, ...localLoginClientContext() }),
   });
   setApiToken(session.token);
+  openLoginSession(session.sessionId);
+  const user: AuthenticatedUser = {
+    uid: session.user.uid,
+    email: session.user.email,
+    displayName: session.user.displayName,
+    photoURL: session.user.photoURL ?? null,
+    intendedRole: session.user.role,
+  };
+  writeLocalUser(user);
   return session.user;
 }
 
 export async function loginWithEmail(email: string, password: string) {
   const sessionUser = await startLocalApiSession(email, password);
-  const user: AuthenticatedUser = {
+  return {
     uid: sessionUser.uid,
     email: sessionUser.email,
     displayName: sessionUser.displayName,
     photoURL: sessionUser.photoURL ?? null,
     intendedRole: sessionUser.role,
-  };
-  writeLocalUser(user);
-  return user;
+  } satisfies AuthenticatedUser;
 }
 
 export async function createPatientAccountWithEmail(email: string, password: string, displayName: string) {
-  const session = await apiRequest<{ token: string; user: AppUser }>("/api/auth/register-patient", {
+  await closeLoginSession("logged_out").catch(() => undefined);
+  setApiToken(null);
+  writeLocalUser(null);
+  const session = await apiRequest<{ token: string; sessionId: string; user: AppUser }>("/api/auth/register-patient", {
     method: "POST",
     body: JSON.stringify({ email, password, displayName }),
   });
   setApiToken(session.token);
+  openLoginSession(session.sessionId);
   const user: AuthenticatedUser = {
     uid: session.user.uid,
     email: session.user.email,
@@ -80,9 +108,15 @@ export async function getGoogleRedirectUser() {
   return null;
 }
 
-export async function logout() {
-  setApiToken(null);
-  writeLocalUser(null);
+export async function logout(logoutStatus: Exclude<LogoutActivityStatus, "active" | "unknown"> = "logged_out") {
+  try {
+    await closeLoginSession(logoutStatus);
+  } catch {
+    // Local sign-out must still complete when the API or token is unavailable.
+  } finally {
+    setApiToken(null);
+    writeLocalUser(null);
+  }
 }
 
 export function watchAuth(callback: (user: AuthenticatedUser | null) => void) {

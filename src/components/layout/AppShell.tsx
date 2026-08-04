@@ -49,7 +49,6 @@ import { SmartSearch } from "../search/SmartSearch";
 import { navItems } from "./navItems";
 import { useAuthStore } from "../../stores/authStore";
 import { logout } from "../../services/authService";
-import { closeLoginSession } from "../../services/loginActivityService";
 import { roleLabels } from "../../lib/rbac";
 import { roleModuleSummary } from "../../lib/accessControl";
 import { canAccessPath } from "../../lib/roleAccess";
@@ -215,8 +214,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, [navSearch, profile, role, t, unreadNotifications]);
 
   async function handleLogout() {
-    await closeLoginSession("logged_out");
-    await logout();
+    await logout("logged_out");
     window.sessionStorage.removeItem("govcare-auth-mode");
     window.sessionStorage.removeItem("govcare-login-intent");
     clearAuth();

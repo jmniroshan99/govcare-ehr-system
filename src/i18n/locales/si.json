@@ -67,7 +67,14 @@
     "patientFieldPolicy": "Patient Field Policy",
     "guardianManagement": "Guardian Management",
     "staffManagement": "කාර්ය මණ්ඩල කළමනාකරණය",
-    "departmentDocuments": "දෙපාර්තමේන්තු ලේඛන"
+    "departmentDocuments": "දෙපාර්තමේන්තු ලේඛන",
+    "wardDashboard": "වාට්ටු පුවරුව",
+    "bedBoard": "ඇඳන් පුවරුව",
+    "bedAllocation": "ඇඳ වෙන් කිරීම",
+    "internalTransfers": "අභ්‍යන්තර මාරු",
+    "incomingTransfers": "පැමිණෙන මාරු",
+    "outgoingTransfers": "පිටවන මාරු",
+    "wardConfiguration": "වාට්ටු සැකසුම්"
   },
   "layout": {
     "groups": {

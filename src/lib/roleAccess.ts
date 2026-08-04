@@ -28,6 +28,11 @@ const pathPermission: Array<[string, string]> = [
   ["/radiology", "RADIOLOGY_REQUEST_VIEW"], ["/admin/staff", "USER_MANAGE"], ["/audit-logs", "AUDIT_VIEW"],
   ["/admin/login-activity", "LOGIN_ACTIVITY_VIEW"], ["/settings", "SETTINGS_MANAGE"], ["/reports", "REPORT_VIEW"],
   ["/media", "MEDIA_VIEW"],
+  ["/wards/bed-board", "BED_VIEW"], ["/admin/wards", "WARD_MANAGE"], ["/wards", "WARD_VIEW"],
+  ["/admissions/bed-allocation", "BED_ALLOCATE"], ["/transfers/internal", "WARD_VIEW"],
+  ["/transfers/inter-hospital/incoming", "INTER_HOSPITAL_TRANSFER_REVIEW"],
+  ["/transfers/inter-hospital/outgoing", "INTER_HOSPITAL_TRANSFER_CREATE"],
+  ["/transfers/inter-hospital", "INTER_HOSPITAL_TRANSFER_CREATE"],
 ];
 
 export function canAccessPath(profile: AppUser | null | undefined, path: string): boolean {

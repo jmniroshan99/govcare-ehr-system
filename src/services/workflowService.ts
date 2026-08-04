@@ -1,5 +1,6 @@
 import { apiRequest } from "./apiClient";
 import type { DoctorQueueRecord } from "./doctorQueueService";
+import { normalizeJsonArray, normalizeStringList } from "../utils/dataNormalization";
 
 export type AppointmentReference = {
   departments: Array<{ id: string; code: string; name: string }>;
@@ -258,6 +259,14 @@ export type PrescriptionRecord = {
   created_at: string;
 };
 
+function normalizePrescriptionRecord(record: PrescriptionRecord): PrescriptionRecord {
+  return {
+    ...record,
+    allergies: normalizeStringList(record.allergies),
+    lines: normalizeJsonArray<PrescriptionRecord["lines"][number]>(record.lines),
+  };
+}
+
 export async function createWorkflowPrescription(input: {
   patientUuid: string;
   visitUuid?: string | null;
@@ -268,10 +277,11 @@ export async function createWorkflowPrescription(input: {
   submitToPharmacy?: boolean;
   lines: PrescriptionLineInput[];
 }) {
-  return apiRequest<{ prescription: PrescriptionRecord }>("/api/prescriptions", {
+  const result = await apiRequest<{ prescription: PrescriptionRecord }>("/api/prescriptions", {
     method: "POST",
     body: JSON.stringify(input),
   });
+  return { ...result, prescription: normalizePrescriptionRecord(result.prescription) };
 }
 
 export async function getWorkflowPrescriptions(filters: { status?: string; patientUuid?: string } = {}) {
@@ -279,26 +289,30 @@ export async function getWorkflowPrescriptions(filters: { status?: string; patie
   if (filters.status) params.set("status", filters.status);
   if (filters.patientUuid) params.set("patientUuid", filters.patientUuid);
   const suffix = params.size ? `?${params.toString()}` : "";
-  return apiRequest<{ items: PrescriptionRecord[] }>(`/api/prescriptions${suffix}`);
+  const result = await apiRequest<{ items: PrescriptionRecord[] }>(`/api/prescriptions${suffix}`);
+  return { ...result, items: normalizeJsonArray<PrescriptionRecord>(result.items).map(normalizePrescriptionRecord) };
 }
 
 export async function getPharmacyPrescriptions(status?: string) {
   const suffix = status ? `?status=${encodeURIComponent(status)}` : "";
-  return apiRequest<{ items: PrescriptionRecord[] }>(`/api/pharmacy/prescriptions${suffix}`);
+  const result = await apiRequest<{ items: PrescriptionRecord[] }>(`/api/pharmacy/prescriptions${suffix}`);
+  return { ...result, items: normalizeJsonArray<PrescriptionRecord>(result.items).map(normalizePrescriptionRecord) };
 }
 
 export async function verifyPharmacyPrescription(prescriptionUuid: string, status: "verified" | "rejected", notes?: string) {
-  return apiRequest<{ prescription: PrescriptionRecord }>(`/api/pharmacy/prescriptions/${encodeURIComponent(prescriptionUuid)}/verify`, {
+  const result = await apiRequest<{ prescription: PrescriptionRecord }>(`/api/pharmacy/prescriptions/${encodeURIComponent(prescriptionUuid)}/verify`, {
     method: "PATCH",
     body: JSON.stringify({ status, notes }),
   });
+  return { ...result, prescription: normalizePrescriptionRecord(result.prescription) };
 }
 
 export async function dispensePharmacyPrescription(prescriptionUuid: string, items: Array<{ prescriptionItemUuid: string; medicineUuid?: string | null; quantity: number }>, notes?: string) {
-  return apiRequest<{ prescription: PrescriptionRecord; receipt: { id: string; receiptNo: string } }>(`/api/pharmacy/prescriptions/${encodeURIComponent(prescriptionUuid)}/dispense`, {
+  const result = await apiRequest<{ prescription: PrescriptionRecord; receipt: { id: string; receiptNo: string } }>(`/api/pharmacy/prescriptions/${encodeURIComponent(prescriptionUuid)}/dispense`, {
     method: "PATCH",
     body: JSON.stringify({ items, notes }),
   });
+  return { ...result, prescription: normalizePrescriptionRecord(result.prescription) };
 }
 
 export type LaboratoryOrderRecord = {

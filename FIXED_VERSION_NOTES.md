@@ -1,3 +1,15 @@
+
+## Login and logging repair
+
+- Added Flyway V12 for the advertised doctor and patient demo accounts.
+- Removed duplicate local-login activity writes.
+- Backend now returns the canonical login `sessionId` to the browser.
+- Failed login attempts are retained in a separate audit transaction.
+- Stale JWT and stale local-auth user data are cleared before sign-in.
+- Logout, OTP cancellation and timeout close the correct database session.
+- Added structured SLF4J error IDs and rolling backend log files.
+- Protected browser-created login audit rows from forged user identities.
+
 # GovCare EHR Spring Boot RBAC — Fixed Full Version
 
 This package includes the fixes identified during local build and login testing.

@@ -6,7 +6,6 @@ import { roleGroups } from "../lib/rbac";
 import { defaultHomeForProfile, isActiveAccount } from "../lib/accessControl";
 import { canAccessPath } from "../lib/roleAccess";
 import { identifyAuthenticatedUser, logout, watchAuth } from "../services/authService";
-import { closeLoginSession } from "../services/loginActivityService";
 import { useAuthStore } from "../stores/authStore";
 import type { Role } from "../types/ehr";
 
@@ -58,7 +57,14 @@ const Reports = lazyPage(() => import("../pages/Reports"), "Reports");
 const Settings = lazyPage(() => import("../pages/Settings"), "Settings");
 const SuperAdminDashboard = lazyPage(() => import("../pages/SuperAdminDashboard"), "SuperAdminDashboard");
 const StaffManagement = lazyPage(() => import("../pages/admin/StaffManagement"), "StaffManagement");
-const WardManagement = lazyPage(() => import("../pages/WardManagement"), "WardManagement");
+const WardDashboard = lazyPage(() => import("../pages/wards/WardDashboard"), "WardDashboard");
+const WardAdministration = lazyPage(() => import("../pages/wards/WardManagement"), "WardManagement");
+const BedBoard = lazyPage(() => import("../pages/wards/BedBoard"), "BedBoard");
+const BedAllocation = lazyPage(() => import("../pages/wards/BedAllocation"), "BedAllocation");
+const InternalTransfers = lazyPage(() => import("../pages/transfers/InternalTransfers"), "InternalTransfers");
+const InterHospitalTransfers = lazyPage(() => import("../pages/transfers/InterHospitalTransfers"), "InterHospitalTransfers");
+const IncomingTransfers = lazyPage(() => import("../pages/transfers/InterHospitalTransfers"), "IncomingTransfers");
+const OutgoingTransfers = lazyPage(() => import("../pages/transfers/InterHospitalTransfers"), "OutgoingTransfers");
 
 function Loading() {
   return <div className="space-y-3"><Skeleton className="h-10 w-72" /><Skeleton className="h-64 w-full" /></div>;
@@ -73,8 +79,7 @@ function Protected({ children, roles }: { children: React.ReactNode; roles: Role
     if (!profile) return;
     const expired = Boolean(sessionExpiresAt && Date.now() > sessionExpiresAt);
     if (!isActiveAccount(profile) || expired) {
-      if (expired) void closeLoginSession("timed_out");
-      void logout();
+      void logout(expired ? "timed_out" : "logged_out");
       clearAuth();
     }
   }, [clearAuth, profile, sessionExpiresAt]);
@@ -191,7 +196,14 @@ export function AppRouter() {
           <Route path="/consultation" element={<Protected roles={["super_admin", "hospital_admin", "doctor"]}><Navigate to="/doctor/workspace" replace /></Protected>} />
           <Route path="/nurse-notes" element={<Protected roles={["super_admin", "hospital_admin", "nurse"]}><NurseModule /></Protected>} />
           <Route path="/admissions" element={<Protected roles={["super_admin", "hospital_admin", "doctor", "nurse", "receptionist", "records_officer"]}><AdmissionsManagement /></Protected>} />
-          <Route path="/wards" element={<Protected roles={roleGroups.clinical}><WardManagement /></Protected>} />
+          <Route path="/wards" element={<Protected roles={roleGroups.clinical}><WardDashboard /></Protected>} />
+          <Route path="/admin/wards" element={<Protected roles={["super_admin", "hospital_admin"]}><WardAdministration /></Protected>} />
+          <Route path="/wards/bed-board" element={<Protected roles={["super_admin", "hospital_admin", "doctor", "nurse"]}><BedBoard /></Protected>} />
+          <Route path="/admissions/bed-allocation" element={<Protected roles={["super_admin", "hospital_admin", "doctor", "nurse"]}><BedAllocation /></Protected>} />
+          <Route path="/transfers/internal" element={<Protected roles={["super_admin", "hospital_admin", "doctor", "nurse"]}><InternalTransfers /></Protected>} />
+          <Route path="/transfers/inter-hospital" element={<Protected roles={["super_admin", "hospital_admin", "doctor", "nurse"]}><InterHospitalTransfers /></Protected>} />
+          <Route path="/transfers/inter-hospital/incoming" element={<Protected roles={["super_admin", "hospital_admin", "nurse"]}><IncomingTransfers /></Protected>} />
+          <Route path="/transfers/inter-hospital/outgoing" element={<Protected roles={["super_admin", "hospital_admin", "doctor", "nurse"]}><OutgoingTransfers /></Protected>} />
           <Route path="/operation-theatre" element={<Protected roles={["super_admin", "hospital_admin", "doctor", "surgeon", "anesthetist", "nurse"]}><OperationTheatre /></Protected>} />
           <Route path="/future-care" element={<Protected roles={["super_admin", "hospital_admin", "doctor", "surgeon", "nurse", "records_officer"]}><FutureCareWorkflow /></Protected>} />
           <Route path="/pharmacy" element={<Protected roles={["super_admin", "hospital_admin", "doctor", "pharmacist"]}><PharmacyModule /></Protected>} />

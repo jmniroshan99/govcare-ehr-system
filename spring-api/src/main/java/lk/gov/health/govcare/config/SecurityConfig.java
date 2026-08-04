@@ -57,7 +57,7 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/health", "/actuator/health", "/actuator/info").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/auth/local-login", "/api/auth/register-patient", "/api/login-activities").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/local-login", "/api/auth/register-patient").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/self-registration/tokens/*").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/self-registration/tokens/*/register").permitAll()
                         .anyRequest().authenticated())

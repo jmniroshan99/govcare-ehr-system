@@ -100,3 +100,14 @@ Desktop.ini
 # Misc local notes
 New Text Document.txt
 run.txt
+.env
+**/.env
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+target/
+**/target/
+logs/
+**/logs/
+*.log

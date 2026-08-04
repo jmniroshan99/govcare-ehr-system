@@ -77,6 +77,7 @@ JWT_SECRET=replace-with-a-long-random-secret-at-least-32-characters
 JWT_EXPIRATION_MINUTES=480
 CORS_ORIGIN=http://127.0.0.1:5300,http://localhost:5300
 STORAGE_ROOT=./govcare-storage
+LOG_FILE=logs/govcare-spring-api.log
 FLYWAY_ENABLED=true
 ```
 
@@ -122,16 +123,17 @@ Spring API: http://127.0.0.1:4001
 Health: http://127.0.0.1:4001/actuator/health
 ```
 
-## Default local administrator
+## Local demonstration accounts
 
-The minimum seed creates a local development administrator only when the account does not already exist:
+Flyway creates these local demonstration accounts only when the email does not already exist:
 
 ```text
-Email: superadmin@govcare.gov.lk
-Password: GovCare@123
+Super Admin: superadmin@govcare.gov.lk / GovCare@123
+Doctor:      doctor@govcare.gov.lk     / GovCare@123
+Patient:     patient@govcare.gov.lk    / GovCare@123
 ```
 
-Change this password immediately after first login. Do not use the seeded password in production.
+Migration `V12__repair_login_accounts_and_audit_sessions.sql` adds the doctor and patient accounts required by the login screen. It does not overwrite an existing account or password. Change every demonstration password before production use.
 
 ## Role-based access control
 
@@ -199,6 +201,19 @@ npm run postgres:api
 npm run postgres:build
 ```
 
+
+## Login activity and backend logs
+
+Spring Boot is the authoritative writer for local email/password login attempts. The returned `sessionId` is stored by the browser and reused when logout or timeout closes the session, preventing duplicate or permanently active audit rows.
+
+Unexpected API errors return an `errorId`. Search that ID in:
+
+```text
+spring-api/logs/govcare-spring-api.log
+```
+
+The log rotates at 10 MB, keeps up to 14 history files and uses a 200 MB total cap. See `LOGIN_AND_LOGGING_FIX.md`.
+
 ## Staff Management
 
 Super Admin and Hospital Admin users can manage staff from `/admin/staff`. See `STAFF_MANAGEMENT_IMPLEMENTATION.md` and `STAFF_MANAGEMENT_TEST_CHECKLIST.md` for the implementation and verification steps.
@@ -231,3 +246,13 @@ INTER_DEPARTMENT_DOCUMENT_SHARING_TEST_CHECKLIST.md
 VALIDATION_INTER_DEPARTMENT_DOCUMENTS.md
 ```
 
+
+## Ward, bed allocation and patient transfers
+
+The application includes an integrated inpatient-operations module for ward and room configuration, live bed status, reservation and allocation, internal transfers, inter-hospital transfers, movement history and authenticated transfer-package PDFs.
+
+See:
+
+- `WARD_BED_TRANSFER_IMPLEMENTATION.md`
+- `WARD_BED_TRANSFER_TEST_CHECKLIST.md`
+- `CHANGED_FILES_WARD_BED_TRANSFERS.txt`

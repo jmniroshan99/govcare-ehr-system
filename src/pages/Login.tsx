@@ -68,7 +68,7 @@ export function Login() {
     if (import.meta.env.DEV) {
       window.sessionStorage.setItem("govcare-auth-mode", "postgresql");
       setProfile(profile);
-      void recordLoginActivity({ email: profile.email, loginStatus: "success", authenticationMethod: method, profile });
+      if (method !== "email_password") void recordLoginActivity({ email: profile.email, loginStatus: "success", authenticationMethod: method, profile });
       window.sessionStorage.removeItem("govcare-login-intent");
       navigate(loginDestination(profile), { replace: true });
       return;
@@ -138,7 +138,6 @@ export function Login() {
       window.sessionStorage.removeItem("govcare-login-intent");
       window.sessionStorage.removeItem("govcare-auth-mode");
       clearAuth();
-      void recordLoginActivity({ email: values.email, loginStatus: "failed", authenticationMethod: "email_password", failureReason: friendlyAuthError(error, t) });
       setLoginError(friendlyAuthError(error, t));
     }
   }
@@ -155,7 +154,6 @@ export function Login() {
       window.sessionStorage.setItem("govcare-auth-mode", "postgresql");
       window.sessionStorage.removeItem("govcare-login-intent");
       setProfile(profile);
-      void recordLoginActivity({ email: normalized, loginStatus: "success", authenticationMethod: "email_password", profile });
       navigate(loginDestination(profile), { replace: true });
     } catch (error) {
       setLoginError(friendlyAuthError(error, t));
@@ -169,7 +167,6 @@ export function Login() {
       window.sessionStorage.setItem("govcare-auth-mode", "postgresql");
       window.sessionStorage.removeItem("govcare-login-intent");
       setProfile(profile);
-      void recordLoginActivity({ email: profile.email, loginStatus: "success", authenticationMethod: "email_password", profile });
       navigate("/portal", { replace: true });
     } catch (error) {
       setLoginError(friendlyAuthError(error, t));
@@ -189,7 +186,7 @@ export function Login() {
       }
       window.sessionStorage.setItem("govcare-auth-mode", "keycloak");
       setProfile(pendingProfile);
-      void recordLoginActivity({ email: pendingProfile.email, loginStatus: "success", authenticationMethod: pendingAuthMethod, profile: pendingProfile });
+      if (pendingAuthMethod !== "email_password") void recordLoginActivity({ email: pendingProfile.email, loginStatus: "success", authenticationMethod: pendingAuthMethod, profile: pendingProfile });
       window.sessionStorage.removeItem("govcare-login-intent");
       navigate(loginDestination(pendingProfile), { replace: true });
     } catch (error) {

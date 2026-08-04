@@ -1,7 +1,10 @@
 package lk.gov.health.govcare.common;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import org.postgresql.util.PSQLException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,9 +15,11 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(ApiException.class)
     public ResponseEntity<Map<String, Object>> api(ApiException ex) {
@@ -58,9 +63,15 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, Object>> generic(Exception ex) {
-        ex.printStackTrace();
+    public ResponseEntity<Map<String, Object>> generic(Exception ex, HttpServletRequest request) {
+        String errorId = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        String method = request == null ? "UNKNOWN" : request.getMethod();
+        String path = request == null ? "UNKNOWN" : request.getRequestURI();
+        log.error("Unhandled API error id={} method={} path={}", errorId, method, path, ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("message", "Internal server error. Check the Spring Boot terminal for details."));
+                .body(Map.of(
+                        "message", "Internal server error. Use error ID " + errorId + " when checking the Spring Boot log.",
+                        "errorId", errorId
+                ));
     }
 }

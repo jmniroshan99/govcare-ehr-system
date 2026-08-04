@@ -67,7 +67,14 @@
     "patientFieldPolicy": "Patient Field Policy",
     "guardianManagement": "Guardian Management",
     "staffManagement": "பணியாளர் மேலாண்மை",
-    "departmentDocuments": "துறை ஆவணங்கள்"
+    "departmentDocuments": "துறை ஆவணங்கள்",
+    "wardDashboard": "வார்டு பலகை",
+    "bedBoard": "படுக்கை பலகை",
+    "bedAllocation": "படுக்கை ஒதுக்கீடு",
+    "internalTransfers": "உள் இடமாற்றங்கள்",
+    "incomingTransfers": "உள்வரும் மாற்றங்கள்",
+    "outgoingTransfers": "வெளிச்செல்லும் மாற்றங்கள்",
+    "wardConfiguration": "வார்டு அமைப்பு"
   },
   "layout": {
     "groups": {

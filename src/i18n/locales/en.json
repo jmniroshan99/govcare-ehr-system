@@ -67,7 +67,14 @@
     "bloodBank": "Blood Bank",
     "surgery": "Surgery",
     "staffManagement": "Staff Management",
-    "departmentDocuments": "Department Documents"
+    "departmentDocuments": "Department Documents",
+    "wardDashboard": "Ward Dashboard",
+    "bedBoard": "Bed Board",
+    "bedAllocation": "Bed Allocation",
+    "internalTransfers": "Internal Transfers",
+    "incomingTransfers": "Incoming Transfers",
+    "outgoingTransfers": "Outgoing Transfers",
+    "wardConfiguration": "Ward Configuration"
   },
   "layout": {
     "groups": {

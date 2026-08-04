@@ -3,12 +3,37 @@ const API_TOKEN_KEY = "govcare-api-token";
 
 export type ApiErrorPayload = {
   message?: string;
+  errorId?: string;
+  databaseCode?: string;
   issues?: Array<{ path?: string; message?: string }>;
 };
 
+export class ApiRequestError extends Error {
+  readonly status: number;
+  readonly code: string;
+  readonly errorId?: string;
+
+  constructor(status: number, message: string, payload: ApiErrorPayload = {}) {
+    super(message);
+    this.name = "ApiRequestError";
+    this.status = status;
+    this.code = status === 0 ? "network/unavailable" : `http/${status}`;
+    this.errorId = payload.errorId;
+  }
+}
+
+async function performFetch(url: string, options: RequestInit) {
+  try {
+    return await fetch(url, options);
+  } catch (error) {
+    const detail = error instanceof Error && error.message ? ` (${error.message})` : "";
+    throw new ApiRequestError(0, `Unable to connect to the GovCare Spring Boot API${detail}.`);
+  }
+}
+
 export async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = window.localStorage.getItem(API_TOKEN_KEY);
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await performFetch(`${API_BASE_URL}${path}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",
@@ -29,7 +54,7 @@ export async function apiRequest<T>(path: string, options: RequestInit = {}): Pr
       .filter(Boolean)
       .join("; ");
     const message = payload.message ?? `API request failed with status ${response.status}`;
-    throw new Error(issueSummary ? `${message} ${issueSummary}` : message);
+    throw new ApiRequestError(response.status, issueSummary ? `${message} ${issueSummary}` : message, payload);
   }
 
   if (response.status === 204) {
@@ -45,7 +70,7 @@ export type ApiFileDownload = {
 
 export async function apiDownload(path: string): Promise<ApiFileDownload> {
   const token = window.localStorage.getItem(API_TOKEN_KEY);
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await performFetch(`${API_BASE_URL}${path}`, {
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   });
 
@@ -61,7 +86,7 @@ export async function apiDownload(path: string): Promise<ApiFileDownload> {
       .filter(Boolean)
       .join("; ");
     const message = payload.message ?? `File download failed with status ${response.status}`;
-    throw new Error(issueSummary ? `${message} ${issueSummary}` : message);
+    throw new ApiRequestError(response.status, issueSummary ? `${message} ${issueSummary}` : message, payload);
   }
 
   const disposition = response.headers.get("Content-Disposition") ?? "";
