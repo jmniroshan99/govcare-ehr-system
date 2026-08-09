@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/patients")
@@ -20,8 +21,15 @@ public class PatientController {
 
     @GetMapping
     @PreAuthorize("hasAuthority('PATIENT_VIEW') or hasAuthority('PATIENT_VIEW_SELF')")
-    public Map<String,Object> list(@RequestParam(required=false) String search) {
-        return Map.of("items", service.list(current.get(), search));
+    public Map<String,Object> list(@RequestParam(required=false) String search,
+                                   @RequestParam(required=false) UUID wardId) {
+        return Map.of("items", service.list(current.get(), search, wardId));
+    }
+
+    @GetMapping("/identification-wards")
+    @PreAuthorize("hasAuthority('PATIENT_VIEW')")
+    public Map<String,Object> identificationWards() {
+        return Map.of("items", service.identificationWards(current.get()));
     }
 
     @PostMapping("/duplicate-check")

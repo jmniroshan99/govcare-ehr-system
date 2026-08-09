@@ -33,6 +33,7 @@ function mergeProfileOverride(profile: AppUser | null) {
     address: override.address,
     city: override.city,
     district: override.district,
+    province: override.province,
     hospitalCity: override.hospitalCity,
     preferredHospital: override.preferredHospital,
     preferredLanguage: override.preferredLanguage,

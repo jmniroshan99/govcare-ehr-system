@@ -1,0 +1,8 @@
+spring-api/src/main/resources/db/migration/V18__admission_ward_bed_catalog_integration.sql
+spring-api/src/main/java/lk/gov/health/govcare/ward/WardCatalogBootstrap.java
+spring-api/src/main/java/lk/gov/health/govcare/ward/WardBedService.java
+src/pages/NewAdmission.tsx
+src/services/apiClient.ts
+ADMISSION_WARD_BED_DATABASE_UI_FIX.md
+CHANGED_FILES_ADMISSION_WARD_BED_DATABASE_UI_FIX.txt
+WARD_BED_DATABASE_VERIFY.sql

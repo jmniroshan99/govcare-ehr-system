@@ -535,3 +535,13 @@ textarea {
     min-width: 680px;
   }
 }
+
+/* Keep native dropdown menus readable when the application is in dark mode. */
+html.dark select {
+  color-scheme: dark;
+}
+
+html.dark select option {
+  background: #071512;
+  color: #e6f3ef;
+}

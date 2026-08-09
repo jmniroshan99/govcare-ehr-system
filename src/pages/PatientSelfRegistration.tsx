@@ -9,27 +9,56 @@ import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Input } from "../components/ui/input";
+import { FormFieldLabel } from "../components/ui/form-field-label";
+import { MultiSelectChips } from "../components/forms";
 import { Select } from "../components/ui/select";
+import { SriLankaDistrictSelect, SriLankaProvinceSelect } from "../components/location/SriLankaLocationSelects";
 import { useToast } from "../components/ui/toast-context";
 import { submitPatientSelfRegistration, verifyRegistrationToken, type RegistrationTokenInfo } from "../services/selfRegistrationService";
+import { isDistrictInProvince, isSriLankaDistrict, isSriLankaProvince, provinceForDistrict } from "../data/sriLankaLocations";
+import { BLOOD_GROUP_OPTIONS, COMMON_ALLERGY_OPTIONS, COMMON_CHRONIC_DISEASE_OPTIONS } from "../data/referenceOptions";
+
+const optionalText = (max: number) => z.string().max(max).optional();
 
 const formSchema = z.object({
-  fullName: z.string().min(2, "Full name is required"),
-  nic: z.string().optional(),
-  passportNo: z.string().optional(),
+  fullName: z.string().trim().min(2, "Full name is required"),
+  nic: optionalText(32),
+  passportNo: optionalText(32),
   dateOfBirth: z.string().min(1, "Date of birth is required"),
-  gender: z.enum(["male", "female", "other", "prefer_not_to_say"]),
-  phone: z.string().min(7, "Contact number is required"),
+  gender: z.enum(["male", "female", "other", "prefer_not_to_say"]).optional().or(z.literal("")),
+  phone: optionalText(20),
   email: z.string().email("Enter a valid email").optional().or(z.literal("")),
-  address: z.string().min(3, "Address is required"),
-  district: z.string().optional(),
-  province: z.string().optional(),
-  emergencyContactName: z.string().min(2, "Emergency contact name is required"),
-  emergencyContactPhone: z.string().min(7, "Emergency contact phone is required"),
-  bloodGroup: z.string().optional(),
-  allergies: z.string().optional(),
-  chronicDiseases: z.string().optional(),
+  address: optionalText(240),
+  district: optionalText(80),
+  province: optionalText(80),
+  emergencyContactName: optionalText(120),
+  emergencyContactPhone: optionalText(20),
+  bloodGroup: optionalText(20),
+  allergies: optionalText(1000),
+  chronicDiseases: optionalText(1000),
   languagePreference: z.enum(["en", "si", "ta"]),
+}).superRefine((value, ctx) => {
+  const dob = new Date(`${value.dateOfBirth}T00:00:00`);
+  if (Number.isNaN(dob.getTime()) || dob > new Date()) {
+    ctx.addIssue({ code: "custom", path: ["dateOfBirth"], message: "Enter a valid date of birth that is not in the future." });
+  }
+  const phonePattern = /^(?:\+94|0)?[0-9]{9}$/;
+  const normalizePhone = (phone?: string) => (phone ?? "").replace(/[-()\s]/g, "");
+  if (value.phone && !phonePattern.test(normalizePhone(value.phone))) {
+    ctx.addIssue({ code: "custom", path: ["phone"], message: "Enter a valid phone number or leave it blank." });
+  }
+  if (value.emergencyContactPhone && !phonePattern.test(normalizePhone(value.emergencyContactPhone))) {
+    ctx.addIssue({ code: "custom", path: ["emergencyContactPhone"], message: "Enter a valid emergency phone number or leave it blank." });
+  }
+  if (value.province && !isSriLankaProvince(value.province)) {
+    ctx.addIssue({ code: "custom", path: ["province"], message: "Select a valid Sri Lankan province." });
+  }
+  if (value.district && !isSriLankaDistrict(value.district)) {
+    ctx.addIssue({ code: "custom", path: ["district"], message: "Select a valid Sri Lankan district." });
+  }
+  if (value.province && value.district && !isDistrictInProvince(value.district, value.province)) {
+    ctx.addIssue({ code: "custom", path: ["district"], message: "The selected district does not belong to the selected province." });
+  }
 });
 
 type PatientSelfRegistrationForm = z.infer<typeof formSchema>;
@@ -53,10 +82,16 @@ export function PatientSelfRegistration() {
   const [tokenError, setTokenError] = useState("");
   const [loadingToken, setLoadingToken] = useState(Boolean(token));
   const [successMessage, setSuccessMessage] = useState("");
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<PatientSelfRegistrationForm>({
+  const { register, handleSubmit, watch, setValue, formState: { errors, isSubmitting } } = useForm<PatientSelfRegistrationForm>({
     resolver: zodResolver(formSchema),
-    defaultValues: { gender: "female", languagePreference: "en" },
+    defaultValues: { gender: "", languagePreference: "en" },
   });
+
+  const selectedProvince = watch("province") ?? "";
+  const selectedDistrict = watch("district") ?? "";
+  const selectedBloodGroup = watch("bloodGroup") ?? "";
+  const selectedAllergies = watch("allergies") ?? "";
+  const selectedChronicDiseases = watch("chronicDiseases") ?? "";
 
   useEffect(() => {
     if (!token) return;
@@ -139,31 +174,40 @@ export function PatientSelfRegistration() {
         </Card>
 
         <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+          <div className="rounded-md border border-cyan-200 bg-cyan-50 px-3 py-2 text-sm text-cyan-950 dark:border-cyan-900 dark:bg-cyan-950 dark:text-cyan-50">
+            Only fields marked with <strong>*</strong> are required. Other details may be completed later by hospital staff.
+          </div>
           <Card>
             <CardHeader><CardTitle>Personal details</CardTitle></CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-2">
-              <Field label="Full name" error={errors.fullName?.message}><Input {...register("fullName")} /></Field>
+              <Field label="Full name" required error={errors.fullName?.message}><Input {...register("fullName")} /></Field>
               <Field label="NIC number"><Input {...register("nic")} placeholder="Adults can enter NIC" /></Field>
               <Field label="Passport number"><Input {...register("passportNo")} /></Field>
-              <Field label="Date of birth" error={errors.dateOfBirth?.message}><Input type="date" {...register("dateOfBirth")} /></Field>
-              <label className="block text-sm font-medium">Gender<Select {...register("gender")}><option value="male">Male</option><option value="female">Female</option><option value="other">Other</option><option value="prefer_not_to_say">Prefer not to say</option></Select></label>
-              <label className="block text-sm font-medium">Language<Select {...register("languagePreference")}><option value="en">English</option><option value="si">Sinhala</option><option value="ta">Tamil</option></Select></label>
+              <Field label="Date of birth" required error={errors.dateOfBirth?.message}><Input type="date" max={new Date().toISOString().slice(0, 10)} {...register("dateOfBirth")} /></Field>
+              <label className="block text-sm font-medium"><FormFieldLabel optional>Gender</FormFieldLabel><Select {...register("gender")}><option value="">Not stated</option><option value="male">Male</option><option value="female">Female</option><option value="other">Other</option><option value="prefer_not_to_say">Prefer not to say</option></Select></label>
+              <label className="block text-sm font-medium"><FormFieldLabel optional>Language</FormFieldLabel><Select {...register("languagePreference")}><option value="en">English</option><option value="si">Sinhala</option><option value="ta">Tamil</option></Select></label>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader><CardTitle>Contact and medical details</CardTitle></CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-2">
-              <Field label="Phone number" error={errors.phone?.message}><Input {...register("phone")} /></Field>
+              <Field label="Phone number" error={errors.phone?.message}><Input type="tel" inputMode="tel" placeholder="07XXXXXXXX or +947XXXXXXXX" {...register("phone")} /></Field>
               <Field label="Email" error={errors.email?.message}><Input type="email" {...register("email")} /></Field>
               <Field label="Address" error={errors.address?.message}><Input {...register("address")} /></Field>
-              <Field label="District"><Input {...register("district")} /></Field>
-              <Field label="Province"><Input {...register("province")} /></Field>
-              <Field label="Blood group"><Input {...register("bloodGroup")} placeholder="A+, B-, O+" /></Field>
-              <Field label="Allergies"><Input {...register("allergies")} placeholder="Separate with commas" /></Field>
-              <Field label="Chronic diseases"><Input {...register("chronicDiseases")} placeholder="Separate with commas" /></Field>
+              <label className="block text-sm font-medium">
+                <FormFieldLabel>Province</FormFieldLabel>
+                {(() => { const field = register("province"); return <SriLankaProvinceSelect {...field} value={selectedProvince} onChange={(event) => { field.onChange(event); const nextProvince = event.target.value; if (selectedDistrict && !isDistrictInProvince(selectedDistrict, nextProvince)) setValue("district", "", { shouldDirty: true, shouldValidate: true }); }} />; })()}
+              </label>
+              <label className="block text-sm font-medium">
+                <FormFieldLabel>District</FormFieldLabel>
+                {(() => { const field = register("district"); return <SriLankaDistrictSelect {...field} province={selectedProvince} value={selectedDistrict} onChange={(event) => { field.onChange(event); const inferredProvince = provinceForDistrict(event.target.value); if (inferredProvince && inferredProvince !== selectedProvince) setValue("province", inferredProvince, { shouldDirty: true, shouldValidate: true }); }} />; })()}
+              </label>
+              <label className="block text-sm font-medium"><FormFieldLabel>Blood group</FormFieldLabel><Select value={selectedBloodGroup} onChange={(event) => setValue("bloodGroup", event.target.value, { shouldDirty: true })}><option value="">Not recorded</option>{BLOOD_GROUP_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</Select></label>
+              <label className="block text-sm font-medium"><FormFieldLabel>Allergies</FormFieldLabel><MultiSelectChips values={selectedAllergies.split(/[,;\n]/).map((item) => item.trim()).filter(Boolean)} options={COMMON_ALLERGY_OPTIONS} allowCustom onChange={(values) => setValue("allergies", values.join(", "), { shouldDirty: true })} noValueLabel="No allergy information recorded" /></label>
+              <label className="block text-sm font-medium"><FormFieldLabel>Chronic diseases</FormFieldLabel><MultiSelectChips values={selectedChronicDiseases.split(/[,;\n]/).map((item) => item.trim()).filter(Boolean)} options={COMMON_CHRONIC_DISEASE_OPTIONS} allowCustom onChange={(values) => setValue("chronicDiseases", values.join(", "), { shouldDirty: true })} noValueLabel="No chronic diseases recorded" /></label>
               <Field label="Emergency contact name" error={errors.emergencyContactName?.message}><Input {...register("emergencyContactName")} /></Field>
-              <Field label="Emergency contact phone" error={errors.emergencyContactPhone?.message}><Input {...register("emergencyContactPhone")} /></Field>
+              <Field label="Emergency contact phone" error={errors.emergencyContactPhone?.message}><Input type="tel" inputMode="tel" {...register("emergencyContactPhone")} /></Field>
             </CardContent>
           </Card>
 
@@ -185,10 +229,10 @@ export function PatientSelfRegistration() {
   );
 }
 
-function Field({ label, error, children }: { label: string; error?: string; children: ReactNode }) {
+function Field({ label, required = false, error, children }: { label: string; required?: boolean; error?: string; children: ReactNode }) {
   return (
     <label className="block text-sm font-medium">
-      {label}
+      <FormFieldLabel required={required} optional={!required}>{label}</FormFieldLabel>
       {children}
       {error ? <span className="text-xs text-destructive">{error}</span> : null}
     </label>

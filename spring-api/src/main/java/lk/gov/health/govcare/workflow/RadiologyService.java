@@ -14,7 +14,7 @@ public class RadiologyService {
     private final SqlSupport sql; private final JsonSupport json; private final AuditService audit;
     public RadiologyService(SqlSupport sql,JsonSupport json,AuditService audit){this.sql=sql;this.json=json;this.audit=audit;}
     private static final String SELECT="""
-      select rr.id::text,rr.patient_id::text,rr.visit_id::text,rr.consultation_id::text,p.patient_no,p.full_name as patient_name,
+      select rr.id::text,rr.patient_id::text,rr.visit_id::text,rr.consultation_id::text,p.patient_no,p.full_name as patient_name,rr.study_catalog_id::text,
        rr.imaging_type,rr.body_area,rr.priority::text,rr.clinical_reason,rr.contrast_required,rr.pregnancy_warning,rr.instructions,
        rr.workflow_status,u.full_name as requested_by_name,r.id::text as report_id,r.findings,r.impression,r.classification,rr.created_at
       from radiology_requests rr join patients p on p.id=rr.patient_id left join app_users u on u.id=rr.requested_by
@@ -41,10 +41,38 @@ public class RadiologyService {
         q.append(" limit 1");
         return sql.required(q.toString(),p,"Radiology order not found.");
     }
-    @Transactional @SuppressWarnings("unchecked") public List<Map<String,Object>> create(GovCarePrincipal a,Map<String,Object> in){String patient=req(in,"patientUuid"),reason=req(in,"clinicalIndication");if(sql.one("select id from patients where id=cast(:id as uuid) and hospital_id=:hospital and status<>'deleted'",Map.of("id",patient,"hospital",a.hospitalId())).isEmpty())throw ApiException.notFound("Patient not found.");String visit=clean(in.get("visitUuid")),consultation=clean(in.get("consultationUuid"));validateLinks(a,patient,visit,consultation);Object obj=in.get("items");if(!(obj instanceof List<?> raw)||raw.isEmpty())throw ApiException.badRequest("At least one radiology investigation is required.");List<Map<String,Object>>out=new ArrayList<>();for(Object o:raw){if(!(o instanceof Map<?,?> x))throw ApiException.badRequest("Invalid radiology item.");Map<String,Object> item=(Map<String,Object>)x;Map<String,Object> p=map("hospital",a.hospitalId(),"patient",patient,"visit",visit,"consultation",consultation,"user",a.id(),"type",req(item,"imagingType"),"area",clean(item.get("bodyArea")),"priority",String.valueOf(in.getOrDefault("priority","routine")),"reason",reason,"contrast",Boolean.parseBoolean(String.valueOf(item.getOrDefault("contrastRequired",false))),"pregnancy",Boolean.parseBoolean(String.valueOf(item.getOrDefault("pregnancyWarning",false))),"instructions",clean(item.get("instructions")));Map<String,Object> row=sql.required("""
-      insert into radiology_requests(hospital_id,patient_id,visit_id,consultation_id,requested_by,imaging_type,body_area,priority,clinical_reason,contrast_required,pregnancy_warning,instructions,workflow_status,scan_status,status,created_by,updated_by)
-      values(:hospital,cast(:patient as uuid),cast(:visit as uuid),cast(:consultation as uuid),:user,:type,:area,cast(:priority as priority_level),:reason,:contrast,:pregnancy,:instructions,'ordered','requested','active',:user,:user) returning id::text
-      """,p,"Unable to create radiology order.");Map<String,Object> order=get(a,String.valueOf(row.get("id")));out.add(order);audit.record(a,"radiology","radiology_order_created","radiology_requests",UUID.fromString(String.valueOf(row.get("id"))),null,order);}return out;}
+    @Transactional
+    @SuppressWarnings("unchecked")
+    public List<Map<String,Object>> create(GovCarePrincipal a,Map<String,Object> in){
+        String patient=req(in,"patientUuid"),reason=req(in,"clinicalIndication");
+        if(sql.one("select id from patients where id=cast(:id as uuid) and hospital_id=:hospital and status<>'deleted'",Map.of("id",patient,"hospital",a.hospitalId())).isEmpty()) throw ApiException.notFound("Patient not found.");
+        String visit=clean(in.get("visitUuid")),consultation=clean(in.get("consultationUuid"));
+        validateLinks(a,patient,visit,consultation);
+        Object obj=in.get("items");
+        if(!(obj instanceof List<?> raw)||raw.isEmpty()) throw ApiException.badRequest("At least one radiology investigation is required.");
+        List<Map<String,Object>> out=new ArrayList<>();
+        for(Object o:raw){
+            if(!(o instanceof Map<?,?> x)) throw ApiException.badRequest("Invalid radiology item.");
+            Map<String,Object> item=(Map<String,Object>)x;
+            String catalogId=clean(item.get("studyCatalogId"));
+            String type=req(item,"imagingType");
+            String area=clean(item.get("bodyArea"));
+            if(catalogId!=null){
+                Map<String,Object> catalog=sql.required("select id::text,name,modality,body_region,contrast_default from radiology_study_catalog where id=cast(:id as uuid) and status='active'",Map.of("id",catalogId),"Radiology study was not found or is inactive.");
+                type=String.valueOf(catalog.get("name"));
+                if(area==null) area=clean(catalog.get("body_region"));
+            }
+            Map<String,Object> p=map("hospital",a.hospitalId(),"patient",patient,"visit",visit,"consultation",consultation,"user",a.id(),"catalog",catalogId,"type",type,"area",area,"priority",String.valueOf(in.getOrDefault("priority","routine")),"reason",reason,"contrast",Boolean.parseBoolean(String.valueOf(item.getOrDefault("contrastRequired",false))),"pregnancy",Boolean.parseBoolean(String.valueOf(item.getOrDefault("pregnancyWarning",false))),"instructions",clean(item.get("instructions")));
+            Map<String,Object> row=sql.required("""
+              insert into radiology_requests(hospital_id,patient_id,visit_id,consultation_id,requested_by,study_catalog_id,imaging_type,body_area,priority,clinical_reason,contrast_required,pregnancy_warning,instructions,workflow_status,scan_status,status,created_by,updated_by)
+              values(:hospital,cast(:patient as uuid),cast(:visit as uuid),cast(:consultation as uuid),:user,cast(:catalog as uuid),:type,:area,cast(:priority as priority_level),:reason,:contrast,:pregnancy,:instructions,'ordered','requested','active',:user,:user) returning id::text
+              """,p,"Unable to create radiology order.");
+            Map<String,Object> order=get(a,String.valueOf(row.get("id")));
+            out.add(order);
+            audit.record(a,"radiology","radiology_order_created","radiology_requests",UUID.fromString(String.valueOf(row.get("id"))),null,order);
+        }
+        return out;
+    }
     @Transactional public Map<String,Object> status(GovCarePrincipal a,String id,Map<String,Object> in){String state=req(in,"status");if(!Set.of("ordered","scheduled","patient_arrived","imaging_started","imaging_completed","report_drafted","verified","released","reviewed","cancelled").contains(state))throw ApiException.badRequest("Invalid radiology status.");Map<String,Object> p=map("id",id,"hospital",a.hospitalId(),"state",state,"user",a.id(),"scheduled",clean(in.get("scheduledAt")),"room",clean(in.get("room")));int n=sql.update("""
       update radiology_requests set workflow_status=:state,scan_status=:state,scheduled_at=coalesce(cast(:scheduled as timestamptz),scheduled_at),room=coalesce(:room,room),
       patient_arrived_at=case when :state='patient_arrived' then now() else patient_arrived_at end,

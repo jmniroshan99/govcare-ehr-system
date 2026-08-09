@@ -8,15 +8,19 @@ import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Input } from "../components/ui/input";
-import { Select } from "../components/ui/select";
+import { AsyncSearchableSelect, PhoneNumberField, SearchableSelect } from "../components/forms";
+import { SriLankaDistrictSelect, SriLankaProvinceSelect } from "../components/location/SriLankaLocationSelects";
 import { useToast } from "../components/ui/toast-context";
 import { roleLabels } from "../lib/rbac";
 import { changeCurrentUserPassword, logout, recordPasswordChanged, requestEmailOtp, verifyEmailOtp } from "../services/authService";
 import { updateProfile } from "../services/profileService";
+import { searchHospitals } from "../services/referenceDataService";
+import { LANGUAGE_OPTIONS } from "../data/referenceOptions";
 import { saveProfileOverride, useAuthStore } from "../stores/authStore";
 import { friendlyAuthError } from "../utils/authErrors";
 import { refreshAndRedirectToMainMenu } from "../utils/navigation";
 import { addNotification } from "../utils/notifications";
+import { isDistrictInProvince, normaliseSriLankaProvince, provinceForDistrict } from "../data/sriLankaLocations";
 import { fieldPolicy } from "../utils/patientFieldPolicy";
 import { createChangePasswordSchema } from "../validations/auth";
 import type { ChangePasswordInput } from "../validations/auth";
@@ -53,6 +57,7 @@ export function Profile() {
     address: profile?.address ?? "",
     city: profile?.city ?? "",
     district: profile?.district ?? "",
+    province: normaliseSriLankaProvince(profile?.province) || provinceForDistrict(profile?.district),
     hospitalCity: profile?.hospitalCity ?? "",
     preferredHospital: profile?.preferredHospital ?? "",
     preferredLanguage: profile?.preferredLanguage ?? "English",
@@ -168,7 +173,7 @@ export function Profile() {
             </label>
             {canShow("phone") && <label className="block text-sm font-medium">
               Phone
-              <Input disabled={readOnly("phone")} value={values.phone} onChange={(event) => setValues((current) => ({ ...current, phone: event.target.value }))} />
+              <PhoneNumberField disabled={readOnly("phone")} value={values.phone} onChange={(phone) => setValues((current) => ({ ...current, phone }))} />
             </label>}
             {canShow("address") && <label className="block text-sm font-medium sm:col-span-2">
               Address
@@ -180,9 +185,13 @@ export function Profile() {
                   Your city
                   <Input value={values.city} onChange={(event) => setValues((current) => ({ ...current, city: event.target.value }))} placeholder="Example: Colombo" />
                 </label>}
+                {canShow("province") && <label className="block text-sm font-medium">
+                  Province
+                  <SriLankaProvinceSelect value={values.province} onChange={(event) => { const province = normaliseSriLankaProvince(event.target.value); setValues((current) => ({ ...current, province, district: current.district && !isDistrictInProvince(current.district, province) ? "" : current.district })); }} />
+                </label>}
                 {canShow("district") && <label className="block text-sm font-medium">
                   District
-                  <Input value={values.district} onChange={(event) => setValues((current) => ({ ...current, district: event.target.value }))} placeholder="Example: Colombo District" />
+                  <SriLankaDistrictSelect province={values.province} value={values.district} onChange={(event) => { const district = event.target.value; const province = provinceForDistrict(district); setValues((current) => ({ ...current, district, province: province || current.province })); }} />
                 </label>}
                 <label className="block text-sm font-medium">
                   Preferred hospital city
@@ -190,15 +199,11 @@ export function Profile() {
                 </label>
                 <label className="block text-sm font-medium">
                   Preferred hospital
-                  <Input value={values.preferredHospital} onChange={(event) => setValues((current) => ({ ...current, preferredHospital: event.target.value }))} placeholder="Example: National Hospital" />
+                  <AsyncSearchableSelect value={values.preferredHospital} selectedOption={values.preferredHospital ? { value: values.preferredHospital, label: values.preferredHospital } : null} loadOptions={searchHospitals} minQueryLength={0} onChange={(value, option) => setValues((current) => ({ ...current, preferredHospital: option?.label ?? value }))} placeholder="Search preferred hospital" />
                 </label>
                 {canShow("preferredLanguage") && <label className="block text-sm font-medium">
                   Preferred language
-                  <Select value={values.preferredLanguage} onChange={(event) => setValues((current) => ({ ...current, preferredLanguage: event.target.value }))}>
-                    <option>English</option>
-                    <option>Sinhala</option>
-                    <option>Tamil</option>
-                  </Select>
+                  <SearchableSelect value={values.preferredLanguage} options={LANGUAGE_OPTIONS} onChange={(preferredLanguage) => setValues((current) => ({ ...current, preferredLanguage }))} clearable={false} />
                 </label>}
                 {canShow("emergencyContactName") && <label className="block text-sm font-medium">
                   Emergency contact name
@@ -206,7 +211,7 @@ export function Profile() {
                 </label>}
                 {canShow("emergencyContactPhone") && <label className="block text-sm font-medium">
                   Emergency contact phone
-                  <Input value={values.emergencyContactPhone} onChange={(event) => setValues((current) => ({ ...current, emergencyContactPhone: event.target.value }))} />
+                  <PhoneNumberField value={values.emergencyContactPhone} onChange={(emergencyContactPhone) => setValues((current) => ({ ...current, emergencyContactPhone }))} />
                 </label>}
               </>
             )}

@@ -35,6 +35,7 @@ export async function apiRequest<T>(path: string, options: RequestInit = {}): Pr
   const token = window.localStorage.getItem(API_TOKEN_KEY);
   const response = await performFetch(`${API_BASE_URL}${path}`, {
     ...options,
+    cache: options.cache ?? "no-store",
     headers: {
       "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),

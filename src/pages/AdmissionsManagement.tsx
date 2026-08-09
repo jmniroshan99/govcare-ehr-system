@@ -7,11 +7,10 @@ import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { SmartSearch } from "../components/search/SmartSearch";
-import { Input } from "../components/ui/input";
 import { Select } from "../components/ui/select";
 import { Table, Td, Th } from "../components/ui/table";
 import { useToast } from "../components/ui/toast-context";
-import { ADMISSION_WORKFLOW_UPDATED_EVENT, addAdmissionCounterRequest, getAdmissionCounterRequests, updateAdmissionCounterRequest, type AdmissionCounterRequest } from "../utils/admissionWorkflow";
+import { ADMISSION_WORKFLOW_UPDATED_EVENT, getAdmissionCounterRequests, updateAdmissionCounterRequest, type AdmissionCounterRequest } from "../utils/admissionWorkflow";
 import { addNotification } from "../utils/notifications";
 import { getPatientClinicalClassification } from "../utils/patientRegistry";
 import { wardAssignmentAllowed, type PatientGenderForWard, type WardCategory } from "../utils/wardPolicy";
@@ -130,9 +129,6 @@ function statusTone(status: AdmissionStatus | BedStatus) {
   return "neutral" as const;
 }
 
-function nextAdmissionRequestId() {
-  return `REQ-${Math.floor(1000 + Math.random() * 9000)}`;
-}
 
 function bedClass(bed: BedRecord, selectedBedId: string) {
   if (bed.id === selectedBedId) return "border-teal-400 bg-teal-50 ring-2 ring-teal-200";
@@ -152,30 +148,12 @@ export function AdmissionsManagement() {
   const [overrideApproved, setOverrideApproved] = useState(false);
   const [statusFilter, setStatusFilter] = useState<AdmissionStatus | "all">("all");
   const [query, setQuery] = useState("");
-  const [form, setForm] = useState({
-    patientId: "PAT-2026-000888",
-    patientName: "New Patient",
-    patientAge: "35",
-    patientGender: "male" as PatientGenderForWard,
-    referralSource: "OPD" as AdmissionRequest["referralSource"],
-    reason: "Observation and inpatient treatment",
-    provisionalDiagnosis: "Dengue fever warning signs",
-    priority: "urgent" as AdmissionPriority,
-    department: "General Medicine",
-    wardType: "Male Ward",
-    consultant: "Dr. Anjali Perera",
-    bedType: "Medical bed",
-    allergies: "No known allergies",
-    chronicDiseases: "None",
-    notes: "Needs FBC monitoring, oral fluid chart, and fever observation.",
-  });
+
   const selectedAdmission = admissions.find((item) => item.id === selectedAdmissionId) ?? admissions[0];
   const wardBeds = beds.filter((bed) => bed.wardId === selectedWardId);
   const selectedWard = wards.find((ward) => ward.id === selectedWardId) ?? wards[0];
   const selectedClassification = getPatientClinicalClassification(selectedAdmission.patientId, { age: selectedAdmission.patientAge, gender: selectedAdmission.patientGender });
-  const formClassification = getPatientClinicalClassification(form.patientId, { age: Number(form.patientAge) || 0, gender: form.patientGender });
   const selectedPolicy = wardAssignmentAllowed({ age: selectedClassification.age ?? selectedAdmission.patientAge, gender: selectedClassification.gender }, selectedWard.category, overrideApproved);
-  const formPolicy = wardAssignmentAllowed({ age: formClassification.age ?? (Number(form.patientAge) || 0), gender: formClassification.gender }, selectedWard.category, overrideApproved);
 
   const visibleAdmissions = useMemo(() => {
     const q = query.toLowerCase();
@@ -210,36 +188,6 @@ export function AdmissionsManagement() {
     };
   }, []);
 
-  function createAdmissionRequest() {
-    const now = new Date().toISOString();
-    const request: AdmissionRequest = {
-      id: nextAdmissionRequestId(),
-      patientId: form.patientId,
-      patientName: form.patientName,
-      patientAge: formClassification.age ?? (Number(form.patientAge) || 0),
-      patientGender: formClassification.gender,
-      referralSource: form.referralSource,
-      reason: form.reason,
-      provisionalDiagnosis: form.provisionalDiagnosis,
-      priority: form.priority,
-      department: form.department,
-      wardType: formClassification.recommendedWardLabel,
-      consultant: form.consultant,
-      bedType: form.bedType,
-      allergies: form.allergies.split(",").map((item) => item.trim()).filter(Boolean),
-      chronicDiseases: form.chronicDiseases.split(",").map((item) => item.trim()).filter(Boolean),
-      emergencyStatus: form.priority === "emergency" || form.priority === "critical" || form.referralSource === "Emergency",
-      notes: form.notes,
-      status: "pending",
-      createdAt: now,
-      updatedAt: now,
-    };
-    setAdmissions((current) => [request, ...current]);
-    addAdmissionCounterRequest({ ...request, counterStatus: "new" });
-    setSelectedAdmissionId(request.id);
-    showToast("Admission request created with audit metadata.", "success");
-    addNotification({ title: "New admission request", message: `${request.patientName} requested admission from ${request.referralSource}.`, module: "Admissions", priority: request.emergencyStatus ? "critical" : "urgent", roles: ["super_admin", "hospital_admin", "doctor", "nurse"], channels: ["in-app", "push"], group: "Admissions", actionHref: "/admissions" });
-  }
 
   function approveAdmission() {
     if (!selectedAdmission || !selectedBedId) {
@@ -286,6 +234,7 @@ export function AdmissionsManagement() {
             <p className="mt-2 max-w-3xl text-sm text-muted-foreground">Create admission requests from OPD, ETU, clinics, or doctor referrals; approve beds with male/female/children ward policy validation, transfers, discharges, notifications, and audit history.</p>
           </div>
           <div className="flex flex-wrap gap-2">
+            <Link className="interactive-control inline-flex min-h-11 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90" to="/admissions/new"><BedDouble className="mr-2 h-4 w-4" />New atomic admission</Link>
             <Button variant="outline" onClick={() => {
               addNotification({
                 title: "Ward admission update",
@@ -323,30 +272,20 @@ export function AdmissionsManagement() {
 
         <section className="grid gap-4 xl:grid-cols-[420px_1fr]">
           <Card>
-            <CardHeader><CardTitle className="flex items-center gap-2"><Hospital className="h-5 w-5 text-primary" />Create admission request</CardTitle></CardHeader>
-            <CardContent className="space-y-3">
-              <div className="grid gap-3 sm:grid-cols-2">
-                <label className="text-sm font-medium">Patient ID<Input value={form.patientId} onChange={(event) => setForm((current) => ({ ...current, patientId: event.target.value }))} /></label>
-                <label className="text-sm font-medium">Patient name<Input value={form.patientName} onChange={(event) => setForm((current) => ({ ...current, patientName: event.target.value }))} /></label>
-                <label className="text-sm font-medium">Age<Input value={form.patientAge} onChange={(event) => setForm((current) => ({ ...current, patientAge: event.target.value }))} inputMode="numeric" /></label>
-                <label className="text-sm font-medium">Gender<Select value={form.patientGender} onChange={(event) => setForm((current) => ({ ...current, patientGender: event.target.value as PatientGenderForWard }))}><option value="male">Male</option><option value="female">Female</option><option value="other">Other / clinical review</option><option value="unknown">Unknown / emergency</option></Select></label>
-                <label className="text-sm font-medium">Referral source<Select value={form.referralSource} onChange={(event) => setForm((current) => ({ ...current, referralSource: event.target.value as AdmissionRequest["referralSource"] }))}><option>OPD</option><option>Emergency</option><option>Clinic</option><option>Doctor Center</option></Select></label>
-                <label className="text-sm font-medium">Priority<Select value={form.priority} onChange={(event) => setForm((current) => ({ ...current, priority: event.target.value as AdmissionPriority }))}><option value="routine">Routine</option><option value="urgent">Urgent</option><option value="emergency">Emergency</option><option value="critical">Critical</option></Select></label>
-                <label className="text-sm font-medium sm:col-span-2">Admission reason<Input value={form.reason} onChange={(event) => setForm((current) => ({ ...current, reason: event.target.value }))} /></label>
-                <label className="text-sm font-medium sm:col-span-2">Provisional diagnosis<Input value={form.provisionalDiagnosis} onChange={(event) => setForm((current) => ({ ...current, provisionalDiagnosis: event.target.value }))} /></label>
-                <label className="text-sm font-medium">Department<Input value={form.department} onChange={(event) => setForm((current) => ({ ...current, department: event.target.value }))} /></label>
-                <label className="text-sm font-medium">Ward recommendation<Input value={formClassification.recommendedWardLabel} readOnly /></label>
-                <label className="text-sm font-medium">Consultant<Input value={form.consultant} onChange={(event) => setForm((current) => ({ ...current, consultant: event.target.value }))} /></label>
-                <label className="text-sm font-medium">Required bed type<Input value={form.bedType} onChange={(event) => setForm((current) => ({ ...current, bedType: event.target.value }))} /></label>
-                <label className="text-sm font-medium">Allergies<Input value={form.allergies} onChange={(event) => setForm((current) => ({ ...current, allergies: event.target.value }))} /></label>
-                <label className="text-sm font-medium">Chronic diseases<Input value={form.chronicDiseases} onChange={(event) => setForm((current) => ({ ...current, chronicDiseases: event.target.value }))} /></label>
-                <label className="text-sm font-medium sm:col-span-2">Admission notes<Input value={form.notes} onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))} /></label>
+            <CardHeader><CardTitle className="flex items-center gap-2"><Hospital className="h-5 w-5 text-primary" />Create a safe inpatient admission</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="rounded-xl border border-teal-300 bg-teal-50 p-4 text-sm text-teal-950 dark:border-teal-800 dark:bg-teal-950/50 dark:text-teal-50">
+                <p className="font-bold">The legacy free-text admission form has been retired.</p>
+                <p className="mt-1">Use the atomic workflow so patient identity, age, hospital, department, ward, available bed, admitting staff, isolation rules, permissions, audit history, and concurrent bed locking are validated by the Spring Boot API.</p>
               </div>
-              <p className={`rounded-md border px-3 py-2 text-sm font-semibold ${formPolicy.recommendation.requiresOverride ? "border-amber-300 bg-amber-50 text-amber-950" : "border-teal-200 bg-teal-50 text-teal-950"}`}>
-                Patient classification: {formClassification.dependentCategory.replaceAll("_", " ")}. {formClassification.reason}
-              </p>
-              <Button className="w-full" onClick={createAdmissionRequest}><ClipboardList className="h-4 w-4" />Create admission request</Button>
-              <p className="help-strip p-3 text-sm">Production writes should call backend API jobs to validate patient, referral source, hospitalId, role claims, bed lock, notifications, and auditLogs.</p>
+              <ol className="space-y-2 text-sm text-muted-foreground">
+                <li><strong className="text-foreground">1.</strong> Search and confirm the patient.</li>
+                <li><strong className="text-foreground">2.</strong> Enter narrative admission reason and choose controlled clinical values.</li>
+                <li><strong className="text-foreground">3.</strong> Select hospital → department → compatible ward → available bed.</li>
+                <li><strong className="text-foreground">4.</strong> Review and commit the admission in one transaction.</li>
+              </ol>
+              <Link className="interactive-control inline-flex min-h-11 w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90" to="/admissions/new"><BedDouble className="mr-2 h-4 w-4" />Open smart admission workflow</Link>
+              <p className="help-strip p-3 text-sm">Existing admission records remain visible in this management dashboard. New records are created only through the validated workflow.</p>
             </CardContent>
           </Card>
 

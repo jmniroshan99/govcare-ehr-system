@@ -65,6 +65,7 @@ export interface PatientFieldPolicy {
 }
 
 export interface PatientFieldConfiguration {
+  version?: number;
   hospitalId: string;
   genderEnabled: boolean;
   genderOptions: string[];
@@ -97,8 +98,8 @@ export const patientFieldDefinitions: PatientFieldDefinition[] = [
   { id: "ethnicity", label: "Ethnicity", section: "identity", type: "text", sensitive: true },
   { id: "religion", label: "Religion", section: "identity", type: "text", sensitive: true },
   { id: "address", label: "Address", section: "contact", type: "text" },
-  { id: "district", label: "District", section: "contact", type: "text" },
-  { id: "province", label: "Province", section: "contact", type: "text" },
+  { id: "district", label: "District", section: "contact", type: "select" },
+  { id: "province", label: "Province", section: "contact", type: "select" },
   { id: "postalCode", label: "Postal code", section: "contact", type: "text" },
   { id: "phone", label: "Phone number", section: "contact", type: "text" },
   { id: "email", label: "Email address", section: "contact", type: "email" },
@@ -130,9 +131,9 @@ export const patientFieldDefinitions: PatientFieldDefinition[] = [
 const defaultVisibleRoles: Role[] = ["super_admin", "hospital_admin", "doctor", "nurse", "receptionist", "records_officer", "patient"];
 
 export function createDefaultPatientFieldConfiguration(hospitalId = "hosp-colombo-national"): PatientFieldConfiguration {
-  const required = new Set<PatientFieldId>(["firstName", "lastName", "dateOfBirth", "phone", "address", "emergencyContactName", "emergencyContactRelationship", "emergencyContactPhone"]);
+  const required = new Set<PatientFieldId>(["firstName", "lastName", "dateOfBirth"]);
   const readOnly = new Set<PatientFieldId>(["patientId", "age"]);
-  const optional = new Set<PatientFieldId>(["middleName", "preferredName", "passportNumber", "email", "occupation", "employer", "ethnicity", "religion", "insuranceDetails", "socialHistory", "communicationPreferences"]);
+  const optional = new Set<PatientFieldId>(patientFieldDefinitions.map((field) => field.id).filter((id) => !required.has(id) && !readOnly.has(id)));
   const fields = Object.fromEntries(
     patientFieldDefinitions.map((field) => [
       field.id,
@@ -143,7 +144,7 @@ export function createDefaultPatientFieldConfiguration(hospitalId = "hosp-colomb
       },
     ]),
   ) as Record<PatientFieldId, PatientFieldPolicy>;
-  return { hospitalId, genderEnabled: true, genderOptions: genderDefaults, fields, customFields: [], updatedAt: new Date().toISOString(), updatedBy: "local-admin" };
+  return { version: 2, hospitalId, genderEnabled: true, genderOptions: genderDefaults, fields, customFields: [], updatedAt: new Date().toISOString(), updatedBy: "local-admin" };
 }
 
 export function getPatientFieldConfiguration() {
@@ -152,7 +153,28 @@ export function getPatientFieldConfiguration() {
     const stored = window.localStorage.getItem(CONFIG_KEY);
     if (!stored) return createDefaultPatientFieldConfiguration();
     const parsed = JSON.parse(stored) as PatientFieldConfiguration;
-    return { ...createDefaultPatientFieldConfiguration(parsed.hospitalId), ...parsed, fields: { ...createDefaultPatientFieldConfiguration(parsed.hospitalId).fields, ...parsed.fields } };
+    const defaults = createDefaultPatientFieldConfiguration(parsed.hospitalId);
+    if ((parsed.version ?? 1) < 2) {
+      const upgradedFields = { ...defaults.fields };
+      for (const [fieldId, policy] of Object.entries(parsed.fields ?? {})) {
+        const id = fieldId as PatientFieldId;
+        upgradedFields[id] = {
+          ...upgradedFields[id],
+          ...policy,
+          state: ["firstName", "lastName", "dateOfBirth"].includes(id)
+            ? "required"
+            : ["patientId", "age"].includes(id)
+              ? "read-only"
+              : policy.state === "hidden"
+                ? "hidden"
+                : "optional",
+        };
+      }
+      const upgraded = { ...defaults, ...parsed, version: 2, fields: upgradedFields };
+      window.localStorage.setItem(CONFIG_KEY, JSON.stringify(upgraded));
+      return upgraded;
+    }
+    return { ...defaults, ...parsed, version: 2, fields: { ...defaults.fields, ...parsed.fields } };
   } catch {
     return createDefaultPatientFieldConfiguration();
   }

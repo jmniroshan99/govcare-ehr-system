@@ -11,7 +11,10 @@ import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { SmartSearch } from "../components/search/SmartSearch";
 import { Input } from "../components/ui/input";
+import { FormFieldLabel } from "../components/ui/form-field-label";
+import { AsyncSearchableSelect, MultiSelectChips } from "../components/forms";
 import { Select } from "../components/ui/select";
+import { SriLankaDistrictSelect, SriLankaProvinceSelect } from "../components/location/SriLankaLocationSelects";
 import { useToast } from "../components/ui/toast-context";
 import {
   checkPatientDuplicate,
@@ -20,6 +23,10 @@ import {
   type DuplicatePatientCheckResult,
   type PatientRecord,
 } from "../services/patientService";
+import { calculateAgeYears } from "../utils/age";
+import { ALCOHOL_USE_OPTIONS, BLOOD_GROUP_OPTIONS, COMMON_ALLERGY_OPTIONS, COMMON_CHRONIC_DISEASE_OPTIONS, ORGAN_DONOR_OPTIONS, SMOKING_STATUS_OPTIONS } from "../data/referenceOptions";
+import { searchCountries } from "../services/referenceDataService";
+import { isDistrictInProvince, provinceForDistrict } from "../data/sriLankaLocations";
 import { fieldPolicy, getPatientFieldConfiguration, type PatientFieldId } from "../utils/patientFieldPolicy";
 import { generateNewPatientPdf } from "../utils/patientPdf";
 import { sanitizeInput } from "../utils/sanitize";
@@ -40,16 +47,6 @@ const guardianRelationships: readonly string[] = [
 
 function nextPatientId() {
   return `PAT-${new Date().getFullYear()}-${String(Math.floor(100000 + Math.random() * 899999))}`;
-}
-
-function calculateAge(dateOfBirth: string) {
-  const birthday = new Date(dateOfBirth);
-  if (Number.isNaN(birthday.getTime())) return undefined;
-  const today = new Date();
-  let age = today.getFullYear() - birthday.getFullYear();
-  const hasBirthdayPassed = today.getMonth() > birthday.getMonth() || (today.getMonth() === birthday.getMonth() && today.getDate() >= birthday.getDate());
-  if (!hasBirthdayPassed) age -= 1;
-  return age >= 0 ? age : undefined;
 }
 
 function listFromText(value: unknown) {
@@ -96,9 +93,9 @@ export function PatientRegistration() {
   const [isCheckingDuplicate, setIsCheckingDuplicate] = useState(false);
   const [isSavingPatient, setIsSavingPatient] = useState(false);
   const submissionLockRef = useRef(false);
-  const { register, handleSubmit, control, reset, getValues, setFocus, formState: { errors, isSubmitting } } = useForm<PatientInput>({
+  const { register, handleSubmit, control, reset, getValues, setFocus, setValue, formState: { errors, isSubmitting } } = useForm<PatientInput>({
     resolver: zodResolver(patientSchema),
-    defaultValues: { sex: config.genderOptions[0] ?? "Female", riskCategory: "routine", consentToShare: false, patientId: generatedId, preferredLanguage: "English", nationality: "Sri Lankan" },
+    defaultValues: { sex: "", riskCategory: "routine", consentToShare: false, patientId: generatedId, preferredLanguage: "English", nationality: "Sri Lankan" },
   });
   const riskCategory = useWatch({ control, name: "riskCategory" });
   const dateOfBirth = useWatch({ control, name: "dateOfBirth" });
@@ -111,7 +108,16 @@ export function PatientRegistration() {
   const watchedBirthCertificate = useWatch({ control, name: "birthCertificateNo" });
   const watchedPhone = useWatch({ control, name: "phone" });
   const watchedEmail = useWatch({ control, name: "email" });
-  const patientAge = calculateAge(dateOfBirth ?? "");
+  const watchedProvince = useWatch({ control, name: "province" }) ?? "";
+  const watchedDistrict = useWatch({ control, name: "district" }) ?? "";
+  const watchedBloodGroup = useWatch({ control, name: "bloodGroup" }) ?? "";
+  const watchedNationality = useWatch({ control, name: "nationality" }) ?? "";
+  const watchedAllergies = useWatch({ control, name: "allergies" }) ?? "";
+  const watchedChronicDiseases = useWatch({ control, name: "chronicDiseases" }) ?? "";
+  const watchedSmokingStatus = useWatch({ control, name: "smokingStatus" }) ?? "";
+  const watchedAlcoholUse = useWatch({ control, name: "alcoholUse" }) ?? "";
+  const watchedOrganDonorStatus = useWatch({ control, name: "organDonorStatus" }) ?? "";
+  const patientAge = calculateAgeYears(dateOfBirth ?? "");
   const requiresGuardian = patientAge !== undefined && patientAge < 16;
   const barcodeValue = `*${generatedId.replaceAll("-", "")}*`;
   const [duplicates, setDuplicates] = useState<PatientRecord[]>([]);
@@ -205,11 +211,15 @@ export function PatientRegistration() {
     const valueProps = name === "patientId" ? { value: generatedId } : name === "age" ? { value: patientAge ?? "" } : {};
     return (
       <label key={name} className="block text-sm font-medium">
-        {definition}{policy.required || (requiresGuardian && ["birthCertificateNo", "guardianName", "guardianRelationship", "guardianNic", "guardianPhone"].includes(name)) ? <span className="text-destructive"> *</span> : null}
+        <FormFieldLabel required={policy.required} optional={!policy.required && !disabled}>{definition}</FormFieldLabel>
         <Input
-          type={name === "dateOfBirth" ? "date" : name === "email" ? "email" : "text"}
+          type={name === "dateOfBirth" ? "date" : name === "email" ? "email" : name.includes("Phone") || name === "phone" ? "tel" : "text"}
+          max={name === "dateOfBirth" ? new Date().toISOString().slice(0, 10) : undefined}
+          inputMode={name.includes("Phone") || name === "phone" ? "tel" : undefined}
+          autoCapitalize={name === "passportNumber" || name === "nicOrPassport" || name === "birthCertificateNo" || name === "guardianNic" ? "characters" : undefined}
+          pattern={name === "nicOrPassport" || name === "guardianNic" ? "(?:[0-9]{9}[VvXx]|[0-9]{12}|[A-Za-z0-9]{5,32})" : name === "passportNumber" ? "[A-Za-z0-9]{5,32}" : undefined}
           disabled={disabled}
-          autoComplete="off"
+          autoComplete={name === "email" ? "email" : name === "phone" ? "tel" : "off"}
           aria-invalid={errors[name as keyof PatientInput] ? "true" : undefined}
           {...common}
           {...valueProps}
@@ -228,7 +238,7 @@ export function PatientRegistration() {
     const firstName = String(sanitized.firstName ?? "");
     const lastName = String(sanitized.lastName ?? "");
     const patientName = `${String(sanitized.title ?? "")} ${firstName} ${lastName}`.trim() || generatedId;
-    const age = calculateAge(String(sanitized.dateOfBirth ?? ""));
+    const age = calculateAgeYears(String(sanitized.dateOfBirth ?? ""));
     const passportNumber = String(sanitized.passportNumber ?? "");
     const adultIdentifier = String(sanitized.nicOrPassport ?? "");
 
@@ -322,7 +332,7 @@ export function PatientRegistration() {
       );
       navigate(`/patients/${encodeURIComponent(patient.id)}`);
       const nextId = nextPatientId();
-      reset({ sex: config.genderOptions[0] ?? "Female", riskCategory: "routine", consentToShare: false, patientId: nextId, preferredLanguage: "English", nationality: "Sri Lankan" });
+      reset({ sex: "", riskCategory: "routine", consentToShare: false, patientId: nextId, preferredLanguage: "English", nationality: "Sri Lankan" });
       setPhotoName("");
       setPhotoDataUrl("");
       setDuplicateTerm("");
@@ -373,7 +383,7 @@ export function PatientRegistration() {
   function printPatientIdentifier(kind: "qr" | "barcode") {
     const values = getValues();
     const patientName = `${values.title ?? ""} ${values.firstName ?? ""} ${values.middleName ?? ""} ${values.lastName ?? ""}`.replace(/\s+/g, " ").trim() || "Pending patient name";
-    const age = calculateAge(values.dateOfBirth ?? "");
+    const age = calculateAgeYears(values.dateOfBirth ?? "");
     const identifier = age !== undefined && age < 16 ? values.birthCertificateNo : values.nicOrPassport || values.passportNumber;
     const hospitalId = profile?.hospitalId ?? "current-hospital";
     const qrValue = JSON.stringify({
@@ -548,6 +558,10 @@ export function PatientRegistration() {
       </section>
 
       <form className="space-y-4" noValidate autoComplete="off" onSubmit={handleSubmit(onSubmit, onInvalid)}>
+        <div className="rounded-lg border border-cyan-700/60 bg-cyan-950/25 px-4 py-3 text-sm text-cyan-50">
+          <p className="font-semibold">Minimum registration data only</p>
+          <p className="mt-1 text-cyan-100">Only fields marked with <strong>*</strong> are required. Other details may be left blank and completed later from the patient profile.</p>
+        </div>
         {validationSummary.length > 0 && (
           <div role="alert" className="rounded-lg border border-rose-400/60 bg-rose-950/30 px-4 py-3 text-sm text-rose-100">
             <p className="font-semibold">Patient registration was not submitted.</p>
@@ -557,27 +571,38 @@ export function PatientRegistration() {
         <Card>
           <CardHeader><CardTitle className="flex items-center gap-2"><UserPlus className="h-5 w-5 text-primary" />Personal, contact, and location details</CardTitle></CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {shownFields(["patientId", "nicOrPassport", "passportNumber", "birthCertificateNo", "title", "firstName", "middleName", "lastName", "preferredName", "dateOfBirth", "age", "maritalStatus", "bloodGroup", "nationality", "ethnicity", "religion", "phone", "email", "address", "district", "province", "postalCode", "preferredLanguage"]).map((name) => {
-              if (name === "title") return <label key={name} className="block text-sm font-medium">Title<Select {...register("title")}><option>Mr</option><option>Mrs</option><option>Ms</option><option>Master</option><option>Dr</option><option>Rev</option></Select></label>;
-              if (name === "preferredLanguage") return <label key={name} className="block text-sm font-medium">Language preference<Select {...register("preferredLanguage")}><option>English</option><option>Sinhala</option><option>Tamil</option></Select></label>;
-              if (name === "maritalStatus") return <label key={name} className="block text-sm font-medium">Marital status<Select {...register("maritalStatus")}><option>Single</option><option>Married</option><option>Separated</option><option>Widowed</option><option>Not stated</option></Select></label>;
-              const labels: Record<string, string> = { nicOrPassport: "NIC number (16+ required)", birthCertificateNo: "Birth certificate no (required under 16)", patientId: "Patient ID", passportNumber: "Passport number" };
+            {shownFields(["patientId", "nicOrPassport", "passportNumber", "birthCertificateNo", "title", "firstName", "middleName", "lastName", "preferredName", "dateOfBirth", "age", "maritalStatus", "bloodGroup", "nationality", "ethnicity", "religion", "phone", "email", "address", "province", "district", "postalCode", "preferredLanguage"]).map((name) => {
+              if (name === "province") {
+                const field = register("province");
+                return <label key={name} className="block text-sm font-medium"><FormFieldLabel>Province</FormFieldLabel><SriLankaProvinceSelect {...field} value={watchedProvince} onChange={(event) => { field.onChange(event); const nextProvince = event.target.value; if (watchedDistrict && !isDistrictInProvince(watchedDistrict, nextProvince)) setValue("district", "", { shouldDirty: true, shouldValidate: true }); }} /></label>;
+              }
+              if (name === "district") {
+                const field = register("district");
+                return <label key={name} className="block text-sm font-medium"><FormFieldLabel>District</FormFieldLabel><SriLankaDistrictSelect {...field} province={watchedProvince} value={watchedDistrict} onChange={(event) => { field.onChange(event); const inferredProvince = provinceForDistrict(event.target.value); if (inferredProvince && inferredProvince !== watchedProvince) setValue("province", inferredProvince, { shouldDirty: true, shouldValidate: true }); }} /></label>;
+              }
+              if (name === "title") return <label key={name} className="block text-sm font-medium"><FormFieldLabel>Title</FormFieldLabel><Select {...register("title")}><option value="">Not stated</option><option>Mr</option><option>Mrs</option><option>Ms</option><option>Miss</option><option>Dr</option><option>Prof</option><option>Rev</option><option>Other</option></Select></label>;
+              if (name === "preferredLanguage") return <label key={name} className="block text-sm font-medium"><FormFieldLabel>Language preference</FormFieldLabel><Select {...register("preferredLanguage")}><option>English</option><option>Sinhala</option><option>Tamil</option><option>Other</option></Select></label>;
+              if (name === "maritalStatus") return <label key={name} className="block text-sm font-medium"><FormFieldLabel>Marital status</FormFieldLabel><Select {...register("maritalStatus")}><option value="">Not stated</option><option>Single</option><option>Married</option><option>Divorced</option><option>Separated</option><option>Widowed</option></Select></label>;
+              if (name === "bloodGroup") return <label key={name} className="block text-sm font-medium"><FormFieldLabel>Blood group</FormFieldLabel><Select value={watchedBloodGroup} onChange={(event) => setValue("bloodGroup", event.target.value, { shouldDirty: true, shouldValidate: true })}><option value="">Not recorded</option>{BLOOD_GROUP_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</Select></label>;
+              if (name === "nationality") return <label key={name} className="block text-sm font-medium"><FormFieldLabel>Nationality</FormFieldLabel><AsyncSearchableSelect value={watchedNationality} selectedOption={watchedNationality ? { value: watchedNationality, label: watchedNationality } : null} loadOptions={searchCountries} minQueryLength={0} placeholder="Search country" onChange={(value) => setValue("nationality", value, { shouldDirty: true, shouldValidate: true })} /></label>;
+              const labels: Record<string, string> = { nicOrPassport: "NIC number", birthCertificateNo: "Birth certificate number", patientId: "Patient ID", passportNumber: "Passport number" };
               return renderInput(name, labels[name] ?? name.replace(/([A-Z])/g, " $1").replace(/^./, (char) => char.toUpperCase()));
             })}
             {config.genderEnabled && fieldPolicy("sex", role).visible && (
               <label className="block text-sm font-medium">
-                Gender{fieldPolicy("sex", role).required ? <span className="text-destructive"> *</span> : null}
+                <FormFieldLabel required={fieldPolicy("sex", role).required} optional={!fieldPolicy("sex", role).required}>Gender</FormFieldLabel>
                 <Select {...register("sex")} disabled={fieldPolicy("sex", role).readOnly}>
+                  <option value="">Not stated</option>
                   {config.genderOptions.map((option) => <option key={option} value={option}>{option}</option>)}
                 </Select>
               </label>
             )}
             <label className="block text-sm font-medium">
-              Risk category
+              <FormFieldLabel optional>Risk category</FormFieldLabel>
               <Select {...register("riskCategory")}><option value="routine">Routine</option><option value="moderate">Moderate</option><option value="high">High</option><option value="critical">Critical</option></Select>
             </label>
             {fieldPolicy("photo", role).visible && <label className="block text-sm font-medium xl:col-span-2">
-              Patient photo
+              <FormFieldLabel optional>Patient photo</FormFieldLabel>
               <div className="mt-1 flex flex-wrap items-center gap-3">
                 <div className="aspect-square h-24 w-24 overflow-hidden rounded-xl border border-teal-200 bg-teal-50 dark:border-teal-800 dark:bg-teal-950/40">
                   {photoDataUrl ? <img src={photoDataUrl} alt="Patient profile preview" className="h-full w-full object-cover" /> : <div className="grid h-full w-full place-items-center text-xs font-semibold text-muted-foreground">No photo</div>}
@@ -603,16 +628,16 @@ export function PatientRegistration() {
         </Card>
 
         <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2"><Baby className="h-5 w-5 text-primary" />Guardian, emergency, and consent</CardTitle><p className="text-xs text-muted-foreground">Emergency contact name, relationship, and phone are required for every patient. Guardian fields are additionally required for patients under 16.</p></CardHeader>
+          <CardHeader><CardTitle className="flex items-center gap-2"><Baby className="h-5 w-5 text-primary" />Guardian, emergency, and consent</CardTitle><p className="text-xs text-muted-foreground">These details are optional at initial registration and can be completed later. Guardian contact is strongly recommended for patients under 16.</p></CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {requiresGuardian && (
               <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm font-semibold text-amber-950 xl:col-span-3">
-                Patient age is {patientAge}. Children under 16 usually do not have a NIC. Use birth certificate number and guardian or parent name, NIC, and phone.
+                Patient age is {patientAge}. Birth certificate and guardian details are recommended for safe paediatric care, but the record can be registered and completed later.
               </div>
             )}
             {shownFields(["guardianName", "guardianRelationship", "guardianNic", "guardianPhone", "emergencyContactName", "emergencyContactRelationship", "emergencyContactPhone"]).map((name) => {
               if (name === "guardianRelationship") {
-                return <label key={name} className="block text-sm font-medium">Guardian relationship{requiresGuardian ? <span className="text-destructive"> *</span> : null}<Select {...register("guardianRelationship")}>{guardianRelationships.map((item) => <option key={item}>{item}</option>)}</Select>{errors.guardianRelationship && <span className="text-xs text-destructive">{String(errors.guardianRelationship.message)}</span>}</label>;
+                return <label key={name} className="block text-sm font-medium"><FormFieldLabel optional>Guardian relationship</FormFieldLabel><Select {...register("guardianRelationship")}><option value="">Not stated</option>{guardianRelationships.map((item) => <option key={item}>{item}</option>)}</Select>{errors.guardianRelationship && <span className="text-xs text-destructive">{String(errors.guardianRelationship.message)}</span>}</label>;
               }
               const labels: Record<string, string> = { guardianName: "Guardian / parent name", guardianNic: "Guardian NIC", guardianPhone: "Guardian phone", emergencyContactName: "Emergency contact", emergencyContactRelationship: "Emergency relationship", emergencyContactPhone: "Emergency phone" };
               return renderInput(name, labels[name] ?? name);
@@ -627,7 +652,14 @@ export function PatientRegistration() {
         <Card>
           <CardHeader><CardTitle>Medical background</CardTitle></CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {shownFields(["allergies", "chronicDiseases", "disabilityStatus", "immunizationHistory", "familyHistory", "pregnancyHistory", "smokingStatus", "alcoholUse", "organDonorStatus", "insuranceDetails", "socialHistory", "communicationPreferences", "occupation", "employer"]).map((name) => renderInput(name, name.replace(/([A-Z])/g, " $1").replace(/^./, (char) => char.toUpperCase())))}
+            {shownFields(["allergies", "chronicDiseases", "disabilityStatus", "immunizationHistory", "familyHistory", "pregnancyHistory", "smokingStatus", "alcoholUse", "organDonorStatus", "insuranceDetails", "socialHistory", "communicationPreferences", "occupation", "employer"]).map((name) => {
+              if (name === "allergies") return <label key={name} className="block text-sm font-medium"><FormFieldLabel>Allergies</FormFieldLabel><MultiSelectChips values={listFromText(watchedAllergies)} options={COMMON_ALLERGY_OPTIONS} allowCustom onChange={(values) => setValue("allergies", values.join(", "), { shouldDirty: true })} noValueLabel="No allergy information recorded" /></label>;
+              if (name === "chronicDiseases") return <label key={name} className="block text-sm font-medium"><FormFieldLabel>Chronic diseases</FormFieldLabel><MultiSelectChips values={listFromText(watchedChronicDiseases)} options={COMMON_CHRONIC_DISEASE_OPTIONS} allowCustom onChange={(values) => setValue("chronicDiseases", values.join(", "), { shouldDirty: true })} noValueLabel="No chronic diseases recorded" /></label>;
+              if (name === "smokingStatus") return <label key={name} className="block text-sm font-medium"><FormFieldLabel>Smoking status</FormFieldLabel><Select value={watchedSmokingStatus} onChange={(event) => setValue("smokingStatus", event.target.value, { shouldDirty: true })}><option value="">Not recorded</option>{SMOKING_STATUS_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</Select></label>;
+              if (name === "alcoholUse") return <label key={name} className="block text-sm font-medium"><FormFieldLabel>Alcohol use</FormFieldLabel><Select value={watchedAlcoholUse} onChange={(event) => setValue("alcoholUse", event.target.value, { shouldDirty: true })}><option value="">Not recorded</option>{ALCOHOL_USE_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</Select></label>;
+              if (name === "organDonorStatus") return <label key={name} className="block text-sm font-medium"><FormFieldLabel>Organ donor status</FormFieldLabel><Select value={watchedOrganDonorStatus} onChange={(event) => setValue("organDonorStatus", event.target.value, { shouldDirty: true })}><option value="">Not recorded</option>{ORGAN_DONOR_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</Select></label>;
+              return renderInput(name, name.replace(/([A-Z])/g, " $1").replace(/^./, (char) => char.toUpperCase()));
+            })}
           </CardContent>
         </Card>
 

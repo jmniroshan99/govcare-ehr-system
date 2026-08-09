@@ -47,6 +47,7 @@ export interface AppUser extends BaseDocument {
   address?: string;
   city?: string;
   district?: string;
+  province?: string;
   hospitalCity?: string;
   preferredHospital?: string;
   preferredLanguage?: string;

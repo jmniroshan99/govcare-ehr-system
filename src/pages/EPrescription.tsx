@@ -15,16 +15,19 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useMemo, useState } from "react";
 import { PageTransition, Reveal, SectionReveal, Stagger } from "../components/motion/PageTransition";
-import { SmartSearch } from "../components/search/SmartSearch";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Select } from "../components/ui/select";
+import { NumericField, SearchableSelect } from "../components/forms";
+import { DiagnosisSearchSelector, MedicineSearchSelector } from "../components/selectors";
+import { DURATION_UNIT_OPTIONS, MEDICINE_FREQUENCY_OPTIONS, MEDICINE_ROUTE_OPTIONS, type SelectOption } from "../data/referenceOptions";
 import { Table, Td, Th } from "../components/ui/table";
 import { useToast } from "../components/ui/toast-context";
 import { createPrescriptionFromConsultation, processPrescriptionIssue } from "../services/pharmacyService";
 import { getSavedPatientsForDoctors, type SavedPatientForDoctor } from "../utils/patientRegistry";
+import { useAuthStore } from "../stores/authStore";
 
 type RxType = "OPD" | "Emergency" | "Discharge" | "Repeat";
 type IssueStatus = "pending" | "verified" | "partially issued" | "issued";
@@ -71,19 +74,22 @@ const fallbackPrescriptionPatients: SavedPatientForDoctor[] = [
 
 export function EPrescription() {
   const { showToast } = useToast();
+  const profile = useAuthStore((state) => state.profile);
   const prescriptionPatients = useMemo(() => {
     const saved = getSavedPatientsForDoctors();
     const byId = new Map([...saved, ...fallbackPrescriptionPatients].map((patient) => [patient.patientId, patient]));
     return Array.from(byId.values());
   }, []);
   const [selectedPatientId, setSelectedPatientId] = useState(prescriptionPatients[0]?.patientId ?? "PAT-2026-000001");
-  const [query, setQuery] = useState("metformin");
   const [rxType, setRxType] = useState<RxType>("OPD");
   const [diagnosis, setDiagnosis] = useState("Type 2 diabetes mellitus with viral URTI");
+  const [selectedDiagnosisOption, setSelectedDiagnosisOption] = useState<SelectOption | null>(null);
   const [selectedMedicine, setSelectedMedicine] = useState("Glucomet");
+  const [selectedMedicineOption, setSelectedMedicineOption] = useState<SelectOption | null>(null);
   const [route, setRoute] = useState("Oral");
   const [frequency, setFrequency] = useState("BD");
-  const [duration, setDuration] = useState("30 days");
+  const [durationValue, setDurationValue] = useState("30");
+  const [durationUnit, setDurationUnit] = useState("Days");
   const [quantity, setQuantity] = useState("60");
   const [meals, setMeals] = useState("After meals");
   const [lines, setLines] = useState<PrescriptionLine[]>([
@@ -93,12 +99,19 @@ export function EPrescription() {
   const [pharmacyLog, setPharmacyLog] = useState<string[]>([]);
   const selectedPatient = prescriptionPatients.find((patient) => patient.patientId === selectedPatientId) ?? prescriptionPatients[0] ?? fallbackPrescriptionPatients[0];
 
-  const filteredMedicines = useMemo(() => {
-    const q = query.toLowerCase();
-    return medicines.filter((medicine) => [medicine.brand, medicine.generic, medicine.category, medicine.form, medicine.strength].some((value) => value.toLowerCase().includes(q)));
-  }, [query]);
-
-  const selected = medicines.find((medicine) => medicine.brand === selectedMedicine) ?? medicines[0];
+  const selected = useMemo<MedicineOption>(() => {
+    if (!selectedMedicineOption) return medicines.find((medicine) => medicine.brand === selectedMedicine) ?? medicines[0];
+    const meta = selectedMedicineOption.meta ?? {};
+    return {
+      id: selectedMedicineOption.value,
+      brand: selectedMedicineOption.label,
+      generic: String(meta.generic_name ?? selectedMedicineOption.label),
+      category: String(meta.category ?? "Hospital formulary"),
+      form: String(meta.dosage_form ?? "Medicine"),
+      strength: String(meta.strength ?? ""),
+      stock: Number(meta.stock ?? 0),
+    };
+  }, [selectedMedicine, selectedMedicineOption]);
   const hasAllergyRisk = lines.some((line) => line.generic.toLowerCase().includes("amoxicillin"));
   const duplicateRisk = new Set(lines.map((line) => line.generic)).size !== lines.length;
   const lowStock = lines.filter((line) => line.stock < Number(line.quantity));
@@ -110,7 +123,7 @@ export function EPrescription() {
         ...selected,
         route,
         frequency,
-        duration,
+        duration: durationUnit === "Until review" ? "Until review" : `${durationValue || "0"} ${durationUnit.toLowerCase()}`,
         quantity,
         instructions: `${meals}. Review renal/liver dose if indicated.`,
         meals,
@@ -123,6 +136,12 @@ export function EPrescription() {
 
   async function signPrescription() {
     try {
+      const hospitalId = profile?.hospitalId ?? selectedPatient.hospitalId;
+      if (!hospitalId) {
+        showToast("A hospital could not be resolved for this prescription. Select a patient linked to a hospital or sign in with a hospital-scoped account.", "danger");
+        return;
+      }
+
       const queued = await createPrescriptionFromConsultation({
         consultationId: "CON-EPRESCRIPTION",
         visitId: selectedPatient.visitReason || "OPD prescription",
@@ -135,10 +154,10 @@ export function EPrescription() {
         allergies: selectedPatient.allergies ? selectedPatient.allergies.split(",").map((item) => item.trim()).filter(Boolean) : [],
         diagnosis,
         clinicalNotes: `${rxType} e-prescription generated from the prescription workspace.`,
-        doctorId: "demo-doctor",
-        doctorName: "Dr. Anjali Perera",
-        department: "Medical OPD",
-        hospitalId: "hosp-colombo-national",
+        doctorId: profile?.uid ?? profile?.id ?? "",
+        doctorName: profile?.displayName ?? "Authorized prescriber",
+        department: profile?.departmentName ?? profile?.departmentId ?? "Clinical service",
+        hospitalId,
         opdToken: selectedPatient.visitReason || "OPD",
         priority: rxType === "Emergency" ? "stat" : "routine",
         lines: lines.map((line) => ({
@@ -382,14 +401,13 @@ export function EPrescription() {
                 <p className="text-muted-foreground">Visit {selectedPatient.visitReason || "Prescription workspace"} | Doctor: {selectedPatient.assignedDoctor || "Dr. Anjali Perera"} | Allergy: {selectedPatient.allergies || "No known allergies"}</p>
               </div>
               <label className="text-sm font-medium">Prescription type<Select value={rxType} onChange={(event) => setRxType(event.target.value as RxType)}><option>OPD</option><option>Emergency</option><option>Discharge</option><option>Repeat</option></Select></label>
-              <label className="text-sm font-medium">Diagnosis<Input value={diagnosis} onChange={(event) => setDiagnosis(event.target.value)} /></label>
-              <label className="text-sm font-medium">Medicine search<SmartSearch value={query} onChange={setQuery} onSelect={(suggestion) => { setQuery(suggestion.label); const localMatch = medicines.find((medicine) => [medicine.brand, medicine.generic].some((value) => value.toLowerCase() === suggestion.label.toLowerCase())); if (localMatch) setSelectedMedicine(localMatch.brand); }} navigateOnSelect={false} placeholder="Brand, generic, category, strength, stock" scope="pharmacy" /></label>
-              <label className="text-sm font-medium">Select medicine<Select value={selectedMedicine} onChange={(event) => setSelectedMedicine(event.target.value)}>{filteredMedicines.map((medicine) => <option key={medicine.brand}>{medicine.brand}</option>)}</Select></label>
+              <label className="text-sm font-medium">Diagnosis / ICD-10<DiagnosisSearchSelector value={selectedDiagnosisOption?.value ?? ""} selectedOption={selectedDiagnosisOption} onChange={(_, option) => { setSelectedDiagnosisOption(option ?? null); if (option) setDiagnosis(`${option.label}${option.description ? ` — ${option.description}` : ""}`); }} /><Input className="mt-2" value={diagnosis} onChange={(event) => { setSelectedDiagnosisOption(null); setDiagnosis(event.target.value); }} placeholder="Or enter clinical diagnosis" /></label>
+              <label className="text-sm font-medium md:col-span-2">Medicine from hospital formulary<MedicineSearchSelector value={selectedMedicineOption?.value ?? ""} selectedOption={selectedMedicineOption} onChange={(_, option) => { setSelectedMedicineOption(option ?? null); if (option) setSelectedMedicine(option.label); }} required /></label>
               <div className="grid gap-3 md:grid-cols-2">
-                <label className="text-sm font-medium">Route<Input value={route} onChange={(event) => setRoute(event.target.value)} /></label>
-                <label className="text-sm font-medium">Frequency<Input value={frequency} onChange={(event) => setFrequency(event.target.value)} /></label>
-                <label className="text-sm font-medium">Duration<Input value={duration} onChange={(event) => setDuration(event.target.value)} /></label>
-                <label className="text-sm font-medium">Quantity<Input value={quantity} onChange={(event) => setQuantity(event.target.value)} /></label>
+                <label className="text-sm font-medium">Route<SearchableSelect value={route} options={MEDICINE_ROUTE_OPTIONS} clearable={false} onChange={setRoute} /></label>
+                <label className="text-sm font-medium">Frequency<SearchableSelect value={frequency} options={MEDICINE_FREQUENCY_OPTIONS} clearable={false} onChange={setFrequency} /></label>
+                <label className="text-sm font-medium">Duration<div className="grid grid-cols-[1fr_1.2fr] gap-2"><NumericField min={0} step={1} value={durationValue} disabled={durationUnit === "Until review"} onChange={(event) => setDurationValue(event.target.value)} /><SearchableSelect value={durationUnit} options={DURATION_UNIT_OPTIONS} clearable={false} onChange={setDurationUnit} /></div></label>
+                <label className="text-sm font-medium">Quantity<NumericField min={0} step={1} value={quantity} onChange={(event) => setQuantity(event.target.value)} unit="units" /></label>
                 <label className="text-sm font-medium">Meals<Select value={meals} onChange={(event) => setMeals(event.target.value)}><option>After meals</option><option>Before meals</option><option>With meals</option><option>PRN only</option></Select></label>
                 <div className="rounded-md border border-border bg-white p-3 text-sm">
                   <p className="font-bold text-slate-950">Stock</p>

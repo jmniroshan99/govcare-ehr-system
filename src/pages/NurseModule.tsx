@@ -14,24 +14,65 @@ import {
   Syringe,
   Thermometer,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { PageTransition, Reveal, SectionReveal, Stagger } from "../components/motion/PageTransition";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Input } from "../components/ui/input";
+import { MeasurementField } from "../components/forms";
 import { Select } from "../components/ui/select";
 import { useToast } from "../components/ui/toast-context";
 import { refreshAndRedirectToMainMenu } from "../utils/navigation";
+import { confirmPatientIdentity, getWardAdmittedPatients, type WardPatient } from "../services/admissionService";
+import { getWards } from "../services/wardService";
+import type { WardSummary } from "../types/ward";
 
 type NurseTaskStatus = "due" | "done" | "overdue" | "critical";
 
-const assignedPatients = [
-  { id: "PAT-2026-000001", name: "Nimal Silva", ward: "Ward 12", bed: "W12-08", risk: "Fall risk", allergies: "Penicillin", condition: "Stable" },
-  { id: "PAT-2026-000142", name: "Fathima Rizna", ward: "Ward 03", bed: "W03-11", risk: "High-risk pregnancy", allergies: "None", condition: "Observe" },
-  { id: "PAT-2026-000233", name: "R. Kumar", ward: "ICU", bed: "ICU-02", risk: "Critical labs", allergies: "Sulfa", condition: "Critical" },
-];
+type NursePatientView = {
+  id: string;
+  patientUuid: string;
+  name: string;
+  ward: string;
+  wardId: string;
+  bed: string;
+  bedId: string;
+  admissionId: string;
+  age?: number | null;
+  gender?: string | null;
+  risk: string;
+  allergies: string;
+  condition: "Stable" | "Observe" | "Critical";
+  latestVitalStatus: string;
+};
+
+function listText(value: unknown) {
+  if (Array.isArray(value)) return value.map(String).filter(Boolean).join(", ");
+  if (typeof value === "string" && value.trim()) return value;
+  return "None";
+}
+
+function toNursePatient(patient: WardPatient): NursePatientView {
+  const priority = (patient.priority ?? "routine").toLowerCase();
+  return {
+    id: patient.patientNumber,
+    patientUuid: patient.id,
+    name: patient.patientName,
+    ward: `${patient.wardCode} — ${patient.wardName}`,
+    wardId: patient.wardId,
+    bed: patient.bedCode || patient.bedNumber,
+    bedId: patient.bedId,
+    admissionId: patient.admissionId,
+    age: patient.ageYears,
+    gender: patient.gender,
+    risk: listText(patient.riskFlags) !== "None" ? listText(patient.riskFlags) : patient.admissionReason || "Routine ward care",
+    allergies: listText(patient.allergies),
+    condition: priority === "critical" || priority === "stat" ? "Critical" : priority === "urgent" ? "Observe" : "Stable",
+    latestVitalStatus: patient.latestVitalStatus || "No vitals recorded",
+  };
+}
 
 const vitals = [
   { time: "08:00", bp: 128, pulse: 86, spo2: 98, temp: 37.1 },
@@ -75,9 +116,15 @@ function taskTone(status: NurseTaskStatus) {
 
 export function NurseModule() {
   const { showToast } = useToast();
-  const [selectedPatientId, setSelectedPatientId] = useState(assignedPatients[0].id);
-  const selected = assignedPatients.find((patient) => patient.id === selectedPatientId) ?? assignedPatients[0];
-  const [bp, setBp] = useState("136/86");
+  const [searchParams] = useSearchParams();
+  const [wards, setWards] = useState<WardSummary[]>([]);
+  const [wardId, setWardId] = useState(searchParams.get("wardId") ?? "");
+  const [assignedPatients, setAssignedPatients] = useState<NursePatientView[]>([]);
+  const [selectedPatientId, setSelectedPatientId] = useState("");
+  const [patientsLoading, setPatientsLoading] = useState(false);
+  const selected = assignedPatients.find((patient) => patient.id === selectedPatientId) ?? assignedPatients[0] ?? null;
+  const [systolic, setSystolic] = useState("136");
+  const [diastolic, setDiastolic] = useState("86");
   const [temp, setTemp] = useState("37.5");
   const [pulse, setPulse] = useState("90");
   const [spo2, setSpo2] = useState("98");
@@ -85,18 +132,66 @@ export function NurseModule() {
   const bmi = useMemo(() => (78 / (1.72 * 1.72)).toFixed(1), []);
   const summaryStats = [
     { label: "Assigned patients", value: assignedPatients.length, icon: BedDouble, tone: "info" as const },
-    { label: "Vitals due", value: 8, icon: HeartPulse, tone: "warning" as const },
-    { label: "Critical alerts", value: 2, icon: AlertTriangle, tone: "danger" as const },
-    { label: "MAR confirmations", value: 14, icon: Pill, tone: "success" as const },
+    { label: "Vitals due", value: assignedPatients.filter((patient) => patient.latestVitalStatus === "No vitals recorded").length, icon: HeartPulse, tone: "warning" as const },
+    { label: "Critical alerts", value: assignedPatients.filter((patient) => patient.condition === "Critical").length, icon: AlertTriangle, tone: "danger" as const },
+    { label: "MAR confirmations", value: assignedPatients.length, icon: Pill, tone: "success" as const },
   ];
 
+  useEffect(() => {
+    getWards()
+      .then((items) => {
+        const active = items.filter((ward) => ward.status === "ACTIVE");
+        setWards(active);
+        setWardId((current) => current || active[0]?.id || "");
+      })
+      .catch((error: unknown) => showToast(error instanceof Error ? error.message : "Unable to load wards.", "danger"));
+  }, [showToast]);
+
+  useEffect(() => {
+    if (!wardId) {
+      setAssignedPatients([]);
+      setSelectedPatientId("");
+      return;
+    }
+    setPatientsLoading(true);
+    getWardAdmittedPatients(wardId)
+      .then((items) => {
+        const mapped = items.map(toNursePatient);
+        setAssignedPatients(mapped);
+        setSelectedPatientId((current) => mapped.some((patient) => patient.id === current) ? current : mapped[0]?.id || "");
+      })
+      .catch((error: unknown) => {
+        setAssignedPatients([]);
+        setSelectedPatientId("");
+        showToast(error instanceof Error ? error.message : "Unable to load admitted patients for this ward.", "danger");
+      })
+      .finally(() => setPatientsLoading(false));
+  }, [showToast, wardId]);
+
   function save(label: string, tone: "success" | "warning" | "danger" | "info" = "success") {
+    if (!selected) {
+      showToast("Select an admitted patient first.", "warning");
+      return;
+    }
     showToast(`${label} saved for ${selected.name}.`, tone);
+  }
+
+  async function verifySelectedPatient() {
+    if (!selected) {
+      showToast("Select an admitted patient first.", "warning");
+      return;
+    }
+    try {
+      await confirmPatientIdentity(selected.patientUuid, selected.wardId, selected.bedId);
+      showToast(`${selected.name} verified in ${selected.ward}, bed ${selected.bed}.`, "success");
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : "Patient verification failed.", "danger");
+    }
   }
 
   function saveAndReturn(label: string, tone: "success" | "warning" | "danger" | "info" = "success") {
     save(label, tone);
-    refreshAndRedirectToMainMenu();
+    if (selected) refreshAndRedirectToMainMenu();
   }
 
   return (
@@ -109,10 +204,25 @@ export function NurseModule() {
             <p className="mt-2 max-w-3xl text-sm text-muted-foreground">Focused nurse access for assigned patients, vitals, MAR, assessments, handover, care plans, alerts, and secure clinical communication.</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={() => save("QR patient verification", "info")}><QrCode className="h-4 w-4" />Verify patient</Button>
+            <Button variant="outline" onClick={() => void verifySelectedPatient()} disabled={!selected}><QrCode className="h-4 w-4" />Verify patient</Button>
             <Button onClick={() => save("Shift handover report")}><ClipboardCheck className="h-4 w-4" />Handover</Button>
           </div>
         </div>
+
+        <Card>
+          <CardContent className="grid items-end gap-3 p-4 md:grid-cols-[minmax(260px,0.6fr)_1fr]">
+            <label className="space-y-1 text-sm font-semibold">Ward selection
+              <Select value={wardId} onChange={(event) => setWardId(event.target.value)}>
+                <option value="">Select ward</option>
+                {wards.map((ward) => <option key={ward.id} value={ward.id}>{ward.wardCode} — {ward.wardName} ({ward.occupiedBeds} occupied)</option>)}
+              </Select>
+            </label>
+            <div className="rounded-xl border bg-muted/30 p-3 text-sm">
+              <strong>Patient identification scope</strong>
+              <p className="text-muted-foreground">Only patients with an active admission and active bed allocation in the selected ward are shown. Verification confirms the patient, ward, bed, and admission.</p>
+            </div>
+          </CardContent>
+        </Card>
 
         <div className="help-strip grid gap-3 p-4 text-sm md:grid-cols-3">
           <div className="flex items-center gap-2 font-semibold"><CheckCircle2 className="h-4 w-4" />Nursing-only scope</div>
@@ -148,28 +258,34 @@ export function NurseModule() {
                     <p className="font-bold">{patient.name}</p>
                     <Badge tone={patient.condition === "Critical" ? "danger" : patient.condition === "Observe" ? "warning" : "success"}>{patient.condition}</Badge>
                   </div>
-                  <p className="mt-1 text-muted-foreground">{patient.id} | {patient.ward} {patient.bed} | {patient.risk}</p>
+                  <p className="mt-1 text-muted-foreground">{patient.id} | {patient.ward} | Bed {patient.bed}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Age {patient.age ?? "N/A"} · {patient.gender ?? "Gender N/A"} · {patient.risk}</p>
                 </button>
               ))}
+              {!patientsLoading && !assignedPatients.length && <div className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">No actively admitted patients were found in the selected ward.</div>}
+              {patientsLoading && <div className="rounded-xl border p-6 text-center text-sm text-muted-foreground">Loading ward patients...</div>}
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader><CardTitle className="flex items-center gap-2"><HeartPulse className="h-5 w-5 text-primary" />Record vital signs</CardTitle></CardHeader>
             <CardContent className="space-y-4">
-              <div className="selection-panel p-3 text-sm">
+              {selected ? <div className="selection-panel p-3 text-sm">
                 <p className="font-bold text-slate-950">{selected.name}</p>
-                <p className="text-muted-foreground">{selected.ward} {selected.bed} | Allergy: {selected.allergies} | BMI {bmi}</p>
-              </div>
+                <p className="text-muted-foreground">{selected.ward} · Bed {selected.bed} | Allergy: {selected.allergies} | BMI {bmi}</p>
+                <p className="text-xs text-muted-foreground">Admission {selected.admissionId} · {selected.latestVitalStatus}</p>
+              </div> : <div className="rounded-xl border border-dashed p-5 text-center text-sm text-muted-foreground">Select a ward patient before recording bedside observations.</div>}
               <div className="grid gap-3 md:grid-cols-3">
-                <label className="text-sm font-medium">Blood pressure<Input value={bp} onChange={(event) => setBp(event.target.value)} /></label>
-                <label className="text-sm font-medium">Temperature<Input value={temp} onChange={(event) => setTemp(event.target.value)} /></label>
-                <label className="text-sm font-medium">Pulse<Input value={pulse} onChange={(event) => setPulse(event.target.value)} /></label>
-                <label className="text-sm font-medium">SpO2<Input value={spo2} onChange={(event) => setSpo2(event.target.value)} /></label>
-                <label className="text-sm font-medium">Pain score<Input value={pain} onChange={(event) => setPain(event.target.value)} /></label>
-                <label className="text-sm font-medium">Assessment<Select><option>Stable</option><option>Needs review</option><option>Deteriorating</option></Select></label>
+                <label className="text-sm font-medium">Systolic blood pressure<MeasurementField kind="systolic" value={systolic} onChange={setSystolic} /></label>
+                <label className="text-sm font-medium">Diastolic blood pressure<MeasurementField kind="diastolic" value={diastolic} onChange={setDiastolic} /></label>
+                <label className="text-sm font-medium">Temperature<MeasurementField kind="temperature" value={temp} onChange={setTemp} /></label>
+                <label className="text-sm font-medium">Pulse<MeasurementField kind="pulse" value={pulse} onChange={setPulse} /></label>
+                <label className="text-sm font-medium">SpO2<MeasurementField kind="spo2" value={spo2} onChange={setSpo2} /></label>
+                <label className="text-sm font-medium">Pain score<MeasurementField kind="pain" value={pain} onChange={setPain} /></label>
+                <label className="text-sm font-medium">Assessment<Select defaultValue="Stable"><option>Stable</option><option>Needs review</option><option>Deteriorating</option></Select></label>
               </div>
-              <Button onClick={() => saveAndReturn("Vital signs")}><Thermometer className="h-4 w-4" />Save vitals</Button>
+              <p className="text-xs text-muted-foreground">Current blood pressure entry: {systolic || "—"}/{diastolic || "—"} mmHg. Values outside configured clinical ranges are rejected by the numeric controls.</p>
+              <Button onClick={() => saveAndReturn("Vital signs")} disabled={!selected}><Thermometer className="h-4 w-4" />Save vitals</Button>
             </CardContent>
           </Card>
         </section>

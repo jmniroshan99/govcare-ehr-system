@@ -9,14 +9,14 @@ export const defaultRouteByRole: Record<Role, string> = {
 };
 
 const restrictedPrefixes: Partial<Record<Role, string[]>> = {
-  records_officer: ["/patients/register", "/patients/search", "/patients/"],
+  records_officer: ["/patients/register", "/patients/search", "/patients/", "/admissions"],
   lab_technician: ["/laboratory", "/patients/", "/media", "/notifications", "/reports"],
   lab_manager: ["/laboratory", "/patients/", "/media", "/notifications", "/reports"],
   pathologist: ["/laboratory", "/patients/", "/media", "/notifications", "/reports"],
   pharmacist: ["/pharmacy", "/patients/", "/media", "/notifications", "/reports"],
   radiology_technician: ["/radiology", "/patients/", "/media", "/notifications", "/reports"],
   radiologist: ["/radiology", "/patients/", "/media", "/notifications", "/reports"],
-  receptionist: ["/opd", "/appointments", "/patients/register", "/patients/search", "/patients/", "/media", "/notifications"],
+  receptionist: ["/opd", "/appointments", "/patients/register", "/patients/search", "/patients/", "/admissions", "/media", "/notifications"],
   patient: ["/portal", "/patients/", "/media"],
   guardian: ["/portal", "/patients/", "/media"],
 };
@@ -29,7 +29,7 @@ const pathPermission: Array<[string, string]> = [
   ["/admin/login-activity", "LOGIN_ACTIVITY_VIEW"], ["/settings", "SETTINGS_MANAGE"], ["/reports", "REPORT_VIEW"],
   ["/media", "MEDIA_VIEW"],
   ["/wards/bed-board", "BED_VIEW"], ["/admin/wards", "WARD_MANAGE"], ["/wards", "WARD_VIEW"],
-  ["/admissions/bed-allocation", "BED_ALLOCATE"], ["/transfers/internal", "WARD_VIEW"],
+  ["/admissions/new", "ADMISSION_CREATE"], ["/admissions/bed-allocation", "BED_ALLOCATE"], ["/admissions", "ADMISSION_VIEW"], ["/transfers/internal", "WARD_VIEW"],
   ["/transfers/inter-hospital/incoming", "INTER_HOSPITAL_TRANSFER_REVIEW"],
   ["/transfers/inter-hospital/outgoing", "INTER_HOSPITAL_TRANSFER_CREATE"],
   ["/transfers/inter-hospital", "INTER_HOSPITAL_TRANSFER_CREATE"],

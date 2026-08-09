@@ -17,7 +17,7 @@ public class WorkflowSql {
       select q.id::text as queue_id,q.hospital_id::text as hospital_id,q.token_no,q.queue_status,q.priority::text as priority,
         q.estimated_wait_minutes,q.called_at,q.started_at,q.completed_at,q.no_show_at,q.created_at,q.updated_at,
         q.department_id::text as department_id,q.doctor_id::text as doctor_id,q.appointment_id::text as appointment_id,
-        p.id::text as patient_id,p.patient_no,p.full_name,p.nic,p.date_of_birth,p.age_years,p.gender::text as gender,
+        p.id::text as patient_id,p.patient_no,p.full_name,p.nic,p.date_of_birth,govcare_patient_age_years(p.date_of_birth) as age_years,p.gender::text as gender,
         p.blood_group,p.phone,p.profile_photo_url,p.allergies,p.chronic_diseases,p.risk_flags,
         v.id::text as visit_id,v.visit_no,v.visit_type,v.reason,d.name as department_name,d.code as department_code,
         u.full_name as doctor_name,c.id::text as consultation_id,c.workflow_status as consultation_status,
@@ -29,7 +29,7 @@ public class WorkflowSql {
       """;
 
     public static final String APPOINTMENT_SELECT = """
-      select a.id::text,a.appointment_no,a.patient_id::text,p.patient_no,p.full_name as patient_name,p.nic,p.age_years,p.gender::text,p.blood_group,
+      select a.id::text,a.appointment_no,a.patient_id::text,p.patient_no,p.full_name as patient_name,p.nic,govcare_patient_age_years(p.date_of_birth) as age_years,p.gender::text,p.blood_group,
         a.doctor_id::text,u.full_name as doctor_name,a.department_id::text,d.name as department_name,a.appointment_type,a.scheduled_at,a.reason,
         a.priority::text,a.mode,a.location,a.workflow_status,a.checked_in_at,a.queue_id::text,q.token_no,a.created_at
       from appointments a join patients p on p.id=a.patient_id left join departments d on d.id=a.department_id

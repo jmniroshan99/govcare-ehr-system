@@ -21,6 +21,7 @@ import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { SmartSearch } from "../components/search/SmartSearch";
 import { Input } from "../components/ui/input";
+import { FormFieldLabel } from "../components/ui/form-field-label";
 import { Select } from "../components/ui/select";
 import { useToast } from "../components/ui/toast-context";
 import { useAuthStore } from "../stores/authStore";
@@ -79,8 +80,8 @@ export function PatientAppointments() {
 
   function bookAppointment() {
     if (familyMember === "Child") {
-      if (!childName.trim() || childBirthCertificate.trim().length < 4 || !guardianName.trim() || guardianNic.trim().length < 5 || guardianPhone.trim().length < 7) {
-        notify("For child appointments, enter child name, birth certificate number, guardian name, guardian NIC, and guardian phone.", "warning");
+      if (!childName.trim() || !guardianName.trim() || guardianPhone.trim().length < 7) {
+        notify("For child appointments, enter the child name, guardian name, and guardian phone. Birth certificate and guardian NIC can be added later.", "warning");
         return;
       }
     }
@@ -209,14 +210,14 @@ export function PatientAppointments() {
                 <div className="rounded-md border border-amber-300 bg-amber-50 p-4">
                   <div className="mb-3">
                     <p className="font-bold text-amber-950">Child appointment guardian verification</p>
-                    <p className="text-sm text-amber-950">Patients under 16 do not need a NIC. Use the child birth certificate and guardian details for booking.</p>
+                    <p className="text-sm text-amber-950">Child name, guardian name, and guardian phone are required. Birth certificate and guardian NIC are optional and can be added later.</p>
                   </div>
                   <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                    <label className="text-sm font-medium">Child name *<Input value={childName} onChange={(event) => setChildName(event.target.value)} placeholder="Child full name" /></label>
-                    <label className="text-sm font-medium">Birth certificate no *<Input value={childBirthCertificate} onChange={(event) => setChildBirthCertificate(event.target.value)} placeholder="BC number" /></label>
-                    <label className="text-sm font-medium">Guardian / parent name *<Input value={guardianName} onChange={(event) => setGuardianName(event.target.value)} /></label>
-                    <label className="text-sm font-medium">Guardian NIC *<Input value={guardianNic} onChange={(event) => setGuardianNic(event.target.value)} /></label>
-                    <label className="text-sm font-medium">Guardian phone *<Input value={guardianPhone} onChange={(event) => setGuardianPhone(event.target.value)} /></label>
+                    <label className="text-sm font-medium"><FormFieldLabel required>Child name</FormFieldLabel><Input value={childName} onChange={(event) => setChildName(event.target.value)} placeholder="Child full name" /></label>
+                    <label className="text-sm font-medium"><FormFieldLabel optional>Birth certificate no</FormFieldLabel><Input value={childBirthCertificate} onChange={(event) => setChildBirthCertificate(event.target.value)} placeholder="BC number" /></label>
+                    <label className="text-sm font-medium"><FormFieldLabel required>Guardian / parent name</FormFieldLabel><Input value={guardianName} onChange={(event) => setGuardianName(event.target.value)} /></label>
+                    <label className="text-sm font-medium"><FormFieldLabel optional>Guardian NIC</FormFieldLabel><Input value={guardianNic} onChange={(event) => setGuardianNic(event.target.value)} /></label>
+                    <label className="text-sm font-medium"><FormFieldLabel required>Guardian phone</FormFieldLabel><Input value={guardianPhone} onChange={(event) => setGuardianPhone(event.target.value)} /></label>
                   </div>
                 </div>
               )}
@@ -239,7 +240,7 @@ export function PatientAppointments() {
               </div>
               <TicketRow label="Patient" value={familyMember} />
               {familyMember === "Child" && <TicketRow label="Child / guardian" value={`${childName || "Child name required"} | ${guardianName || "Guardian required"}`} />}
-              {familyMember === "Child" && <TicketRow label="Birth certificate" value={childBirthCertificate || "Required"} />}
+              {familyMember === "Child" && <TicketRow label="Birth certificate" value={childBirthCertificate || "Not recorded"} />}
               <TicketRow label="Patient city" value={patientCity || "Not set"} />
               <TicketRow label="Hospital city" value={hospitalCity} />
               <TicketRow label="Hospital" value={hospital} />

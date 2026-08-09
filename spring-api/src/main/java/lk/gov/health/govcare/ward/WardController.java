@@ -36,6 +36,14 @@ public class WardController {
     public Map<String,Object> updateWard(@PathVariable UUID wardId,@Valid @RequestBody WardRequest input){return wards.updateWard(current.get(),wardId,input);}
     @GetMapping("/wards/{wardId}/summary") @PreAuthorize("hasAuthority('WARD_VIEW')")
     public Map<String,Object> wardSummary(@PathVariable UUID wardId){return wards.wardDetail(current.get(),wardId);}
+    @GetMapping("/wards/{wardId}/available-beds") @PreAuthorize("hasAuthority('BED_VIEW')")
+    public Map<String,Object> wardAvailableBeds(@PathVariable UUID wardId,
+                                                @RequestParam(required=false) String bedType,
+                                                @RequestParam(defaultValue="false") boolean isolationRequired){
+        return Map.of("items",wards.availableBedsForWard(current.get(),wardId,bedType,isolationRequired));
+    }
+    @GetMapping("/wards/{wardId}/admitted-patients") @PreAuthorize("hasAuthority('WARD_PATIENT_LIST') or hasAuthority('WARD_VIEW')")
+    public Map<String,Object> wardPatients(@PathVariable UUID wardId){return Map.of("items",wards.admittedPatients(current.get(),wardId));}
 
     @GetMapping("/wards/{wardId}/rooms") @PreAuthorize("hasAuthority('WARD_VIEW')")
     public Map<String,Object> rooms(@PathVariable UUID wardId){return Map.of("items",wards.listRooms(current.get(),wardId));}

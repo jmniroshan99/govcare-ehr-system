@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import jsPDF from "jspdf";
 import { Clock3, Download, FileCheck2, FilePlus2, Printer, ShieldCheck } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Input } from "../components/ui/input";
 import { Select } from "../components/ui/select";
 import { Table, Td, Th } from "../components/ui/table";
+import { StaffSearchSelector } from "../components/selectors";
 import { useToast } from "../components/ui/toast-context";
 import { ehrEvidenceOptions, medicalReportPurposes } from "../types/medicalDecisionReport";
 import type { MedicalDecisionRequest, MedicalReportPurpose } from "../types/medicalDecisionReport";
@@ -21,6 +22,7 @@ const requestSchema = z.object({
   purpose: z.string().min(1, "Select a report purpose."),
   institutionName: z.string().min(2, "Institution name is required.").max(160),
   institutionType: z.string().min(2, "Institution type is required."),
+  assignedDoctorId: z.string().min(1, "Select an assigned doctor."),
   assignedDoctorName: z.string().min(2, "Select an assigned doctor."),
   additionalDetails: z.string().max(600),
   requestedInformation: z.array(z.string()).min(1, "Select at least one record category."),
@@ -34,13 +36,14 @@ export function MedicalDecisionRequests() {
   const { showToast } = useToast();
   const queryClient = useQueryClient();
   const requestsQuery = useQuery({ queryKey: ["medical-decision-requests"], queryFn: listMedicalDecisionRequests });
-  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<RequestForm>({
+  const { register, control, handleSubmit, reset, setValue, formState: { errors, isSubmitting } } = useForm<RequestForm>({
     resolver: zodResolver(requestSchema),
     defaultValues: {
       purpose: "university-clearance",
       institutionName: "",
       institutionType: "University",
-      assignedDoctorName: "Dr. Anjali Perera",
+      assignedDoctorId: "",
+      assignedDoctorName: "",
       additionalDetails: "",
       requestedInformation: ["Diagnoses", "Laboratory results", "Vital signs"],
       consentAccepted: false as true,
@@ -63,7 +66,7 @@ export function MedicalDecisionRequests() {
       institutionType: values.institutionType,
       requestedInformation: values.requestedInformation,
       additionalDetails: values.additionalDetails,
-      assignedDoctorId: "demo-doctor",
+      assignedDoctorId: values.assignedDoctorId,
       assignedDoctorName: values.assignedDoctorName,
       consent: {
         accepted: true,
@@ -131,7 +134,10 @@ export function MedicalDecisionRequests() {
                 <label className="block text-sm font-semibold">Institution name<Input {...register("institutionName")} placeholder="Organization receiving the report" />{errors.institutionName && <span className="text-xs text-destructive">{errors.institutionName.message}</span>}</label>
                 <label className="block text-sm font-semibold">Institution type<Select {...register("institutionType")}><option>University</option><option>Workplace</option><option>Insurance</option><option>Government Department</option><option>Legal / Court</option><option>Service Institution</option><option>Other</option></Select></label>
               </div>
-              <label className="block text-sm font-semibold">Assigned doctor<Select {...register("assignedDoctorName")}><option>Dr. Anjali Perera</option><option>Dr. K. Fernando</option><option>Authorized Medical Officer</option></Select></label>
+              <label className="block text-sm font-semibold">Assigned doctor
+                <Controller control={control} name="assignedDoctorId" render={({ field }) => <StaffSearchSelector value={field.value} hospitalId={profile?.hospitalId} role="doctor" onChange={(value, option) => { field.onChange(value); setValue("assignedDoctorName", option?.label ?? "", { shouldValidate: true }); }} required />} />
+                {errors.assignedDoctorId && <span className="text-xs text-destructive">{errors.assignedDoctorId.message}</span>}
+              </label>
               <fieldset>
                 <legend className="text-sm font-semibold">Records you authorize for review and sharing</legend>
                 <div className="mt-2 grid gap-2 sm:grid-cols-2">

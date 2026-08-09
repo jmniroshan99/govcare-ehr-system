@@ -1,7 +1,8 @@
 import { z } from "zod";
+import { isDistrictInProvince, isSriLankaDistrict, isSriLankaProvince } from "../data/sriLankaLocations";
 
 function ageFromDateOfBirth(dateOfBirth: string) {
-  const birthday = new Date(dateOfBirth);
+  const birthday = new Date(`${dateOfBirth}T00:00:00`);
   if (Number.isNaN(birthday.getTime())) return undefined;
   const today = new Date();
   let age = today.getFullYear() - birthday.getFullYear();
@@ -19,6 +20,10 @@ const phonePattern = /^(?:\+94|0)?[0-9]{9}$/;
 function normalizeIdentifier(value?: string) {
   return (value ?? "").trim().toUpperCase().replace(/\s+/g, "");
 }
+
+const optionalText = (max: number) => z.string().max(max).optional();
+
+const optionalEmail = z.string().email("Enter a valid email address.").max(120).optional().or(z.literal(""));
 
 export function isValidNic(value?: string) {
   const normalized = normalizeIdentifier(value);
@@ -40,88 +45,100 @@ export function isValidSriLankanPhone(value?: string) {
   return phonePattern.test(normalized);
 }
 
+/**
+ * System-wide patient registration policy:
+ * - Only the minimum safe demographic set is mandatory.
+ * - Supporting contact, identity, guardian and medical fields are optional.
+ * - Optional values are still validated when staff enter them.
+ */
 export const patientSchema = z.object({
-  patientId: z.string().optional(),
-  title: z.string().optional(),
-  firstName: z.string().min(2).max(80),
-  middleName: z.string().max(80).optional(),
-  lastName: z.string().min(2).max(80),
-  preferredName: z.string().max(80).optional(),
-  nicOrPassport: z.string().max(32).optional(),
-  passportNumber: z.string().max(32).optional(),
-  birthCertificateNo: z.string().max(40).optional(),
-  dateOfBirth: z.string().min(1),
-  age: z.string().optional(),
-  sex: z.string().min(1).optional(),
-  maritalStatus: z.string().optional(),
-  phone: z.string().min(7).max(20),
-  email: z.string().max(120).optional(),
-  address: z.string().min(5).max(240),
-  district: z.string().optional(),
-  province: z.string().optional(),
-  postalCode: z.string().optional(),
-  gnDivision: z.string().optional(),
-  bloodGroup: z.string().optional(),
-  nationality: z.string().optional(),
-  ethnicity: z.string().optional(),
-  religion: z.string().optional(),
-  allergies: z.string().optional(),
-  chronicDiseases: z.string().optional(),
-  currentMedications: z.string().optional(),
-  pastSurgeries: z.string().optional(),
-  familyHistory: z.string().optional(),
-  immunizationHistory: z.string().optional(),
-  pregnancyHistory: z.string().optional(),
-  disabilityStatus: z.string().optional(),
+  patientId: optionalText(40),
+  title: optionalText(30),
+  firstName: z.string().trim().min(2, "First name is required.").max(80),
+  middleName: optionalText(80),
+  lastName: z.string().trim().min(2, "Last name is required.").max(80),
+  preferredName: optionalText(80),
+  nicOrPassport: optionalText(32),
+  passportNumber: optionalText(32),
+  birthCertificateNo: optionalText(40),
+  dateOfBirth: z.string().min(1, "Date of birth is required."),
+  age: optionalText(10),
+  sex: optionalText(40),
+  maritalStatus: optionalText(40),
+  phone: optionalText(20),
+  email: optionalEmail,
+  address: optionalText(240),
+  district: optionalText(80),
+  province: optionalText(80),
+  postalCode: optionalText(20),
+  gnDivision: optionalText(120),
+  bloodGroup: optionalText(20),
+  nationality: optionalText(80),
+  ethnicity: optionalText(80),
+  religion: optionalText(80),
+  allergies: optionalText(1000),
+  chronicDiseases: optionalText(1000),
+  currentMedications: optionalText(1000),
+  pastSurgeries: optionalText(1000),
+  familyHistory: optionalText(1000),
+  immunizationHistory: optionalText(1000),
+  pregnancyHistory: optionalText(1000),
+  disabilityStatus: optionalText(1000),
   riskCategory: z.enum(["routine", "moderate", "high", "critical"]).default("routine"),
-  guardianName: z.string().optional(),
-  guardianRelationship: z.string().optional(),
-  guardianNic: z.string().optional(),
-  guardianPhone: z.string().optional(),
-  occupation: z.string().optional(),
-  employer: z.string().optional(),
-  preferredLanguage: z.string().optional(),
-  smokingStatus: z.string().optional(),
-  alcoholUse: z.string().optional(),
-  organDonorStatus: z.string().optional(),
-  insuranceDetails: z.string().optional(),
-  socialHistory: z.string().optional(),
-  communicationPreferences: z.string().optional(),
-  emergencyContactName: z.string().min(2),
-  emergencyContactRelationship: z.string().min(2),
-  emergencyContactPhone: z.string().min(7).max(20),
+  guardianName: optionalText(120),
+  guardianRelationship: optionalText(80),
+  guardianNic: optionalText(32),
+  guardianPhone: optionalText(20),
+  occupation: optionalText(120),
+  employer: optionalText(160),
+  preferredLanguage: optionalText(40),
+  smokingStatus: optionalText(80),
+  alcoholUse: optionalText(80),
+  organDonorStatus: optionalText(80),
+  insuranceDetails: optionalText(500),
+  socialHistory: optionalText(1000),
+  communicationPreferences: optionalText(500),
+  emergencyContactName: optionalText(120),
+  emergencyContactRelationship: optionalText(80),
+  emergencyContactPhone: optionalText(20),
   consentToShare: z.boolean().default(false),
 }).superRefine((value, ctx) => {
   const age = ageFromDateOfBirth(value.dateOfBirth);
-  if (age === undefined) return;
-  if (!isValidSriLankanPhone(value.phone)) {
-    ctx.addIssue({ code: "custom", path: ["phone"], message: "Enter a valid Sri Lankan phone number." });
-  }
-  if (!isValidSriLankanPhone(value.emergencyContactPhone)) {
-    ctx.addIssue({ code: "custom", path: ["emergencyContactPhone"], message: "Enter a valid emergency contact phone number." });
-  }
-  if (age >= 16) {
-    const hasValidNic = isValidNic(value.nicOrPassport);
-    const hasValidPassport = isValidPassport(value.passportNumber) || isValidPassport(value.nicOrPassport);
-    if (!hasValidNic && !hasValidPassport) {
-      ctx.addIssue({ code: "custom", path: ["nicOrPassport"], message: "Adults must have a valid Sri Lankan NIC or passport number." });
-    }
+  if (age === undefined) {
+    ctx.addIssue({ code: "custom", path: ["dateOfBirth"], message: "Enter a valid date of birth that is not in the future." });
     return;
   }
-  if (!isValidBirthCertificate(value.birthCertificateNo)) {
-    ctx.addIssue({ code: "custom", path: ["birthCertificateNo"], message: "Birth certificate number is required for patients under 16 years old." });
+
+  if (value.phone && !isValidSriLankanPhone(value.phone)) {
+    ctx.addIssue({ code: "custom", path: ["phone"], message: "Enter a valid Sri Lankan phone number or leave it blank." });
   }
-  if (!value.guardianName?.trim()) {
-    ctx.addIssue({ code: "custom", path: ["guardianName"], message: "Guardian name is required for patients under 16 years old." });
+  if (value.emergencyContactPhone && !isValidSriLankanPhone(value.emergencyContactPhone)) {
+    ctx.addIssue({ code: "custom", path: ["emergencyContactPhone"], message: "Enter a valid emergency contact phone number or leave it blank." });
   }
-  if (!value.guardianRelationship?.trim()) {
-    ctx.addIssue({ code: "custom", path: ["guardianRelationship"], message: "Guardian relationship is required for patients under 16 years old." });
+  if (value.guardianPhone && !isValidSriLankanPhone(value.guardianPhone)) {
+    ctx.addIssue({ code: "custom", path: ["guardianPhone"], message: "Enter a valid guardian phone number or leave it blank." });
   }
-  if (!isValidNic(value.guardianNic)) {
-    ctx.addIssue({ code: "custom", path: ["guardianNic"], message: "Valid guardian NIC is required for patients under 16 years old." });
+
+  if (value.nicOrPassport && !isValidNic(value.nicOrPassport) && !isValidPassport(value.nicOrPassport)) {
+    ctx.addIssue({ code: "custom", path: ["nicOrPassport"], message: "Enter a valid Sri Lankan NIC/passport number or leave it blank." });
   }
-  if (!isValidSriLankanPhone(value.guardianPhone)) {
-    ctx.addIssue({ code: "custom", path: ["guardianPhone"], message: "Valid guardian phone is required for patients under 16 years old." });
+  if (value.passportNumber && !isValidPassport(value.passportNumber)) {
+    ctx.addIssue({ code: "custom", path: ["passportNumber"], message: "Enter a valid passport number or leave it blank." });
+  }
+  if (value.birthCertificateNo && !isValidBirthCertificate(value.birthCertificateNo)) {
+    ctx.addIssue({ code: "custom", path: ["birthCertificateNo"], message: "Enter a valid birth certificate number or leave it blank." });
+  }
+  if (value.guardianNic && !isValidNic(value.guardianNic)) {
+    ctx.addIssue({ code: "custom", path: ["guardianNic"], message: "Enter a valid guardian NIC or leave it blank." });
+  }
+  if (value.province && !isSriLankaProvince(value.province)) {
+    ctx.addIssue({ code: "custom", path: ["province"], message: "Select a valid Sri Lankan province." });
+  }
+  if (value.district && !isSriLankaDistrict(value.district)) {
+    ctx.addIssue({ code: "custom", path: ["district"], message: "Select a valid Sri Lankan district." });
+  }
+  if (value.province && value.district && !isDistrictInProvince(value.district, value.province)) {
+    ctx.addIssue({ code: "custom", path: ["district"], message: "The selected district does not belong to the selected province." });
   }
 });
 

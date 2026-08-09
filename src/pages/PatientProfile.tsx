@@ -1,5 +1,5 @@
 import { QRCodeSVG } from "qrcode.react";
-import { Activity, AlertTriangle, Bell, BrainCircuit, CalendarDays, CalendarPlus, Camera, Download, FileText, HeartPulse, LockKeyhole, MapPin, Pencil, QrCode, ScanBarcode, Stethoscope, Upload, X } from "lucide-react";
+import { Activity, AlertTriangle, BedDouble, Bell, BrainCircuit, CalendarDays, CalendarPlus, Camera, Download, FileText, HeartPulse, LockKeyhole, MapPin, Pencil, QrCode, ScanBarcode, Stethoscope, Upload, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -10,11 +10,13 @@ import { PatientPhoto } from "../components/patient/PatientPhoto";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Input } from "../components/ui/input";
+import { MultiSelectChips, PhoneNumberField, SearchableSelect } from "../components/forms";
+import { SriLankaDistrictSelect, SriLankaProvinceSelect } from "../components/location/SriLankaLocationSelects";
 import { Table, Td, Th } from "../components/ui/table";
 import { useToast } from "../components/ui/toast-context";
 import { getPatientActivities, PATIENT_ACTIVITIES_UPDATED_EVENT } from "../services/patientActivityService";
 import { getPatientRecord, updatePatientRecord } from "../services/patientService";
+import { resolveAgeYears } from "../utils/age";
 import { downloadTextFile, timestampedFilename } from "../utils/download";
 import { normaliseGenderLabel } from "../utils/gender";
 import { diffPatientFields, generatePatientUpdatePdf } from "../utils/patientPdf";
@@ -23,7 +25,10 @@ import type { SavedPatientForDoctor } from "../utils/patientRegistry";
 import { getSelfRegisteredPatients, SELF_REGISTRATION_UPDATED_EVENT, type SelfRegisteredPatient } from "../services/selfRegistrationService";
 import { useAuthStore } from "../stores/authStore";
 import { apiRequest } from "../services/apiClient";
+import { dischargeAdmission } from "../services/admissionService";
 import { preparePatientProfilePhoto } from "../utils/profilePhoto";
+import { isDistrictInProvince, normaliseSriLankaProvince, provinceForDistrict } from "../data/sriLankaLocations";
+import { BLOOD_GROUP_OPTIONS, COMMON_ALLERGY_OPTIONS, COMMON_CHRONIC_DISEASE_OPTIONS } from "../data/referenceOptions";
 
 
 type VitalPoint = { slot: string; bp: number; pulse: number; spo2: number; sugar: number };
@@ -42,10 +47,12 @@ export function PatientProfile() {
   const [selfRegisteredPatients, setSelfRegisteredPatients] = useState<SelfRegisteredPatient[]>([]);
   const [databasePatient, setDatabasePatient] = useState<SavedPatientForDoctor | null>(null);
   const [databasePatientUuid, setDatabasePatientUuid] = useState("");
+  const [currentAdmission, setCurrentAdmission] = useState<{ admissionId: string; admissionNumber: string; wardId?: string; wardCode?: string; wardName?: string; bedCode?: string; admittedAt?: string } | null>(null);
   const [isEditingDetails, setIsEditingDetails] = useState(false);
   const [isSavingDetails, setIsSavingDetails] = useState(false);
   const [editForm, setEditForm] = useState({
     phone: "",
+    province: "",
     district: "",
     bloodGroup: "",
     allergies: "",
@@ -62,6 +69,15 @@ export function PatientProfile() {
         if (response.patient) {
           setDatabasePatient(databasePatientToProfile(response.patient));
           setDatabasePatientUuid(response.patient.id ?? "");
+          setCurrentAdmission(response.patient.admission_id ? {
+            admissionId: response.patient.admission_id,
+            admissionNumber: response.patient.admission_no ?? "Active admission",
+            wardId: response.patient.ward_id ?? undefined,
+            wardCode: response.patient.ward_code ?? undefined,
+            wardName: response.patient.ward_name ?? undefined,
+            bedCode: response.patient.bed_code ?? undefined,
+            admittedAt: response.patient.admitted_at ?? undefined,
+          } : null);
         }
       } catch (error) {
         console.warn("Database patient loading failed", error);
@@ -75,7 +91,7 @@ export function PatientProfile() {
   const patientId = profilePatient.patientId;
   const documentPatientId = databasePatientUuid || (/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(requestedPatientId) ? requestedPatientId : "");
   const patientGender = normaliseGenderLabel(profilePatient.sex);
-  const patientAge = profilePatient.age;
+  const patientAge = resolveAgeYears(profilePatient.dateOfBirth, profilePatient.age);
   const patientPhone = profilePatient.phone;
   const patientDistrict = profilePatient.district;
   const patientBloodGroup = profilePatient.bloodGroup;
@@ -128,6 +144,7 @@ export function PatientProfile() {
   function openEditDetails() {
     setEditForm({
       phone: profilePatient.phone === "Not recorded" ? "" : (profilePatient.phone ?? ""),
+      province: normaliseSriLankaProvince(profilePatient.province) || provinceForDistrict(profilePatient.district),
       district: profilePatient.district === "Pending review" ? "" : (profilePatient.district ?? ""),
       bloodGroup: profilePatient.bloodGroup === "Not recorded" ? "" : (profilePatient.bloodGroup ?? ""),
       allergies: profilePatient.allergies === "Pending clinical review" ? "" : (profilePatient.allergies ?? ""),
@@ -140,6 +157,7 @@ export function PatientProfile() {
     setIsSavingDetails(true);
     const before = {
       phone: profilePatient.phone === "Not recorded" ? "" : profilePatient.phone,
+      province: normaliseSriLankaProvince(profilePatient.province) || provinceForDistrict(profilePatient.district),
       district: profilePatient.district === "Pending review" ? "" : profilePatient.district,
       blood_group: profilePatient.bloodGroup === "Not recorded" ? "" : profilePatient.bloodGroup,
       allergies: profilePatient.allergies === "Pending clinical review" ? "" : profilePatient.allergies,
@@ -147,6 +165,7 @@ export function PatientProfile() {
     };
     const after = {
       phone: editForm.phone,
+      province: editForm.province,
       district: editForm.district,
       blood_group: editForm.bloodGroup,
       allergies: editForm.allergies,
@@ -154,6 +173,7 @@ export function PatientProfile() {
     };
     const fieldLabels = {
       phone: "Phone",
+      province: "Province",
       district: "District",
       blood_group: "Blood group",
       allergies: "Allergies",
@@ -180,6 +200,7 @@ export function PatientProfile() {
       if (match?.id) {
         await updatePatientRecord(match.id, {
           phone: editForm.phone,
+          province: editForm.province,
           district: editForm.district,
           bloodGroup: editForm.bloodGroup,
           allergies: editForm.allergies ? editForm.allergies.split(/[,;]/).map((item) => item.trim()).filter(Boolean) : [],
@@ -196,6 +217,7 @@ export function PatientProfile() {
     savePatientForDoctors({
       ...profilePatient,
       phone: editForm.phone || profilePatient.phone,
+      province: editForm.province || profilePatient.province,
       district: editForm.district || profilePatient.district,
       bloodGroup: editForm.bloodGroup || profilePatient.bloodGroup,
       allergies: editForm.allergies || profilePatient.allergies,
@@ -210,6 +232,7 @@ export function PatientProfile() {
           gender: patientGender,
           age: patientAge,
           phone: editForm.phone,
+          province: editForm.province,
           district: editForm.district,
           bloodGroup: editForm.bloodGroup,
           allergies: editForm.allergies,
@@ -248,6 +271,19 @@ export function PatientProfile() {
     }
   }
 
+  async function dischargeCurrentAdmission() {
+    if (!currentAdmission) return;
+    const reason = window.prompt("Enter the discharge reason:");
+    if (!reason?.trim()) return;
+    try {
+      await dischargeAdmission(currentAdmission.admissionId, reason.trim(), "Discharged from the patient profile.");
+      setCurrentAdmission(null);
+      showToast("Patient discharged. The previous bed is now awaiting cleaning.", "success");
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : "Unable to discharge the patient.", "danger");
+    }
+  }
+
   return (
     <div className="space-y-5">
       <PatientCodeScanner open={scannerMode !== null} mode={scannerMode ?? "qr"} onClose={() => setScannerMode(null)} onDetected={handleScannedCode} />
@@ -259,6 +295,8 @@ export function PatientProfile() {
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={openEditDetails}><Pencil className="h-4 w-4" />Edit patient details</Button>
           <Button onClick={() => navigate("/opd")}><CalendarPlus className="h-4 w-4" />New visit</Button>
+          {role !== "patient" && role !== "guardian" && !currentAdmission && documentPatientId && <Button onClick={() => navigate(`/admissions/new?patientId=${encodeURIComponent(documentPatientId)}`)}><BedDouble className="h-4 w-4" />Admit to ward</Button>}
+          {role !== "patient" && role !== "guardian" && currentAdmission && <Button variant="outline" onClick={() => currentAdmission.wardId ? navigate(`/wards/bed-board?wardId=${encodeURIComponent(currentAdmission.wardId)}`) : navigate("/admissions")}><BedDouble className="h-4 w-4" />Current ward and bed</Button>}
           <Button variant="outline" onClick={() => documentPatientId ? navigate(`/patients/${documentPatientId}/documents`) : showToast("The PostgreSQL patient record must be loaded before opening documents.", "warning")}><FileText className="h-4 w-4" />Documents & PDFs</Button>
           <Button variant="outline" onClick={() => navigate("/media")}><Upload className="h-4 w-4" />Media Center</Button>
           <PdfActionButtons kind="patients" recordId={requestedPatientId || patientId} />
@@ -276,25 +314,43 @@ export function PatientProfile() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-3 sm:grid-cols-2">
-              <label className="space-y-1 text-sm font-medium text-slate-800">
+              <label className="space-y-1 text-sm font-medium text-slate-800 dark:text-slate-100">
                 Phone
-                <Input value={editForm.phone} onChange={(event) => setEditForm((prev) => ({ ...prev, phone: event.target.value }))} placeholder="e.g. 0771234567" />
+                <PhoneNumberField value={editForm.phone} onChange={(phone) => setEditForm((prev) => ({ ...prev, phone }))} />
               </label>
-              <label className="space-y-1 text-sm font-medium text-slate-800">
+              <label className="space-y-1 text-sm font-medium text-slate-800 dark:text-slate-100">
+                Province
+                <SriLankaProvinceSelect value={editForm.province} onChange={(event) => { const province = normaliseSriLankaProvince(event.target.value); setEditForm((prev) => ({ ...prev, province, district: prev.district && !isDistrictInProvince(prev.district, province) ? "" : prev.district })); }} />
+              </label>
+              <label className="space-y-1 text-sm font-medium text-slate-800 dark:text-slate-100">
                 District
-                <Input value={editForm.district} onChange={(event) => setEditForm((prev) => ({ ...prev, district: event.target.value }))} placeholder="e.g. Colombo" />
+                <SriLankaDistrictSelect province={editForm.province} value={editForm.district} onChange={(event) => { const district = event.target.value; const province = provinceForDistrict(district); setEditForm((prev) => ({ ...prev, district, province: province || prev.province })); }} />
               </label>
-              <label className="space-y-1 text-sm font-medium text-slate-800">
+              <label className="space-y-1 text-sm font-medium text-slate-800 dark:text-slate-100">
                 Blood group
-                <Input value={editForm.bloodGroup} onChange={(event) => setEditForm((prev) => ({ ...prev, bloodGroup: event.target.value }))} placeholder="e.g. O+" />
+                <SearchableSelect value={editForm.bloodGroup} options={BLOOD_GROUP_OPTIONS} onChange={(bloodGroup) => setEditForm((prev) => ({ ...prev, bloodGroup }))} placeholder="Select blood group" />
               </label>
-              <label className="space-y-1 text-sm font-medium text-slate-800">
+              <label className="space-y-1 text-sm font-medium text-slate-800 dark:text-slate-100">
                 Allergies
-                <Input value={editForm.allergies} onChange={(event) => setEditForm((prev) => ({ ...prev, allergies: event.target.value }))} placeholder="Comma-separated, e.g. Penicillin" />
+                <MultiSelectChips
+                  values={splitClinicalList(editForm.allergies)}
+                  options={COMMON_ALLERGY_OPTIONS}
+                  onChange={(values) => setEditForm((prev) => ({ ...prev, allergies: values.join(", ") }))}
+                  allowCustom
+                  placeholder="Search or add allergies"
+                  noValueLabel="No allergies selected"
+                />
               </label>
-              <label className="space-y-1 text-sm font-medium text-slate-800 sm:col-span-2">
+              <label className="space-y-1 text-sm font-medium text-slate-800 dark:text-slate-100 sm:col-span-2">
                 Chronic diseases
-                <Input value={editForm.chronicDiseases} onChange={(event) => setEditForm((prev) => ({ ...prev, chronicDiseases: event.target.value }))} placeholder="Comma-separated, e.g. Diabetes, hypertension" />
+                <MultiSelectChips
+                  values={splitClinicalList(editForm.chronicDiseases)}
+                  options={COMMON_CHRONIC_DISEASE_OPTIONS}
+                  onChange={(values) => setEditForm((prev) => ({ ...prev, chronicDiseases: values.join(", ") }))}
+                  allowCustom
+                  placeholder="Search or add chronic diseases"
+                  noValueLabel="No chronic diseases selected"
+                />
               </label>
             </div>
             <p className="text-xs text-muted-foreground">Saving updates PostgreSQL, refreshes this profile, and downloads a "changed details" PDF listing exactly what was updated.</p>
@@ -339,7 +395,7 @@ export function PatientProfile() {
                 <GenderBadge value={patientGender} />
               </div>
               <p className="text-sm text-muted-foreground">{patientId} | NIC {profilePatient.nicOrPassport || "Not recorded"}</p>
-              <p className="text-sm text-muted-foreground">{patientBloodGroup} | {patientAge} years | {patientDistrict} | {patientPhone}</p>
+              <p className="text-sm text-muted-foreground">{patientBloodGroup} | {patientAge === undefined ? "Age not recorded" : `${patientAge} years`} | {patientDistrict} | {patientPhone}</p>
             </div>
             <div className="flex flex-wrap gap-2">
               {allergyList.length
@@ -374,6 +430,17 @@ export function PatientProfile() {
           ))}
         </div>
       </section>
+
+      {currentAdmission && (
+        <Card className="border-emerald-300 bg-emerald-50/70 dark:bg-emerald-950/20">
+          <CardContent className="flex flex-wrap items-center gap-4 p-4">
+            <Badge tone="success">Currently admitted</Badge>
+            <div><strong>{currentAdmission.admissionNumber}</strong><p className="text-sm text-muted-foreground">{currentAdmission.wardCode} — {currentAdmission.wardName} · Bed {currentAdmission.bedCode ?? "Not assigned"}</p></div>
+            {currentAdmission.admittedAt && <p className="text-sm text-muted-foreground">Admitted {new Date(currentAdmission.admittedAt).toLocaleString()}</p>}
+            <div className="ml-auto flex flex-wrap gap-2"><Button variant="outline" onClick={() => navigate("/admissions")}>Open admission</Button>{currentAdmission.wardId && <Button variant="outline" onClick={() => navigate(`/wards/bed-board?wardId=${encodeURIComponent(currentAdmission.wardId ?? "")}`)}>Open bed board</Button>}<Button variant="outline" onClick={() => navigate("/transfers/internal")}>Transfer patient</Button><Button variant="outline" onClick={() => void dischargeCurrentAdmission()}>Discharge patient</Button></div>
+          </CardContent>
+        </Card>
+      )}
 
       {allergyList.length > 0 && (
         <Card className="border-amber-200 bg-amber-50">
@@ -545,7 +612,7 @@ function databasePatientToProfile(patient: any): SavedPatientForDoctor {
     nicOrPassport: patient.nic ?? patient.passport_no ?? "",
     phone: patient.phone ?? "Not recorded",
     sex: patient.gender ?? "Not stated",
-    age: patient.age_years ?? undefined,
+    age: resolveAgeYears(patient.date_of_birth, patient.age_years),
     district: patient.district ?? "Not recorded",
     bloodGroup: patient.blood_group ?? "Not recorded",
     dateOfBirth: patient.date_of_birth ?? undefined,

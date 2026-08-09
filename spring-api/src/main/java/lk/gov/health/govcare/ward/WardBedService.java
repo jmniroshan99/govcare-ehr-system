@@ -28,7 +28,7 @@ public class WardBedService {
         UUID hospital = support.scopedHospital(actor, hospitalId);
         Map<String,Object> summary = sql.required("""
             select count(*) "totalBeds",
-                   count(*) filter(where status='AVAILABLE') "availableBeds",
+                   count(*) filter(where status='AVAILABLE' and current_patient_id is null and current_admission_id is null and (reserved_patient_id is null or reserved_until < now())) "availableBeds",
                    count(*) filter(where status='OCCUPIED') "occupiedBeds",
                    count(*) filter(where status='RESERVED') "reservedBeds",
                    count(*) filter(where status='CLEANING') "cleaningBeds",
@@ -43,22 +43,25 @@ public class WardBedService {
     public List<Map<String,Object>> listWards(GovCarePrincipal actor, UUID hospitalId) {
         UUID hospital = support.scopedHospital(actor, hospitalId);
         return sql.list("""
-            select w.id::text id,w.hospital_id::text "hospitalId",w.department_id::text "departmentId",
+            select w.id::text id,w.hospital_id::text "hospitalId",h.name "hospitalName",
+                   w.department_id::text "departmentId",d.name "departmentName",
                    w.ward_code "wardCode",w.name "wardName",w.ward_type "wardType",w.category,
                    w.building,w.floor,w.gender_restriction "genderRestriction",w.age_restriction "ageRestriction",
                    w.isolation_capable "isolationCapable",w.nurse_station "nurseStation",w.phone,
                    w.operational_status status,
                    count(b.id) "totalBeds",
-                   count(b.id) filter(where b.status='AVAILABLE') "availableBeds",
+                   count(b.id) filter(where b.status='AVAILABLE' and b.current_patient_id is null and b.current_admission_id is null and (b.reserved_patient_id is null or b.reserved_until < now())) "availableBeds",
                    count(b.id) filter(where b.status='OCCUPIED') "occupiedBeds",
                    count(b.id) filter(where b.status='RESERVED') "reservedBeds",
                    count(b.id) filter(where b.status='CLEANING') "cleaningBeds",
                    count(b.id) filter(where b.status in ('BLOCKED','INFECTION_CONTROL','OUT_OF_SERVICE')) "blockedBeds",
                    count(b.id) filter(where b.status='MAINTENANCE') "maintenanceBeds",
+                   count(b.id) filter(where b.isolation_support=true and b.status='AVAILABLE' and b.current_patient_id is null and b.current_admission_id is null and (b.reserved_patient_id is null or b.reserved_until < now())) "isolationBeds",
                    case when count(b.id)=0 then 0 else round(100.0*count(b.id) filter(where b.status='OCCUPIED')/count(b.id),1) end "occupancyPercent"
-            from wards w left join beds b on b.ward_id=w.id
+            from wards w join hospitals h on h.id=w.hospital_id
+              left join departments d on d.id=w.department_id left join beds b on b.ward_id=w.id
             where w.hospital_id=:hospital
-            group by w.id order by w.name
+            group by w.id,h.name,d.name order by w.name
             """, Map.of("hospital", hospital));
     }
 
@@ -204,6 +207,62 @@ public class WardBedService {
         if(availableOnly) q.append(" and b.status='AVAILABLE'");
         q.append(" order by w.name,r.room_number,b.bed_no");
         return sql.list(q.toString(),p);
+    }
+
+    public List<Map<String,Object>> availableBedsForWard(GovCarePrincipal actor, UUID wardId, String bedType, boolean isolationRequired) {
+        Map<String,Object> ward=support.ward(wardId);
+        UUID hospital=support.uuid(ward.get("hospital_id"));
+        support.requireHospitalAccess(actor,hospital);
+        Map<String,Object> params=new HashMap<>();
+        params.put("hospital",hospital);
+        params.put("ward",wardId);
+        params.put("type",bedType==null||bedType.isBlank()?null:support.upper(bedType,null));
+        params.put("isolation",isolationRequired);
+        StringBuilder query=new StringBuilder("""
+            select b.id::text id,b.hospital_id::text "hospitalId",b.ward_id::text "wardId",b.room_id::text "roomId",
+              b.bed_no "bedNumber",b.bed_code "bedCode",b.bed_type "bedType",b.status,
+              b.gender_restriction "genderRestriction",b.age_restriction "ageRestriction",
+              b.isolation_support "isolationSupport",b.oxygen_support "oxygenSupport",b.ventilator_support "ventilatorSupport",
+              b.monitor_support "monitorSupport",b.electric_bed "electricBed",b.accessible_bed "accessibleBed",
+              w.name "wardName",w.ward_code "wardCode",r.room_number "roomNumber",r.room_name "roomName"
+            from beds b join wards w on w.id=b.ward_id left join ward_rooms r on r.id=b.room_id
+            where b.hospital_id=:hospital and b.ward_id=:ward and b.status='AVAILABLE'
+              and b.current_patient_id is null and b.current_admission_id is null
+              and (b.reserved_patient_id is null or b.reserved_until < now())
+            """);
+        if(bedType!=null&&!bedType.isBlank()) query.append(" and b.bed_type=:type");
+        if(isolationRequired) query.append(" and (b.isolation_support=true or w.isolation_capable=true)");
+        query.append(" order by r.room_number,b.bed_no");
+        return sql.list(query.toString(),params);
+    }
+
+    public List<Map<String,Object>> admittedPatients(GovCarePrincipal actor, UUID wardId) {
+        Map<String,Object> ward=support.ward(wardId);
+        UUID hospital=support.uuid(ward.get("hospital_id"));
+        support.requireHospitalAccess(actor,hospital);
+        return sql.list("""
+            select p.id::text id,p.patient_no "patientNumber",p.full_name "patientName",p.profile_photo_url "profilePhotoUrl",
+              p.date_of_birth "dateOfBirth",govcare_patient_age_years(p.date_of_birth) "ageYears",p.gender::text gender,
+              p.blood_group "bloodGroup",p.allergies,p.risk_flags "riskFlags",p.chronic_diseases "chronicDiseases",
+              a.id::text "admissionId",a.admission_no "admissionNumber",a.admitted_at "admittedAt",a.priority::text priority,
+              a.reason "admissionReason",a.provisional_diagnosis "provisionalDiagnosis",a.isolation_required "isolationRequired",
+              w.id::text "wardId",w.ward_code "wardCode",w.name "wardName",
+              b.id::text "bedId",b.bed_code "bedCode",b.bed_no "bedNumber",r.room_number "roomNumber",
+              coalesce(doc.full_name,creator.full_name) "responsibleDoctor",
+              case when c.vital_signs is null or c.vital_signs='{}'::jsonb then 'No vitals recorded' else 'Vitals recorded' end "latestVitalStatus",
+              c.vital_signs "latestVitals"
+            from admissions a join patients p on p.id=a.patient_id join wards w on w.id=a.ward_id
+              join patient_bed_assignments x on x.admission_id=a.id and x.active=true
+              join beds b on b.id=x.bed_id left join ward_rooms r on r.id=x.room_id
+              left join app_users doc on doc.id=a.consultant_id left join app_users creator on creator.id=a.created_by
+              left join lateral (
+                select con.vital_signs from consultations con
+                where con.patient_id=p.id and con.hospital_id=a.hospital_id
+                order by con.updated_at desc limit 1
+              ) c on true
+            where a.hospital_id=:hospital and a.ward_id=:ward and a.status='active' and a.discharged_at is null
+            order by b.bed_no,p.full_name
+            """,Map.of("hospital",hospital,"ward",wardId));
     }
 
     @Transactional

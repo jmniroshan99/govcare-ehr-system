@@ -1,5 +1,6 @@
 import { BedDouble, RefreshCw, ShieldAlert, Sparkles, Wind } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Badge, StatusBadge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
@@ -11,9 +12,10 @@ import type { WardBed, WardSummary } from "../../types/ward";
 
 export function BedBoard() {
   const { showToast } = useToast();
+  const [searchParams] = useSearchParams();
   const [wards, setWards] = useState<WardSummary[]>([]);
   const [beds, setBeds] = useState<WardBed[]>([]);
-  const [wardId, setWardId] = useState("");
+  const [wardId, setWardId] = useState(() => searchParams.get("wardId") ?? "");
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(true);
 

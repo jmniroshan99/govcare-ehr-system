@@ -347,7 +347,7 @@ export async function createLaboratoryOrders(input: {
   consultationUuid?: string | null;
   priority: "routine" | "urgent" | "stat" | "critical";
   clinicalIndication: string;
-  items: Array<{ testName: string; testCode?: string; specimen?: string; instructions?: string }>;
+  items: Array<{ testCatalogId?: string; testName: string; testCode?: string; specimen?: string; instructions?: string }>;
 }) {
   return apiRequest<{ items: LaboratoryOrderRecord[] }>("/api/laboratory/orders", {
     method: "POST",
@@ -425,7 +425,7 @@ export async function createRadiologyOrders(input: {
   consultationUuid?: string | null;
   priority: "routine" | "urgent" | "stat" | "critical";
   clinicalIndication: string;
-  items: Array<{ imagingType: string; bodyArea?: string; contrastRequired?: boolean; pregnancyWarning?: boolean; instructions?: string }>;
+  items: Array<{ studyCatalogId?: string; imagingType: string; bodyArea?: string; contrastRequired?: boolean; pregnancyWarning?: boolean; instructions?: string }>;
 }) {
   return apiRequest<{ items: RadiologyOrderRecord[] }>("/api/radiology/orders", {
     method: "POST",

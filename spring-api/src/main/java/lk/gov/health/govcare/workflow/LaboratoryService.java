@@ -17,7 +17,7 @@ public class LaboratoryService {
 
     private static final String SELECT="""
       select lr.id::text,lr.patient_id::text,lr.visit_id::text,lr.consultation_id::text,
-       p.patient_no,p.full_name as patient_name,lr.test_type,lr.test_code,lr.specimen,lr.priority::text,
+       p.patient_no,p.full_name as patient_name,lr.test_catalog_id::text,lr.test_type,lr.test_code,lr.specimen,lr.priority::text,
        lr.clinical_reason,lr.instructions,lr.workflow_status,u.full_name as requested_by_name,
        r.id::text as result_id,r.numeric_result,r.text_result,r.unit,r.reference_range,r.classification,
        r.abnormal_flag,r.critical_flag,lr.created_at
@@ -59,13 +59,29 @@ public class LaboratoryService {
         String visit=clean(input.get("visitUuid")),consultation=clean(input.get("consultationUuid")); validateLinks(a,patient,visit,consultation);
         Object itemsObj=input.get("items");if(!(itemsObj instanceof List<?> raw)||raw.isEmpty())throw ApiException.badRequest("At least one laboratory test is required.");
         List<Map<String,Object>> out=new ArrayList<>();
-        for(Object o:raw){if(!(o instanceof Map<?,?> m))throw ApiException.badRequest("Invalid laboratory test item.");Map<String,Object> item=(Map<String,Object>)m;String test=req(item,"testName");
-            Map<String,Object> p=map("hospital",a.hospitalId(),"patient",patient,"visit",visit,"consultation",consultation,"user",a.id(),"test",test,"code",clean(item.get("testCode")),"specimen",clean(item.get("specimen")),"priority",String.valueOf(input.getOrDefault("priority","routine")),"reason",indication,"instructions",clean(item.get("instructions")));
+        for(Object o:raw){
+            if(!(o instanceof Map<?,?> m)) throw ApiException.badRequest("Invalid laboratory test item.");
+            Map<String,Object> item=(Map<String,Object>)m;
+            String catalogId=clean(item.get("testCatalogId"));
+            String test=req(item,"testName");
+            String code=clean(item.get("testCode"));
+            String specimen=clean(item.get("specimen"));
+            if(catalogId!=null){
+                Map<String,Object> catalog=sql.required("select id::text,code,name,specimen_type from laboratory_test_catalog where id=cast(:id as uuid) and status='active'",Map.of("id",catalogId),"Laboratory test was not found or is inactive.");
+                test=String.valueOf(catalog.get("name"));
+                code=String.valueOf(catalog.get("code"));
+                if(specimen==null) specimen=clean(catalog.get("specimen_type"));
+            }
+            Map<String,Object> p=map("hospital",a.hospitalId(),"patient",patient,"visit",visit,"consultation",consultation,"user",a.id(),"catalog",catalogId,"test",test,"code",code,"specimen",specimen,"priority",String.valueOf(input.getOrDefault("priority","routine")),"reason",indication,"instructions",clean(item.get("instructions")));
             Map<String,Object> inserted=sql.required("""
-              insert into lab_requests(hospital_id,patient_id,visit_id,consultation_id,requested_by,test_type,test_code,specimen,priority,clinical_reason,instructions,workflow_status,sample_status,test_status,status,created_by,updated_by)
-              values(:hospital,cast(:patient as uuid),cast(:visit as uuid),cast(:consultation as uuid),:user,:test,:code,:specimen,cast(:priority as priority_level),:reason,:instructions,'ordered','requested','pending','active',:user,:user) returning id::text
-              """,p,"Unable to create laboratory order.");Map<String,Object> order=get(a,String.valueOf(inserted.get("id")));out.add(order);audit.record(a,"laboratory","lab_order_created","lab_requests",UUID.fromString(String.valueOf(inserted.get("id"))),null,order);
-        }return out;
+              insert into lab_requests(hospital_id,patient_id,visit_id,consultation_id,requested_by,test_catalog_id,test_type,test_code,specimen,priority,clinical_reason,instructions,workflow_status,sample_status,test_status,status,created_by,updated_by)
+              values(:hospital,cast(:patient as uuid),cast(:visit as uuid),cast(:consultation as uuid),:user,cast(:catalog as uuid),:test,:code,:specimen,cast(:priority as priority_level),:reason,:instructions,'ordered','requested','pending','active',:user,:user) returning id::text
+              """,p,"Unable to create laboratory order.");
+            Map<String,Object> order=get(a,String.valueOf(inserted.get("id")));
+            out.add(order);
+            audit.record(a,"laboratory","lab_order_created","lab_requests",UUID.fromString(String.valueOf(inserted.get("id"))),null,order);
+        }
+        return out;
     }
 
     @Transactional public Map<String,Object> status(GovCarePrincipal a,String id,Map<String,Object> in){

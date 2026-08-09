@@ -1,0 +1,12 @@
+SYSTEM_WIDE_OPTIONAL_FIELDS_IMPLEMENTATION.md
+VALIDATION_SYSTEM_WIDE_OPTIONAL_FIELDS.md
+src/components/ui/form-field-label.tsx
+src/pages/NewAdmission.tsx
+src/pages/PatientAppointments.tsx
+src/pages/PatientRegistration.tsx
+src/pages/PatientSelfRegistration.tsx
+src/pages/admin/StaffManagement.tsx
+src/services/selfRegistrationService.ts
+src/utils/patientFieldPolicy.ts
+src/validations/patient.ts
+spring-api/src/main/java/lk/gov/health/govcare/patient/SelfRegistrationController.java

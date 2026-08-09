@@ -12,7 +12,9 @@ export type BedStatus =
 export interface WardSummary {
   id: string;
   hospitalId: string;
+  hospitalName?: string;
   departmentId?: string;
+  departmentName?: string;
   wardCode: string;
   wardName: string;
   wardType: string;
@@ -32,6 +34,7 @@ export interface WardSummary {
   cleaningBeds: number;
   blockedBeds: number;
   maintenanceBeds: number;
+  isolationBeds?: number;
   occupancyPercent: number;
 }
 
@@ -43,6 +46,7 @@ export interface BedBoardSummary {
   cleaningBeds: number;
   blockedBeds: number;
   maintenanceBeds: number;
+  isolationBeds?: number;
   occupancyPercent: number;
 }
 

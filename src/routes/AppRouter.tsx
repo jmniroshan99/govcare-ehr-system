@@ -18,6 +18,7 @@ const Login = lazyPage(() => import("../pages/Login"), "Login");
 const ResetPassword = lazyPage(() => import("../pages/ResetPassword"), "ResetPassword");
 const ChangeTemporaryPassword = lazyPage(() => import("../pages/ChangeTemporaryPassword"), "ChangeTemporaryPassword");
 const AdmissionsManagement = lazyPage(() => import("../pages/AdmissionsManagement"), "AdmissionsManagement");
+const NewAdmission = lazyPage(() => import("../pages/NewAdmission"), "NewAdmission");
 const AppointmentManagement = lazyPage(() => import("../pages/AppointmentManagement"), "AppointmentManagement");
 const AuditLogs = lazy(() => import("../pages/AuditLogs"));
 const CareSummary = lazyPage(() => import("../pages/CareSummary"), "CareSummary");
@@ -195,7 +196,8 @@ export function AppRouter() {
           <Route path="/opd" element={<Protected roles={["super_admin", "hospital_admin", "doctor", "nurse", "receptionist", "records_officer"]}><OPDQueueManagement /></Protected>} />
           <Route path="/consultation" element={<Protected roles={["super_admin", "hospital_admin", "doctor"]}><Navigate to="/doctor/workspace" replace /></Protected>} />
           <Route path="/nurse-notes" element={<Protected roles={["super_admin", "hospital_admin", "nurse"]}><NurseModule /></Protected>} />
-          <Route path="/admissions" element={<Protected roles={["super_admin", "hospital_admin", "doctor", "nurse", "receptionist", "records_officer"]}><AdmissionsManagement /></Protected>} />
+          <Route path="/admissions" element={<Protected roles={["super_admin", "hospital_admin", "doctor", "surgeon", "nurse", "receptionist", "records_officer"]}><AdmissionsManagement /></Protected>} />
+          <Route path="/admissions/new" element={<Protected roles={["super_admin", "hospital_admin", "doctor", "surgeon", "nurse", "receptionist", "records_officer"]}><NewAdmission /></Protected>} />
           <Route path="/wards" element={<Protected roles={roleGroups.clinical}><WardDashboard /></Protected>} />
           <Route path="/admin/wards" element={<Protected roles={["super_admin", "hospital_admin"]}><WardAdministration /></Protected>} />
           <Route path="/wards/bed-board" element={<Protected roles={["super_admin", "hospital_admin", "doctor", "nurse"]}><BedBoard /></Protected>} />

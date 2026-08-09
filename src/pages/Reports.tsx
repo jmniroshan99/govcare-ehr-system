@@ -5,7 +5,7 @@ import autoTable from "jspdf-autotable";
 import { BarChart3, ChevronDown, ChevronUp, Download, FileSpreadsheet, FileText, Filter, LoaderCircle, Printer, ShieldCheck } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { z } from "zod";
 import { Badge } from "../components/ui/badge";
@@ -13,13 +13,17 @@ import type { BadgeTone } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { SmartSearch } from "../components/search/SmartSearch";
+import { AsyncSearchableSelect, SearchableSelect } from "../components/forms";
+import { DiagnosisSearchSelector, MedicineSearchSelector, StaffSearchSelector } from "../components/selectors";
 import { Input } from "../components/ui/input";
 import { Select } from "../components/ui/select";
 import { Table, Td, Th } from "../components/ui/table";
 import { useToast } from "../components/ui/toast-context";
 import { reportDefinitions, reportRows } from "../data/adminReports";
+import { GENDER_OPTIONS, PRIORITY_OPTIONS, type SelectOption } from "../data/referenceOptions";
 import type { ReportCategory } from "../data/adminReports";
 import { createAdminReportJob } from "../services/reportService";
+import { searchLaboratoryTests, searchRadiologyStudies } from "../services/referenceDataService";
 import type { ReportFilters } from "../services/reportService";
 import { useAuthStore } from "../stores/authStore";
 import { downloadTextFile, timestampedFilename, toCsv } from "../utils/download";
@@ -90,7 +94,7 @@ export function Reports() {
   const [page, setPage] = useState(1);
   const [filtersOpen, setFiltersOpen] = useState(true);
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<FilterForm>({
+  const { register, control, handleSubmit, reset, formState: { errors } } = useForm<FilterForm>({
     resolver: zodResolver(filterSchema),
     defaultValues: activeFilters,
   });
@@ -262,17 +266,17 @@ export function Reports() {
             <Field label="To" error={errors.to?.message}><Input type="date" {...register("to")} /></Field>
             <Field label="Hospital"><Input readOnly={profile?.role !== "super_admin"} {...register("hospitalId")} /></Field>
             <Field label="Department"><Select disabled={!isFullAdmin} {...register("department")}><option value="">All permitted departments</option>{["Medical OPD", "Medical Clinic", "Antenatal", "Obstetrics", "Pharmacy", "Hematology", "Radiology", "Medical Ward", "ETU", "Finance", "Stores", "ICT Unit"].map((item) => <option key={item}>{item}</option>)}</Select></Field>
-            <Field label="Doctor / staff"><Input placeholder="Name or staff ID" {...register("staff")} /></Field>
-            <Field label="Patient ID"><Input placeholder="PHR-000000" {...register("patientId")} /></Field>
-            <Field label="NIC / passport"><Input placeholder="Identifier" {...register("nic")} /></Field>
-            <Field label="Gender"><Select {...register("gender")}><option value="">All</option><option>Male</option><option>Female</option><option>Other</option><option>Prefer Not to Say</option></Select></Field>
-            <Field label="Age group"><Select {...register("ageGroup")}><option value="">All</option><option>Under 10</option><option>10-15</option><option>16-39</option><option>40-59</option><option>60+</option></Select></Field>
-            <Field label="Diagnosis"><Input placeholder="Diagnosis or ICD-10" {...register("diagnosis")} /></Field>
-            <Field label="Status"><Input placeholder="Completed, pending..." {...register("status")} /></Field>
-            <Field label="Ward / bed"><Input placeholder="Ward or bed number" {...register("ward")} /></Field>
-            <Field label="Medicine"><Input placeholder="Generic or brand name" {...register("medicine")} /></Field>
-            <Field label="Lab / radiology type"><Input placeholder="CBC, CT, MRI..." {...register("testType")} /></Field>
-            <Field label="Priority"><Select {...register("priority")}><option value="">All priorities</option><option>Routine</option><option>Urgent</option><option>STAT</option><option>Critical</option></Select></Field>
+            <Field label="Doctor / staff"><Controller control={control} name="staff" render={({ field }) => <StaffSearchSelector value={field.value} hospitalId={profile?.hospitalId} onChange={(value, option) => field.onChange(option?.label ?? value)} />} /></Field>
+            <Field label="Patient ID"><Input placeholder="PAT-2026-000001" autoCapitalize="characters" {...register("patientId")} /></Field>
+            <Field label="NIC / passport"><Input placeholder="Identifier" autoCapitalize="characters" {...register("nic")} /></Field>
+            <Field label="Gender"><Controller control={control} name="gender" render={({ field }) => <SearchableSelect value={field.value} options={[{ value: "", label: "All genders" }, ...GENDER_OPTIONS]} onChange={field.onChange} clearable={false} />} /></Field>
+            <Field label="Age group"><Select {...register("ageGroup")}><option value="">All age groups</option><option>Under 10</option><option>10-15</option><option>16-39</option><option>40-59</option><option>60+</option></Select></Field>
+            <Field label="Diagnosis"><Controller control={control} name="diagnosis" render={({ field }) => <DiagnosisSearchSelector value={field.value} onChange={(value, option) => field.onChange(option?.label ?? value)} />} /></Field>
+            <Field label="Status"><Select {...register("status")}><option value="">All statuses</option><option>Pending</option><option>Completed</option><option>Approved</option><option>Admitted</option><option>Discharged</option><option>Cancelled</option><option>Critical</option></Select></Field>
+            <Field label="Ward / bed"><Input placeholder="Ward code, name or bed number" {...register("ward")} /></Field>
+            <Field label="Medicine"><Controller control={control} name="medicine" render={({ field }) => <MedicineSearchSelector value={field.value} onChange={(value, option) => field.onChange(option?.label ?? value)} />} /></Field>
+            <Field label="Lab / radiology type"><Controller control={control} name="testType" render={({ field }) => <AsyncSearchableSelect value={field.value} onChange={(value, option) => field.onChange(option?.label ?? value)} loadOptions={async (query) => { const [laboratory, radiology] = await Promise.all([searchLaboratoryTests(query), searchRadiologyStudies(query)]); const tagged: SelectOption[] = [...laboratory.map((item) => ({ ...item, description: ["Laboratory", item.description].filter(Boolean).join(" · ") })), ...radiology.map((item) => ({ ...item, description: ["Radiology", item.description].filter(Boolean).join(" · ") }))]; return tagged; }} placeholder="Search test, code or imaging study" />} /></Field>
+            <Field label="Priority"><Controller control={control} name="priority" render={({ field }) => <SearchableSelect value={field.value} options={[{ value: "", label: "All priorities" }, ...PRIORITY_OPTIONS, { value: "STAT", label: "STAT" }, { value: "Critical", label: "Critical" }]} onChange={field.onChange} clearable={false} />} /></Field>
             <div className="flex items-end gap-2 md:col-span-2 xl:col-span-4">
               <Button type="submit"><Filter className="h-4 w-4" />Generate report</Button>
               <Button type="button" variant="outline" onClick={() => {

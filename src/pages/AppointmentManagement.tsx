@@ -5,6 +5,9 @@ import { Badge, StatusBadge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Input } from "../components/ui/input";
+import { DateTimePicker, SearchableSelect } from "../components/forms";
+import { PatientSearchSelector } from "../components/selectors";
+import { PRIORITY_OPTIONS, type SelectOption } from "../data/referenceOptions";
 import { Select } from "../components/ui/select";
 import { Table, Td, Th } from "../components/ui/table";
 import { useToast } from "../components/ui/toast-context";
@@ -30,6 +33,7 @@ export function AppointmentManagement() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const [patientIdentifier, setPatientIdentifier] = useState(() => searchParams.get("patient") ?? "");
+  const [selectedPatientOption, setSelectedPatientOption] = useState<SelectOption | null>(null);
   const [departmentUuid, setDepartmentUuid] = useState("");
   const [doctorUuid, setDoctorUuid] = useState("");
   const [scheduledAt, setScheduledAt] = useState("");
@@ -84,6 +88,7 @@ export function AppointmentManagement() {
       });
       showToast("Appointment saved to PostgreSQL.", "success");
       setPatientIdentifier("");
+      setSelectedPatientOption(null);
       setReason("");
       await load();
     } catch (error) {
@@ -117,13 +122,15 @@ export function AppointmentManagement() {
         <CardHeader><CardTitle className="flex items-center gap-2"><CalendarCheck2 className="h-5 w-5 text-primary" />Create appointment</CardTitle></CardHeader>
         <CardContent>
           <form className="grid gap-3 md:grid-cols-2 xl:grid-cols-4" onSubmit={submitAppointment}>
-            <label className="space-y-1 text-sm font-semibold text-slate-700">Patient UUID / patient no. / NIC<Input value={patientIdentifier} onChange={(event) => setPatientIdentifier(event.target.value)} placeholder="PAT-2026-000001" /></label>
+            <label className="space-y-1 text-sm font-semibold text-slate-700">Patient
+              <PatientSearchSelector value={patientIdentifier} selectedOption={selectedPatientOption} onChange={(value, option) => { setPatientIdentifier(value); setSelectedPatientOption(option ?? null); }} required />
+            </label>
             <label className="space-y-1 text-sm font-semibold text-slate-700">Department<Select value={departmentUuid} onChange={(event) => { setDepartmentUuid(event.target.value); setDoctorUuid(""); }}><option value="">Select department</option>{reference.departments.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</Select></label>
             <label className="space-y-1 text-sm font-semibold text-slate-700">Doctor<Select value={doctorUuid} onChange={(event) => setDoctorUuid(event.target.value)}><option value="">Department queue</option>{filteredDoctors.map((item) => <option key={item.id} value={item.id}>{item.full_name}</option>)}</Select></label>
-            <label className="space-y-1 text-sm font-semibold text-slate-700">Date and time<Input type="datetime-local" value={scheduledAt} onChange={(event) => setScheduledAt(event.target.value)} /></label>
+            <label className="space-y-1 text-sm font-semibold text-slate-700">Date and time<DateTimePicker min={new Date().toISOString().slice(0, 16)} value={scheduledAt} onChange={(event) => setScheduledAt(event.target.value)} /></label>
             <label className="space-y-1 text-sm font-semibold text-slate-700 md:col-span-2">Reason<Input value={reason} onChange={(event) => setReason(event.target.value)} placeholder="Clinic review or presenting complaint" /></label>
-            <label className="space-y-1 text-sm font-semibold text-slate-700">Priority<Select value={priority} onChange={(event) => setPriority(event.target.value as typeof priority)}><option value="routine">Routine</option><option value="urgent">Urgent</option><option value="critical">Critical</option></Select></label>
-            <label className="space-y-1 text-sm font-semibold text-slate-700">Mode<Select value={mode} onChange={(event) => setMode(event.target.value as typeof mode)}><option value="physical">Physical</option><option value="video">Video</option><option value="telephone">Telephone</option></Select></label>
+            <label className="space-y-1 text-sm font-semibold text-slate-700">Priority<SearchableSelect value={priority} options={PRIORITY_OPTIONS} onChange={(value) => setPriority(value as typeof priority)} clearable={false} /></label>
+            <label className="space-y-1 text-sm font-semibold text-slate-700">Mode<SearchableSelect value={mode} options={[{ value: "physical", label: "Physical" }, { value: "video", label: "Video" }, { value: "telephone", label: "Telephone" }]} onChange={(value) => setMode(value as typeof mode)} clearable={false} /></label>
             <div className="md:col-span-2 xl:col-span-4"><Button type="submit" disabled={saving}><CheckCircle2 className="h-4 w-4" />{saving ? "Saving..." : "Save appointment"}</Button></div>
           </form>
         </CardContent>
