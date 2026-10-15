@@ -1,0 +1,11 @@
+{
+  "status": "passed",
+  "cause": "Shared AI assessment switcher intrinsic flex width",
+  "viewport": 375,
+  "beforeDocumentWidth": 438,
+  "afterDocumentWidths": {
+    "dark": 375,
+    "light": 375
+  },
+  "clinicalValidationSubjects": 0
+}

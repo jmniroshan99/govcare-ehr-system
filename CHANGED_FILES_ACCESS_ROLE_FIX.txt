@@ -1,0 +1,66 @@
+Changes against the user-uploaded hospital intelligence source package.
+Includes the October 1 Java compilation correction.
+
+NEW       ACCESS_ROLE_BUILD_INSTRUCTIONS.md
+NEW       ACCESS_ROLE_FIX_REPORT.md
+NEW       ACCESS_ROLE_TESTING_REPORT.md
+NEW       AI_CKΓò¼├┤Γö£┬¼╬ô├«├ëΓò¼├┤Γö£ΓûôΓö¼├æ╬ô├╢┬ú╬ô├╗├å_MODEL_IMPLEMENTATION.md
+NEW       DASHBOARD_COMPILE_FIX.md
+NEW       LOCAL_ROLE_CREDENTIALS.md
+MODIFIED  README.md
+NEW       ROLE_DASHBOARD_BUILD_AND_RUN.md
+NEW       ROLE_DASHBOARD_PERMISSION_MATRIX.md
+NEW       ROLE_INTELLIGENCE_DASHBOARD_ARCHITECTURE.md
+NEW       database/postgresql/local-role-accounts.sql
+NEW       database/postgresql/local-role-credentials.json
+NEW       package-lock.json
+MODIFIED  package.json
+NEW       scripts/provision-local-role-accounts.mjs
+NEW       scripts/role-access.test.cjs
+NEW       scripts/role-dashboard-contract.test.cjs
+NEW       scripts/verify-role-logins.mjs
+NEW       setup-role-logins-windows.bat
+MODIFIED  spring-api/pom.xml
+MODIFIED  spring-api/src/main/java/lk/gov/health/govcare/dashboard/DashboardController.java
+NEW       spring-api/src/main/java/lk/gov/health/govcare/dashboard/DashboardIntelligenceService.java
+MODIFIED  spring-api/src/main/java/lk/gov/health/govcare/dashboard/DashboardService.java
+MODIFIED  spring-api/src/main/java/lk/gov/health/govcare/security/UserRole.java
+MODIFIED  spring-api/src/main/java/lk/gov/health/govcare/staff/StaffManagementService.java
+NEW       spring-api/src/main/resources/db/migration/V31__role_intelligence_dashboards.sql
+NEW       spring-api/src/main/resources/db/migration/V32__repair_role_access_consistency.sql
+NEW       spring-api/src/test/java/lk/gov/health/govcare/dashboard/DashboardIntelligenceServiceTest.java
+NEW       spring-api/src/test/java/lk/gov/health/govcare/dashboard/DashboardRoleAccessTest.java
+MODIFIED  spring-api/src/test/java/lk/gov/health/govcare/dashboard/DashboardServiceTest.java
+NEW       spring-api/src/test/java/lk/gov/health/govcare/security/UserRoleTest.java
+MODIFIED  src/app/providers.tsx
+MODIFIED  src/components/layout/AppShell.tsx
+MODIFIED  src/components/layout/navItems.ts
+MODIFIED  src/components/search/SmartSearch.tsx
+NEW       src/dashboard/DashboardChart.tsx
+NEW       src/dashboard/DashboardRouter.tsx
+NEW       src/dashboard/RoleDashboardPage.tsx
+NEW       src/dashboard/dashboardDefinitions.ts
+MODIFIED  src/i18n/locales/en.json
+MODIFIED  src/i18n/locales/si.json
+MODIFIED  src/i18n/locales/ta.json
+MODIFIED  src/index.css
+MODIFIED  src/lib/accessControl.ts
+MODIFIED  src/lib/rbac.ts
+MODIFIED  src/lib/roleAccess.ts
+MODIFIED  src/pages/ChangeTemporaryPassword.tsx
+MODIFIED  src/pages/Login.tsx
+MODIFIED  src/pages/MediaCenter.tsx
+MODIFIED  src/pages/Profile.tsx
+MODIFIED  src/pages/Reports.tsx
+MODIFIED  src/pages/admin/StaffManagement.tsx
+MODIFIED  src/routes/AppRouter.tsx
+MODIFIED  src/routes/routePreload.ts
+MODIFIED  src/services/authService.ts
+MODIFIED  src/services/dashboardService.ts
+MODIFIED  src/services/profileService.ts
+MODIFIED  src/stores/authStore.ts
+MODIFIED  src/types/ehr.ts
+MODIFIED  src/types/staff.ts
+MODIFIED  src/utils/browserClinicalCache.ts
+
+Excluded: dependency/build/runtime folders and private .env files.

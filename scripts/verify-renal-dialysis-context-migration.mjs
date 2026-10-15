@@ -1,0 +1,20 @@
+import assert from 'node:assert/strict';import{PGlite}from'@electric-sql/pglite';import{pgcrypto}from'@electric-sql/pglite/contrib/pgcrypto';import{readFile,readdir,writeFile}from'node:fs/promises';
+const db=new PGlite({extensions:{pgcrypto}}),dir=new URL('../spring-api/src/main/resources/db/migration/',import.meta.url);let checks=0;const[h,p,actor,other]=Array.from({length:4},()=>crypto.randomUUID());
+const reject=async(q,args)=>{await assert.rejects(db.query(q,args));checks++;};
+try{const migrations=(await readdir(dir)).filter(f=>/^V\d+__/.test(f)).sort((a,b)=>Number(a.match(/^V(\d+)/)[1])-Number(b.match(/^V(\d+)/)[1]));for(const f of migrations)await db.exec(await readFile(new URL(f,dir),'utf8'));
+ await db.query("insert into hospitals(id,code,name) values($1,'CONTEXT-QA','Operational context'),($2,'CONTEXT-OTHER','Other tenant')",[h,other]);
+ await db.query("insert into patients(id,hospital_id,patient_no,full_name,date_of_birth) values($1,$2,'CONTEXT-OPERATIONAL','Operational fixture only','1970-01-01')",[p,h]);
+ await db.query("insert into app_users(id,hospital_id,full_name,email,password_hash,role) values($1,$2,'Operational clinician','context@govcare.test','NOT_A_LOGIN_HASH','doctor')",[actor,h]);
+ const insert="insert into renal_dialysis_context_events(id,hospital_id,patient_id,actor_id,request_id,context_status,verified_at,source_note,source_verified,input_fingerprint) values($1,$2,$3,$4,$5,$6,$7,$8,$9,repeat('a',64))";
+ const id=crypto.randomUUID(),request=crypto.randomUUID(),args=[id,h,p,actor,request,'MAINTENANCE_HD','2026-01-01T00:00:00Z','Verified operational source',true];
+ await db.query(insert,args);checks++;
+ assert.equal((await db.query('select count(*)::int as count from sri_lankan_renal_observations')).rows[0].count,0);checks++;
+ await reject(insert,[crypto.randomUUID(),other,...args.slice(2)]);
+ await reject(insert,[crypto.randomUUID(),...args.slice(1)]);
+ await reject(insert,[crypto.randomUUID(),h,p,actor,crypto.randomUUID(),'UNKNOWN_VALUE',...args.slice(6)]);
+ await reject(insert,[crypto.randomUUID(),h,p,actor,crypto.randomUUID(),'MAINTENANCE_HD',args[6],args[7],false]);
+ await reject(insert,[crypto.randomUUID(),h,p,actor,crypto.randomUUID(),'MAINTENANCE_HD','2099-01-01',args[7],true]);
+ await reject('update renal_dialysis_context_events set context_status=$1 where id=$2',['NOT_ON_MAINTENANCE_HD',id]);await reject('delete from renal_dialysis_context_events where id=$1',[id]);
+ const report={status:'passed',checks,migrationCount:migrations.length,lastMigration:migrations.at(-1),engine:'PGlite PostgreSQL WASM; not native Windows PostgreSQL',scope:'Standalone context without laboratory values; tenant FK, request idempotency uniqueness, supported status, source/date constraints and append-only evidence'};
+ if(process.env.GOVCARE_RENAL_CONTEXT_DB_REPORT)await writeFile(process.env.GOVCARE_RENAL_CONTEXT_DB_REPORT,JSON.stringify(report,null,2));console.log(JSON.stringify(report));
+}finally{await db.close();}

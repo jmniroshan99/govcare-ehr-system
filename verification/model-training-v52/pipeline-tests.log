@@ -1,0 +1,21 @@
+test_candidate_must_beat_other_simple_baselines (test_packaged_training.PackagedTrainingGateTests.test_candidate_must_beat_other_simple_baselines) ... ok
+test_overlapping_patient_manifests_are_rejected (test_packaged_training.PackagedTrainingGateTests.test_overlapping_patient_manifests_are_rejected) ... ok
+test_perfect_persistence_is_retained (test_packaged_training.PackagedTrainingGateTests.test_perfect_persistence_is_retained) ... ok
+test_small_improvement_does_not_replace_persistence (test_packaged_training.PackagedTrainingGateTests.test_small_improvement_does_not_replace_persistence) ... ok
+test_unlisted_patient_cannot_enter_a_partition (test_packaged_training.PackagedTrainingGateTests.test_unlisted_patient_cannot_enter_a_partition) ... ok
+test_validation_improvement_passes_independently_of_test_metrics (test_packaged_training.PackagedTrainingGateTests.test_validation_improvement_passes_independently_of_test_metrics) ... ok
+test_cleaning_logs_exact_duplicates_and_invalid_cells (test_pipeline.CausalPipelineTests.test_cleaning_logs_exact_duplicates_and_invalid_cells) ... ok
+test_explicit_units_and_wrong_unit_rejection (test_pipeline.CausalPipelineTests.test_explicit_units_and_wrong_unit_rejection) ... ok
+test_feature_contract_rejects_target_and_patient_id (test_pipeline.CausalPipelineTests.test_feature_contract_rejects_target_and_patient_id) ... ok
+test_group_split_rejects_same_patient_across_sets (test_pipeline.CausalPipelineTests.test_group_split_rejects_same_patient_across_sets) ... ok
+test_prefix_features_are_invariant_to_future_changes (test_pipeline.CausalPipelineTests.test_prefix_features_are_invariant_to_future_changes) ... ok
+test_pseudonyms_are_stable_and_secret_dependent (test_pipeline.CausalPipelineTests.test_pseudonyms_are_stable_and_secret_dependent) ... ok
+test_saved_patient_manifest_has_no_overlap (test_pipeline.CausalPipelineTests.test_saved_patient_manifest_has_no_overlap) ... ok
+test_serialized_full_pipeline_and_train_only_imputation (test_pipeline.CausalPipelineTests.test_serialized_full_pipeline_and_train_only_imputation) ... ok
+test_targets_do_not_cross_patient_or_skip_missing_outcome (test_pipeline.CausalPipelineTests.test_targets_do_not_cross_patient_or_skip_missing_outcome) ... ok
+test_urr_is_not_clamped (test_pipeline.CausalPipelineTests.test_urr_is_not_clamped) ... ok
+
+----------------------------------------------------------------------
+Ran 16 tests in 2.520s
+
+OK

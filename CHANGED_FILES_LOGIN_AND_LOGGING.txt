@@ -1,0 +1,24 @@
+GovCare EHR login and logging repair
+
+New files
+- LOGIN_AND_LOGGING_FIX.md
+- VALIDATION_LOGIN_AND_LOGGING.md
+- spring-api/src/main/java/lk/gov/health/govcare/audit/LoginAuditService.java
+- spring-api/src/main/resources/db/migration/V12__repair_login_accounts_and_audit_sessions.sql
+
+Modified files
+- README.md
+- FIXED_VERSION_NOTES.md
+- spring-api/.env.example
+- spring-api/src/main/java/lk/gov/health/govcare/audit/LoginActivityController.java
+- spring-api/src/main/java/lk/gov/health/govcare/auth/AuthController.java
+- spring-api/src/main/java/lk/gov/health/govcare/common/GlobalExceptionHandler.java
+- spring-api/src/main/java/lk/gov/health/govcare/config/SecurityConfig.java
+- spring-api/src/main/resources/application.yml
+- src/components/layout/AppShell.tsx
+- src/pages/Login.tsx
+- src/routes/AppRouter.tsx
+- src/services/apiClient.ts
+- src/services/authService.ts
+- src/services/loginActivityService.ts
+- src/utils/authErrors.ts

@@ -1,0 +1,1 @@
+{"status":"passed","checks":31,"migrationCount":44,"lastMigration":"V45__unified_clinical_prediction_features.sql","engine":"PGlite PostgreSQL WASM; not native Windows PostgreSQL","scope":"Real existing-table CKD rows migrated to immutable, tenant-scoped feature projections, with saved dates/units, no dialysis fabrication, FK/idempotence and preservation checks"}

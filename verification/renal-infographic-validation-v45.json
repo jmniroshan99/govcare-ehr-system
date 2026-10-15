@@ -1,0 +1,34 @@
+{
+  "delivery": "GovCare V45 CKD research infographic",
+  "frontend_build": {
+    "status": "PASSED",
+    "command": "npm run build",
+    "typescript": "project references compiled",
+    "vite_modules": 3432
+  },
+  "affected_regression_tests": {
+    "status": "PASSED",
+    "passed": 66,
+    "failed": 0,
+    "command": "node --test scripts/renal-clinical-risk-graphics.test.cjs scripts/ckd-workspace.test.cjs scripts/renal-measurement-units.test.mjs scripts/predictive-access.test.cjs"
+  },
+  "pdf": {
+    "status": "PASSED",
+    "pages": 1,
+    "width_points": 960,
+    "height_points": 540,
+    "embedded_images": 1,
+    "visual_review": "Poppler render inspected; no clipping or missing labels"
+  },
+  "browser": {
+    "status": "PASSED",
+    "report": "verification/renal-infographic-browser-v45.json",
+    "scope": "Isolated real static research component; no signed-in clinical workflow"
+  },
+  "native_windows_postgres_fullstack": {
+    "status": "NOT_REPEATED",
+    "reason": "Presentation-only source changes; executor Java 17, Maven absent, no configured native PostgreSQL/clinical account fixture"
+  },
+  "clinical_validation": "NOT_COMPLETED",
+  "dataset_permission_status": "UNVERIFIED"
+}

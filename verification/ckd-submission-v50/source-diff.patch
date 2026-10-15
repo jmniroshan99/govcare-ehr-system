@@ -1,0 +1,30 @@
+--- V49/README.md
++++ V50/README.md
+@@ -1,3 +1,9 @@
++# V50 — CKD submission audit persistence fix
++
++V50 fixes the V49 feature-capture audit insert that could roll back CKD submissions with HTTP 500 / SQLSTATE 42703. It uses the existing audit columns, required module and PostgreSQL enum cast; all current clinical workflows and the unified feature layer are retained.
++
++Fresh verification: 201 Spring tests including five real JDBC persistence/rollback checks, 95 client/startup tests and 31 feature migration checks passed. See [diagnosis, modified files, restart instructions and repeatable QA](V50_CKD_SUBMISSION_AUDIT_FIX.md). No new migration is needed. Native Windows/PostgreSQL and the exact screenshot error-ID match still require target-machine evidence.
++
+ # V49 — unified CKD clinical feature integration
+ 
+ Saved CKD assessment values now populate the existing renal monitoring cards, current-value summary, dated charts and PDF. Flyway V45 adds and backfills immutable, tenant-scoped `clinical_prediction_features`; existing workflows and research model gates are retained.
+--- V49/spring-api/src/main/java/lk/gov/health/govcare/ai/ClinicalPredictionFeatureService.java
++++ V50/spring-api/src/main/java/lk/gov/health/govcare/ai/ClinicalPredictionFeatureService.java
+@@ -38,7 +38,14 @@
+             values(:id,:h,:p,:a,:date,:recorded,:creatinine,:egfr,:acr,:potassium,:hemoglobin,:hba1c,:proteinuria,:age,:bmi,:systolic,:diastolic,:glucose,:bun,:edema,:family_history,:previous_aki,:nsaids_use,
+               'CKD_ASSESSMENT',cast(:raw as jsonb),cast(:meta as jsonb),'GOVCARE-CLINICAL-FEATURES-1.0') on conflict(source_assessment_id) do nothing
+             """,p);
+-        sql.update("insert into audit_logs(hospital_id,actor_id,actor_email,actor_role,action,entity_type,entity_id,details) values(:h,:actor,:email,:role,'CKD_CLINICAL_FEATURES_NORMALIZED','clinical_prediction_features',:id,cast(:details as jsonb))",Map.of("h",scoped.hospitalId(),"actor",scoped.id(),"email",scoped.email(),"role",scoped.role(),"id",assessment,"details",mapper.createObjectNode().put("assessmentId",assessment.toString()).put("normalizationVersion",ClinicalFeatureNormalizer.VERSION).toString()));
++        // Use the established audit schema, including its required module and typed role.
++        // Keep audit persistence in the assessment transaction; a genuine failure must roll back.
++        sql.update("""
++            insert into audit_logs(hospital_id,actor_id,actor_role,module,action,entity_type,entity_id,after_state)
++            values(:h,:actor,cast(:role as user_role),'ai_cdss','CKD_CLINICAL_FEATURES_NORMALIZED',
++              'clinical_prediction_features',:id,cast(:details as jsonb))
++            """,Map.of("h",scoped.hospitalId(),"actor",scoped.id(),"role",scoped.role(),"id",assessment,
++              "details",mapper.createObjectNode().put("assessmentId",assessment.toString()).put("normalizationVersion",ClinicalFeatureNormalizer.VERSION).toString()));
+         return normalized;
+     }
+     public FeatureData load(GovCarePrincipal actor,UUID patient){return load(actor,patient,null);}

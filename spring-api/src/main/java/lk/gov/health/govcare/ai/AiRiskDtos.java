@@ -1,0 +1,3 @@
+package lk.gov.health.govcare.ai;
+import java.math.BigDecimal;import java.util.*;
+public final class AiRiskDtos{private AiRiskDtos(){}public record AssessmentRequest(String patientId,BigDecimal respiratoryRate,BigDecimal oxygenSaturation,BigDecimal systolicBloodPressure,BigDecimal pulse,BigDecimal temperature,BigDecimal wbc,BigDecimal haemoglobin,BigDecimal platelets,Boolean supplementalOxygen,Boolean alteredMentalState){}public record ReviewRequest(String note){}public record Factor(String code,String label,int points,String value,String explanation){}public record ScoreResult(int score,String riskLevel,BigDecimal confidence,List<Factor> factors,String recommendation,Map<String,Object> inputs){}}

@@ -1,0 +1,15 @@
+src/routes/AppRouter.tsx
+src/components/layout/AppShell.tsx
+src/components/layout/navItems.ts
+src/lib/roleAccess.ts
+src/routes/routePreload.ts
+src/pages/UserManagement.tsx
+src/pages/admin/StaffManagement.tsx
+src/pages/SuperAdminDashboard.tsx
+src/services/staffService.ts
+src/i18n/locales/en.json
+src/i18n/locales/si.json
+src/i18n/locales/ta.json
+spring-api/src/main/java/lk/gov/health/govcare/system/SearchController.java
+spring-api/src/main/resources/db/migration/V10__replace_user_management_with_staff_management.sql
+USER_TO_STAFF_MANAGEMENT_REPLACEMENT.md

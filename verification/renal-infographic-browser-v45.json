@@ -1,0 +1,81 @@
+{
+  "scope": "Isolated real research component; no authenticated clinical workflow or clinical validation",
+  "checks": [
+    {
+      "check": "Desktop, tablet and mobile layouts show all four readable module descriptions without horizontal overflow",
+      "status": "passed"
+    },
+    {
+      "check": "Keyboard activation collapses and reopens the real infographic",
+      "status": "passed"
+    },
+    {
+      "check": "Full-size viewing opens the packaged PNG in a protected new tab",
+      "status": "passed"
+    },
+    {
+      "check": "Download PNG returns a genuine packaged file with the expected filename and signature",
+      "status": "passed"
+    },
+    {
+      "check": "Presentation PDF returns a genuine packaged file with the expected filename and signature",
+      "status": "passed"
+    },
+    {
+      "check": "The research component produces no runtime errors and makes no clinical API calls",
+      "status": "passed"
+    },
+    {
+      "check": "An unavailable image leaves an accessible fallback and readable research descriptions",
+      "status": "passed"
+    }
+  ],
+  "layouts": [
+    {
+      "width": 1366,
+      "status": "passed",
+      "horizontalOverflow": false,
+      "imageSize": {
+        "width": 1672,
+        "height": 941
+      }
+    },
+    {
+      "width": 768,
+      "status": "passed",
+      "horizontalOverflow": false,
+      "imageSize": {
+        "width": 1672,
+        "height": 941
+      }
+    },
+    {
+      "width": 375,
+      "status": "passed",
+      "horizontalOverflow": false,
+      "imageSize": {
+        "width": 1672,
+        "height": 941
+      }
+    }
+  ],
+  "assetResponses": [
+    {
+      "path": "/research/ckd-risk-predictive-intelligence-v45.png",
+      "status": 200
+    },
+    {
+      "path": "/research/ckd-risk-predictive-intelligence-v45.png",
+      "status": 200
+    },
+    {
+      "path": "/research/ckd-risk-predictive-intelligence-v45.png",
+      "status": 200
+    }
+  ],
+  "requestFailures": [],
+  "status": "passed",
+  "runtimeErrors": 0,
+  "clinicalApiRequests": 0,
+  "browserVersion": "153.0.8010.0"
+}

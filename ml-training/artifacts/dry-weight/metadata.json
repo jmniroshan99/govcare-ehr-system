@@ -1,0 +1,28 @@
+{
+  "model_key": "dry-weight",
+  "model": "LK-RENAL-DRYWEIGHT-1.0",
+  "model_version": "1.0.0",
+  "status": "INSUFFICIENT_DATA_FOR_RELIABLE_MODEL",
+  "clinical_validation": "NOT_COMPLETED",
+  "dataset_permission_status": "UNVERIFIED",
+  "rows": 763,
+  "unique_patients": null,
+  "missing_required_fields": [
+    "patient_id",
+    "date",
+    "current_dry_weight"
+  ],
+  "legacy_prediction_export_descriptive_metrics": {
+    "MAE": 0.42283879423328985,
+    "RMSE": 0.9755719980913896,
+    "R2": 0.9951357370924607,
+    "MedianAbsoluteError": 0.1700000000000017
+  },
+  "post_hd_weight_proxy_descriptive_metrics": {
+    "MAE": 0.4470511140235911,
+    "RMSE": 0.9293876843868268,
+    "R2": 0.9955853913091541,
+    "MedianAbsoluteError": 0.20000000000000284
+  },
+  "interpretation": "Exported errors are descriptive, not a freshly grouped validation. Post-HD weight is a proxy, NOT next-dry-weight persistence. True persistence/rolling/LOCF cannot be reconstructed; legacy model not promoted."
+}

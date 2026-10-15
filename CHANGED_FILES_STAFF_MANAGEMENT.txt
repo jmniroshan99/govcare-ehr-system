@@ -1,0 +1,33 @@
+GovCare EHR Staff Management and Role Assignment - Changed Files
+
+Documentation
+- README.md
+- STAFF_MANAGEMENT_IMPLEMENTATION.md
+- STAFF_MANAGEMENT_TEST_CHECKLIST.md
+- CHANGED_FILES_STAFF_MANAGEMENT.txt
+
+Spring Boot backend
+- spring-api/src/main/resources/db/migration/V7__staff_management.sql
+- spring-api/src/main/java/lk/gov/health/govcare/staff/StaffDtos.java
+- spring-api/src/main/java/lk/gov/health/govcare/staff/StaffManagementController.java
+- spring-api/src/main/java/lk/gov/health/govcare/staff/StaffManagementService.java
+- spring-api/src/main/java/lk/gov/health/govcare/auth/AuthController.java
+- spring-api/src/main/java/lk/gov/health/govcare/security/AppUserEntity.java
+- spring-api/src/main/java/lk/gov/health/govcare/security/AppUserRepository.java
+- spring-api/src/main/java/lk/gov/health/govcare/user/UserService.java
+
+React frontend
+- src/pages/admin/StaffManagement.tsx
+- src/pages/ChangeTemporaryPassword.tsx
+- src/services/staffService.ts
+- src/services/authService.ts
+- src/types/staff.ts
+- src/types/ehr.ts
+- src/routes/AppRouter.tsx
+- src/pages/Login.tsx
+- src/components/layout/navItems.ts
+- src/lib/accessControl.ts
+- src/lib/roleAccess.ts
+- src/i18n/locales/en.json
+- src/i18n/locales/si.json
+- src/i18n/locales/ta.json

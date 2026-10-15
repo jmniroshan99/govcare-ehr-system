@@ -1,0 +1,11 @@
+# Versions used to fit, serialize, and verify the included research artifacts.
+Django==6.1.2
+PyJWT==2.15.1
+numpy==2.3.5
+pandas==2.2.3
+scikit-learn==1.8.0
+xgboost==3.4.1
+shap==0.52.0
+joblib==1.5.3
+scipy==1.17.0
+matplotlib==3.10.8

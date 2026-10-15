@@ -1,0 +1,52 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import {randomUUID} from 'node:crypto';
+import {resolve,dirname} from 'node:path';
+
+const base=new URL(process.env.GOVCARE_VISUAL_API||'http://127.0.0.1:4002');
+assert.ok(['localhost','127.0.0.1','[::1]'].includes(base.hostname),'Live PDF verifier is restricted to loopback.');
+assert.equal(process.env.GOVCARE_RENAL_TEST_MUTATIONS,'disposable-local','Set GOVCARE_RENAL_TEST_MUTATIONS=disposable-local; this verifier persists a synthetic QA assessment/report.');
+assert.ok(process.env.GOVCARE_VISUAL_ACCOUNTS,'Set GOVCARE_VISUAL_ACCOUNTS to a private local fixture JSON file.');
+const accounts=JSON.parse(await fs.readFile(process.env.GOVCARE_VISUAL_ACCOUNTS,'utf8'));
+const doctor=accounts.find(a=>a.role==='doctor'&&a.email&&a.password&&a.patientId);
+assert.ok(doctor,'A doctor fixture with email, password and authorized patientId is required.');
+assert.match(doctor.patientId,/^[0-9a-f-]{36}$/i);
+async function json(path,{token,method='GET',body,expected=200}={}){
+  const response=await fetch(new URL(path,base),{method,headers:{...(token?{Authorization:`Bearer ${token}`}:{ }),...(body?{'Content-Type':'application/json'}:{})},body:body?JSON.stringify(body):undefined});
+  let payload={}; try{payload=await response.json();}catch{}
+  assert.equal(response.status,expected,`${method} ${path}: ${response.status} ${payload.message||payload.error||''}`);
+  return payload;
+}
+const login=await json('/api/auth/local-login',{method:'POST',body:{email:doctor.email,password:doctor.password}});
+assert.ok(login.token,'Doctor login did not return a JWT.');
+const token=login.token;
+const renal=await json(`/api/ai-cdss/ckd/patients/${doctor.patientId}/renal-intelligence`,{token});
+assert.equal(renal.patientId,doctor.patientId,'Renal intelligence patient association mismatch.');
+assert.ok(Array.isArray(renal.observations)&&renal.observations.length>=2,'Run verify-renal-api.mjs first so the disposable test patient has two verified renal observations.');
+assert.ok(Array.isArray(renal.predictions)&&renal.predictions.some(p=>p.model_key==='hyperkalemia'),'Run verify-renal-api.mjs first so a stored hyperkalemia research snapshot exists.');
+const intelligence=await json(`/api/ai-cdss/ckd/patients/${doctor.patientId}/predictive-intelligence`,{token});
+assert.equal(intelligence.moduleOrder.length,6);
+const features={Age:58,BMI:26.4,SystolicBP:138,DiastolicBP:86,FastingBloodSugar:112,HbA1c:6.4,SerumCreatinine:5.2,BUNLevels:42,GFR:12,ProteinInUrine:120,ACR:420,SerumElectrolytesPotassium:5.1,HemoglobinLevels:10.8,Edema:1,FamilyHistoryKidneyDisease:0,PreviousAcuteKidneyInjury:1,NSAIDsUse:2};
+const assessment=await json('/api/ai-cdss/ckd/predict',{token,method:'POST',body:{patientId:doctor.patientId,requestId:randomUUID(),features,sources:{}}});
+assert.match(assessment.predictionId,/^[0-9a-f-]{36}$/i,'CKD assessment was not persisted.');
+const report=await json(`/api/ai-cdss/ckd/assessments/${assessment.predictionId}/report`,{token,method:'POST'});
+assert.match(report.id,/^[0-9a-f-]{36}$/i,'Generated CKD report ID missing.');
+const response=await fetch(new URL(`/api/ai-cdss/ckd/assessments/reports/${report.id}/download`,base),{headers:{Authorization:`Bearer ${token}`}});
+assert.equal(response.status,200,'Generated CKD PDF download failed.');
+assert.match(response.headers.get('content-type')||'',/^application\/pdf/i,'Downloaded report is not application/pdf.');
+const bytes=Buffer.from(await response.arrayBuffer());
+assert.ok(bytes.length>5000,`Generated PDF is unexpectedly small (${bytes.length} bytes).`);
+assert.equal(bytes.subarray(0,5).toString('ascii'),'%PDF-','Downloaded file does not have a PDF signature.');
+const dir=resolve(process.env.GOVCARE_CKD_PDF_OUTPUT||'verification/ckd-live-pdf');
+await fs.mkdir(dir,{recursive:true});
+const file=resolve(dir,`govcare-ckd-${assessment.predictionId}.pdf`);
+await fs.writeFile(file,bytes);
+const afterExport=await json(`/api/ai-cdss/ckd/patients/${doctor.patientId}/predictive-intelligence`,{token});
+assert.equal(afterExport.snapshotId,intelligence.snapshotId,"Export changed the intelligence snapshot instead of reading it.");
+const listed=await json(`/api/ai-cdss/ckd/assessments/${assessment.predictionId}/reports`,{token});
+assert.ok(Array.isArray(listed.items)&&listed.items.some(item=>String(item.id)===String(report.id)),'Generated report is not listed for the assessment.');
+const result={status:'passed',operationalFixtureNotClinicalValidation:true,patientId:doctor.patientId,assessmentId:assessment.predictionId,reportId:report.id,pdfBytes:bytes.length,pdfPath:file,renalModuleSnapshotId:intelligence.snapshotId,renalModules:intelligence.moduleOrder,renalObservations:renal.observations.length,storedRenalModelKeys:[...new Set(renal.predictions.map(p=>p.model_key))].sort()};
+const reportPath=resolve(process.env.GOVCARE_CKD_PDF_REPORT||'verification/ckd-live-pdf-report.json');
+await fs.mkdir(dirname(reportPath),{recursive:true});
+await fs.writeFile(reportPath,JSON.stringify(result,null,2)+'\n');
+console.log(JSON.stringify(result,null,2));

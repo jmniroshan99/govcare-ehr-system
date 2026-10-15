@@ -1,0 +1,34 @@
+GovCare EHR - Patient Identification, Ward Selection, and Automatic Age Fix
+
+Frontend
+- src/utils/age.ts
+- src/services/patientService.ts
+- src/pages/PatientRegistration.tsx
+- src/pages/PatientProfile.tsx
+- src/pages/PatientWorkbench.tsx
+- src/pages/wards/BedBoard.tsx
+
+Spring Boot API
+- spring-api/src/main/java/lk/gov/health/govcare/patient/PatientController.java
+- spring-api/src/main/java/lk/gov/health/govcare/patient/PatientRepository.java
+- spring-api/src/main/java/lk/gov/health/govcare/patient/PatientService.java
+- spring-api/src/main/java/lk/gov/health/govcare/workflow/WorkflowSql.java
+- spring-api/src/main/java/lk/gov/health/govcare/workflow/PrescriptionService.java
+- spring-api/src/main/java/lk/gov/health/govcare/pdf/PdfReportService.java
+
+Database
+- spring-api/src/main/resources/db/migration/V13__patient_age_and_ward_identification.sql
+
+Main behavior
+- Patient Identification now includes a ward selector.
+- A selected ward limits identification results to active admissions in that ward.
+- Ward patient count, available-bed count, current bed, and admission number are displayed.
+- QR/barcode searches respect the selected ward.
+- The Bed Board opens with the selected ward pre-filtered.
+- Age is calculated from date of birth using the current date.
+- Date of birth overrides a stale stored age.
+- Existing ages are backfilled by Flyway V13.
+- Future dates of birth are rejected.
+- Queue, pharmacy, duplicate checking, patient PDFs, and clinical PDFs use dynamic age.
+
+The previous Pharmacy Verify/Reject workflow fixes are retained in this package.

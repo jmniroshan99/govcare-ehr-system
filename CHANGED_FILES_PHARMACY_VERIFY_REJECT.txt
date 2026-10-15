@@ -1,0 +1,20 @@
+GovCare EHR - Pharmacy Verify / Reject Workflow Fix
+Date: 2026-08-04
+
+Modified files
+==============
+1. src/pages/PharmacyModule.tsx
+   - Added Verify and Reject actions to pending prescription queue rows.
+   - Added always-visible Verify and Reject controls in Prescription Preview.
+   - Buttons are enabled only for pending/pending_verification records.
+   - Added duplicate-click protection and progress labels.
+   - Rejection now requires a reason.
+   - Added clearer completed-status messages and corrected rejected audit labels.
+
+2. spring-api/src/main/java/lk/gov/health/govcare/workflow/PrescriptionService.java
+   - Restricted verify/reject transitions to pending prescriptions.
+   - Added mandatory rejection-reason validation.
+   - Added an atomic status guard to prevent concurrent duplicate reviews.
+   - Added audit log records for prescription verification and rejection.
+
+No database migration is required.

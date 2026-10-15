@@ -1,0 +1,1 @@
+import{a as e}from"./vendor-motion-CQXSuf1v.js";import{DashboardRouter as t}from"./DashboardRouter-DjzIfH_z.js";var n=e();function r(){return(0,n.jsx)(t,{})}export{r as Reports};

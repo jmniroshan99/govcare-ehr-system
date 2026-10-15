@@ -1,0 +1,17 @@
+{
+  "status": "passed",
+  "v51_dashboard_and_java_source_files_byte_preserved": 470,
+  "training_data_split_hb_baseline_and_serving_contract_unchanged": [
+    "ml-training/data/deidentified_monthly.csv",
+    "ml-training/reports/patient_split_manifest.json",
+    "ml-training/artifacts/hb-risk/model.joblib",
+    "ml-training/artifacts/hb-risk/metadata.json",
+    "ml-training/serving_input_contract.json"
+  ],
+  "active_model_hashes": {
+    "hb": "d81abfee0f345dcf59a2e2ce51617f9038a3693b4630de8cc97b1b0216eb4211",
+    "urr": "7de2f633c04a8a8c58d5629f81483ca32c3e3fa6f6ef3dde47d5ff2c8732a1e2",
+    "hyperkalemia": "9a561de7f66e3418ee6397e531306e4a63f86a929fff651b6f30d18594c5481b"
+  },
+  "restoration": "1043 CRC-validated checkpoint members overlaid on the complete original archive; missing archive tail contained old verification assets only."
+}

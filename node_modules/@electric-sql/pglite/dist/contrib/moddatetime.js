@@ -1,0 +1,2 @@
+import{j as e}from"../chunk-QY3QWFKW.js";e();var t=async(n,s)=>({bundlePath:new URL("../spi.tar.gz",import.meta.url)}),r={name:"moddatetime",setup:t};export{r as moddatetime};
+//# sourceMappingURL=moddatetime.js.map

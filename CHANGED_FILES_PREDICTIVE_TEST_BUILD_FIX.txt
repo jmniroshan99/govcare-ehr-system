@@ -1,0 +1,6 @@
+Modified:
+spring-api/src/test/java/lk/gov/health/govcare/ai/PredictiveIntelligenceSecurityTest.java
+
+Added:
+BUILD_FIX_PREDICTIVE_SECURITY_TEST_CONSTRUCTOR.md
+CHANGED_FILES_PREDICTIVE_TEST_BUILD_FIX.txt

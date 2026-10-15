@@ -1,0 +1,35 @@
+import assert from 'node:assert/strict';
+import {PGlite} from '@electric-sql/pglite';import {pgcrypto} from '@electric-sql/pglite/contrib/pgcrypto';
+import {readFile,readdir,writeFile} from 'node:fs/promises';
+const db=new PGlite({extensions:{pgcrypto}}),dir=new URL('../spring-api/src/main/resources/db/migration/',import.meta.url);
+const [h,p,actor,other,snapshot]=Array.from({length:5},()=>crypto.randomUUID());let checks=0;
+const reject=async(query,args)=>{await assert.rejects(db.query(query,args));checks++;};
+try {
+ const migrations=(await readdir(dir)).filter(f=>/^V\d+__/.test(f)).sort((a,b)=>Number(a.match(/^V(\d+)/)[1])-Number(b.match(/^V(\d+)/)[1]));
+ for(const f of migrations)await db.exec(await readFile(new URL(f,dir),'utf8'));
+ await db.query("insert into hospitals(id,code,name) values($1,'SIX-QA','Operational fixture'),($2,'SIX-OTHER','Other tenant')",[h,other]);
+ await db.query("insert into patients(id,hospital_id,patient_no,full_name,date_of_birth) values($1,$2,'SIX-OPERATIONAL','Operational fixture only','1970-01-01')",[p,h]);
+ await db.query("insert into app_users(id,hospital_id,full_name,email,password_hash,role) values($1,$2,'Operational clinician','six-module@govcare.test','NOT_A_LOGIN_HASH','doctor')",[actor,h]);
+ const order=['renalTrajectory','kidneyFailureStatus','hyperkalemia','anemia','dialysisAdequacy','renalDeterioration'];
+ const output={snapshotId:snapshot,patientId:p,hospitalId:h,moduleOrder:order,dataQuality:{}};
+ for(const key of order)output[key]={key,status:'INSUFFICIENT_DATA',researchRiskScore:null};
+ const insert="insert into renal_clinical_module_snapshots(id,hospital_id,patient_id,requested_by,source_fingerprint,rule_version,outputs) values($1,$2,$3,$4,repeat('b',64),'LK-RENAL-MODULES-1.0',$5::jsonb)";
+ await db.query(insert,[snapshot,h,p,actor,JSON.stringify(output)]);checks++;
+ await reject(insert,[crypto.randomUUID(),other,p,actor,JSON.stringify(output)]);
+ const duplicate={...output,snapshotId:crypto.randomUUID()};await reject(insert,[duplicate.snapshotId,h,p,actor,JSON.stringify(duplicate)]);
+ await reject("update renal_clinical_module_snapshots set rule_version='changed' where id=$1",[snapshot]);await reject("delete from renal_clinical_module_snapshots where id=$1",[snapshot]);
+ const bad={...output,snapshotId:crypto.randomUUID(),anemia:{researchRiskScore:.2}};
+ await reject("insert into renal_clinical_module_snapshots(id,hospital_id,patient_id,requested_by,source_fingerprint,rule_version,outputs) values($1,$2,$3,$4,repeat('c',64),'test',$5::jsonb)",[bad.snapshotId,h,p,actor,JSON.stringify(bad)]);
+ const review="insert into renal_clinical_module_reviews(hospital_id,patient_id,snapshot_id,module_key,actor_id,request_id,action,reason,review_version,input_fingerprint,method,model_version,module_snapshot,modified_interpretation) values($1,$2,$3,$4,$5,$6,$7,'Verified operational review',$8,repeat('d',64),'Clinical Rule','1.0',$9::jsonb,$10)";
+ const args=[h,p,snapshot,'kidneyFailureStatus',actor,crypto.randomUUID(),'DEFER',1,JSON.stringify(output.kidneyFailureStatus),null];
+ await db.query(review,args);checks++;
+ await reject(review,[...args.slice(0,5),crypto.randomUUID(),...args.slice(6)]);
+ await reject(review,[other,...args.slice(1,5),crypto.randomUUID(),...args.slice(6)]);
+ await reject(review,[...args.slice(0,3),'unsupportedDisease',...args.slice(4,5),crypto.randomUUID(),...args.slice(6)]);
+ await reject(review,[...args.slice(0,5),crypto.randomUUID(),'MODIFY',2,args[8],null]);
+ await db.query(review,[...args.slice(0,5),crypto.randomUUID(),'MODIFY',2,args[8],'Clinician revised interpretation']);checks++;
+ await reject("update renal_clinical_module_reviews set reason='changed' where snapshot_id=$1",[snapshot]);
+ await reject("delete from renal_clinical_module_reviews where snapshot_id=$1",[snapshot]);
+ const report={status:'passed',checks,migrationCount:migrations.length,lastMigration:migrations.at(-1),engine:'PGlite PostgreSQL WASM; not native Windows PostgreSQL',scope:'Disposable operational fixtures; persistence, tenant FK, null-score contract, idempotency uniqueness, review version and immutability'};
+ if(process.env.GOVCARE_SIX_MODULE_DB_REPORT)await writeFile(process.env.GOVCARE_SIX_MODULE_DB_REPORT,JSON.stringify(report,null,2));console.log(JSON.stringify(report));
+}finally{await db.close();}

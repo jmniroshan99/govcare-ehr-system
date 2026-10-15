@@ -1,0 +1,42 @@
+Super Admin network patient and AI access update — 2026-10-02
+
+Modified relative to GovCare_10_Hospitals_Demo.zip:
+README.md
+ROLE_DASHBOARD_PERMISSION_MATRIX.md
+ROLE_INTELLIGENCE_DASHBOARD_ARCHITECTURE.md
+package.json
+scripts/demo-network.test.mjs
+spring-api/src/main/java/lk/gov/health/govcare/ai/AIIntelligenceService.java
+spring-api/src/main/java/lk/gov/health/govcare/ai/AiRiskService.java
+spring-api/src/main/java/lk/gov/health/govcare/ai/CkdAssessmentReportService.java
+spring-api/src/main/java/lk/gov/health/govcare/ai/CkdPredictionController.java
+spring-api/src/main/java/lk/gov/health/govcare/ai/CkdPredictionService.java
+spring-api/src/main/java/lk/gov/health/govcare/ai/ClinicalPdfExtractionController.java
+spring-api/src/main/java/lk/gov/health/govcare/ai/ClinicalPersistenceService.java
+spring-api/src/main/java/lk/gov/health/govcare/documents/DocumentAccessService.java
+spring-api/src/main/java/lk/gov/health/govcare/documents/PatientDocumentService.java
+spring-api/src/main/java/lk/gov/health/govcare/draft/DraftService.java
+spring-api/src/main/java/lk/gov/health/govcare/patient/PatientController.java
+spring-api/src/main/java/lk/gov/health/govcare/patient/PatientRepository.java
+spring-api/src/main/java/lk/gov/health/govcare/patient/PatientService.java
+spring-api/src/main/java/lk/gov/health/govcare/security/ClinicalPatientAccess.java
+src/components/forms/AuthorizedPatientSelect.tsx
+src/components/layout/AppShell.tsx
+src/pages/AICDSSDashboard.tsx
+src/pages/CKDAICDSS.tsx
+src/pages/PatientProfile.tsx
+src/pages/PatientWorkbench.tsx
+src/services/patientService.ts
+
+Added:
+CHANGED_FILES_SUPERADMIN_NETWORK.txt
+SUPERADMIN_NETWORK_ACCESS_FIX.md
+SUPERADMIN_NETWORK_ACCESS_TESTING.md
+scripts/network-patient-queries.mjs
+scripts/superadmin-navigation.test.cjs
+scripts/test-superadmin-java.mjs
+scripts/test-support/SuperadminNetworkHarness.java
+spring-api/src/main/java/lk/gov/health/govcare/patient/NetworkPatientDirectory.java
+src/utils/patientNavigation.ts
+
+No source files removed. No database migrations changed. Demo seed and credentials unchanged.

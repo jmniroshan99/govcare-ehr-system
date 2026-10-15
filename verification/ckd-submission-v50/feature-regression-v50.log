@@ -1,0 +1,21 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> govcare-ehr-system@0.0.0 test:ckd:features
+> node --test scripts/renal-api-contracts.test.cjs scripts/clinical-feature-contracts.test.cjs && node scripts/verify-clinical-feature-migration.mjs
+
+✔ CKD assessment save retains the real feature/source/date payload at its existing endpoint (77.106901ms)
+✔ Historical generic creatinine is sent through the existing verified-measurement API without HD relabeling (17.81853ms)
+✔ The schema-three feature mapping uses the existing six-module API path (12.262739ms)
+✔ clinical overview uses the existing intelligence endpoint and forwards cancellation (72.70645ms)
+✔ six-module overview retains the predictive-intelligence endpoint (20.347721ms)
+✔ six-module clinician review posts the unchanged review payload to its dedicated route (12.332784ms)
+✔ clinical dialysis verification uses its patient-scoped endpoint without fabricated lab values (7.641809ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 385.593369
+{"status":"passed","checks":31,"migrationCount":44,"lastMigration":"V45__unified_clinical_prediction_features.sql","engine":"PGlite PostgreSQL WASM; not native Windows PostgreSQL","scope":"Real existing-table CKD rows migrated to immutable, tenant-scoped feature projections, with saved dates/units, no dialysis fabrication, FK/idempotence and preservation checks"}

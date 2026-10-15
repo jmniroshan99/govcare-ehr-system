@@ -1,0 +1,179 @@
+/* Scoped extension of the existing clinical green dashboard tokens. */
+.sri-renal { display: grid; gap: 18px; min-width: 0; border: 1px solid var(--tone-accent-border); border-radius: var(--radius-panel); background: var(--glass-background); padding: 24px; box-shadow: var(--card-shadow); }
+.sri-renal *, .sri-renal-dialog * { min-width: 0; }
+.sri-renal h2, .sri-renal h3 { margin: 0; color: var(--text-primary); font-weight: 650; line-height: 1.4; }
+.sri-renal p, .sri-renal-dialog p { margin: 0; line-height: 1.6; overflow-wrap: anywhere; }
+.sri-renal-header { margin-bottom: 0; flex-wrap: wrap; }
+.sri-renal-header > div:first-child { flex: 1; min-width: min(250px,100%); }
+.sri-renal-header .pci-muted { max-width: 72ch; }
+.sri-renal-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.sri-renal-actions button { font-size: .72rem; }
+.sri-renal-governance { display: flex; gap: 8px; flex-wrap: wrap; }
+.sri-renal-governance > span { display: inline-flex; align-items: center; gap: 6px; color: var(--tone-warning-text); background: var(--tone-warning-surface); border: 1px solid var(--tone-warning-border); font-size: .65rem; padding: 5px 9px; border-radius: 8px; }
+.sri-renal-governance svg, .sri-renal-permission svg, .sri-renal-chart-note svg, .sri-renal-footer svg { flex-shrink: 0; }
+.sri-renal-message { display: flex; align-items: start; gap: 9px; border: 1px solid var(--border-color); border-radius: 10px; padding: 12px; font-size: .74rem; }
+.sri-renal-message > svg { flex-shrink: 0; margin-top: 3px; }
+.sri-renal-message > p { flex: 1; }
+.sri-renal-message > button { flex-shrink: 0; min-height: 32px; }
+.sri-renal-message-success { color: var(--tone-success-text); background: var(--tone-success-surface); border-color: var(--tone-success-border); }
+.sri-renal-message-error { color: var(--tone-danger-text); background: var(--tone-danger-surface); border-color: var(--tone-danger-border); }
+.sri-renal-status { display: grid; grid-template-columns: minmax(180px,.75fr) minmax(0,2fr); align-items: center; gap: 20px; background: var(--bg-muted); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px 18px; }
+.sri-renal-status > div { display: grid; gap: 5px; }
+.sri-renal-status strong { font-size: 1.45rem; font-weight: 700; letter-spacing: -.03em; }
+.sri-renal-status > div > span:last-child, .sri-renal-status p { font-size: .71rem; color: var(--text-secondary); }
+.sri-renal-latest { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 12px; }
+.sri-renal-latest > div { display: grid; gap: 7px; border: 1px solid var(--border-color); border-radius: 11px; padding: 13px; background: var(--bg-muted); }
+.sri-renal-latest span { color: var(--text-secondary); font-size: .67rem; }
+.sri-renal-latest strong { color: var(--text-primary); font-size: 1.05rem; font-weight: 650; }
+.sri-renal-latest small { color: var(--text-secondary); font-size: .65rem; font-weight: 500; }
+.sri-renal-latest time { color: var(--text-secondary); font-size: .63rem; }
+.sri-renal-permission { display: flex; gap: 8px; align-items: start; color: var(--text-secondary); font-size: .72rem; }
+.sri-renal-permission svg { margin-top: 3px; }
+.sri-renal-models { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 14px; align-items: start; }
+.sri-renal-model { display: flex; flex-direction: column; gap: 10px; border: 1px solid var(--border-color); border-radius: 14px; background: var(--bg-muted); padding: 17px; }
+.sri-renal-model-heading { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+.sri-renal-pill { display: inline-block; color: var(--text-secondary); background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 7px; padding: 4px 7px; font-size: .6rem; }
+.sri-renal-model h3 { font-size: .86rem; }
+.sri-renal-model-value { display: flex; align-items: baseline; gap: 7px; flex-wrap: wrap; }
+.sri-renal-model-value strong { font-size: 1.45rem; font-weight: 700; letter-spacing: -.04em; }
+.sri-renal-model-value span { color: var(--text-secondary); font-size: .7rem; }
+.sri-renal-model > p { color: var(--text-secondary); font-size: .68rem; }
+.sri-renal-model > p.sri-renal-method { color: var(--tone-accent-text); }
+.sri-renal-model > p.sri-renal-limitation, .sri-renal-stale { color: var(--tone-warning-text); font-size: .69rem; }
+.sri-renal-small { display: block; font-size: .67rem; font-weight: 400; color: var(--text-secondary); line-height: 1.6; }
+.sri-renal-review-state { display: flex; align-items: start; gap: 5px; }
+.sri-renal-review-state svg { flex-shrink: 0; margin-top: 2px; }
+.sri-renal-model-actions { display: flex; gap: 5px; flex-wrap: wrap; margin-top: auto; padding-top: 4px; }
+.sri-renal-model-actions button { font-size: .68rem; padding: 8px 10px; }
+.sri-renal-explanation { border-top: 1px solid var(--border-color); padding-top: 8px; }
+.sri-renal-explanation summary, .sri-renal-sources summary { color: var(--text-accent); font-size: .72rem; font-weight: 600; cursor: pointer; min-height: 38px; line-height: 2; }
+.sri-renal-explanation-body { display: grid; gap: 8px; font-size: .65rem; padding-top: 5px; }
+.sri-renal-explanation-body > strong { color: var(--text-primary); margin-top: 3px; }
+.sri-renal-explanation-body > p, .sri-renal-explanation-body > ul { color: var(--text-secondary); }
+.sri-renal-explanation-body dl { display: grid; margin: 0 0 5px; }
+.sri-renal-explanation-body dl > div { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--border-color); }
+.sri-renal-explanation-body dt { color: var(--text-secondary); }
+.sri-renal-explanation-body dd { color: var(--text-primary); margin: 0; text-align: right; overflow-wrap: anywhere; }
+.sri-renal-explanation-body ul { padding-left: 17px; margin: 0; display: grid; gap: 5px; }
+.sri-renal-chart-card { border: 1px solid var(--border-color); border-radius: 14px; padding: 18px; background: var(--bg-muted); }
+.sri-renal-chart-card h3 { font-size: .92rem; }
+.sri-renal-chart-card .pci-section-header { flex-wrap: wrap; gap: 12px; }
+.sri-renal-chart-select { display: grid; gap: 5px; color: var(--text-secondary); font-size: .65rem; width: min(270px,100%); }
+.sri-renal-chart-select select { width: 100%; }
+.sri-renal-chart { height: 260px; width: 100%; margin: 12px 0 8px; }
+/* Recharts measures its container and supplies an explicit wrapper width inside
+   a zero-width sizing element. The global max-width rule would collapse it. */
+.sri-renal-chart .recharts-wrapper { max-width: none; }
+/* A hidden tooltip may retain its desktop translation after a mobile resize.
+   Remove its layout footprint while hidden; visible tooltips still render. */
+.sri-renal-chart .recharts-tooltip-wrapper[style*="visibility: hidden"] { display: none; }
+.sri-renal-chart-key { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; color: var(--text-secondary); font-size: .66rem; }
+.sri-renal-chart-key > span { display: inline-flex; gap: 7px; align-items: center; }
+.sri-renal-chart-key i { display: inline-block; width: 23px; height: 0; border-top: 2px solid var(--brand-primary); }
+.sri-renal-chart-key i.sri-renal-line-dashed { border-top-style: dashed; }
+.sri-renal-chart-note { color: var(--text-secondary); font-size: .67rem; display: flex; gap: 6px; margin-top: 10px !important; }
+.sri-renal-chart-note svg { margin-top: 3px; }
+.sri-renal-chart-card > .sri-renal-stale { margin-top: 9px; }
+.sri-renal-sources { border-top: 1px solid var(--border-color); padding-top: 8px; }
+.sri-renal-table { width: 100%; border-collapse: collapse; text-align: left; font-size: .64rem; }
+.sri-renal-table td, .sri-renal-table th { border-bottom: 1px solid var(--border-color); padding: 9px 6px; vertical-align: top; }
+.sri-renal-table th { color: var(--text-secondary); font-weight: 650; }
+.sri-renal-table td { color: var(--text-primary); overflow-wrap: anywhere; }
+.sri-renal-source-value { display: block; min-width: 170px; margin-bottom: 4px; }
+.sri-renal-sources td:first-child { min-width: 105px; }
+.sri-renal-sources td:last-child { min-width: 160px; max-width: 400px; }
+.sri-renal-sources td p { color: var(--text-secondary); margin-top: 5px; }
+.sri-renal-footer { display: flex; gap: 8px; color: var(--text-secondary); font-size: .65rem; border-top: 1px solid var(--border-color); padding-top: 13px; }
+.sri-renal-footer svg { margin-top: 3px; }
+.sri-renal-empty { display: grid; justify-items: center; gap: 9px; text-align: center; padding: 27px 15px; color: var(--text-secondary); background: var(--bg-muted); border: 1px dashed var(--border-color); border-radius: 12px; }
+.sri-renal-empty strong { color: var(--text-primary); font-size: .78rem; }
+.sri-renal-empty p { font-size: .71rem; max-width: 72ch; }
+.sri-renal-dialog { width: min(680px,calc(100vw - 32px)); }
+.sri-renal-dialog > .pci-muted { margin-top: 10px; }
+.sri-renal-form { margin-top: 20px; }
+.sri-renal-form label > small { color: var(--text-secondary); font-size: .66rem; font-weight: 400; }
+.sri-renal-form .pci-inline-error { margin-top: 0 !important; }
+.sri-renal-form select { display: block; width: 100%; margin-top: 8px; }
+.sri-renal-review-summary { display: grid; gap: 5px; margin-top: 18px; background: var(--bg-muted); border: 1px solid var(--border-color); border-radius: 10px; padding: 13px; }
+.sri-renal-review-summary strong { font-size: 1.25rem; }
+.sri-renal-review-summary p { color: var(--text-secondary); font-size: .71rem; }
+.sri-renal button:focus-visible, .sri-renal summary:focus-visible, .sri-renal select:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 3px; }
+@media (max-width:1100px) { .sri-renal-models { grid-template-columns: repeat(2,minmax(0,1fr)); } .sri-renal-model:last-child { grid-column: auto; } }
+@media (max-width:700px) { .sri-renal { padding: 17px; } .sri-renal-status { grid-template-columns: minmax(0,1fr); gap: 12px; } .sri-renal-latest { grid-template-columns: repeat(2,minmax(0,1fr)); } .sri-renal-models { grid-template-columns: minmax(0,1fr); } .sri-renal-model:last-child { grid-column: auto; } .sri-renal-chart-card { padding: 13px; } .sri-renal-chart { height: 230px; } .sri-renal-message { flex-wrap: wrap; } .sri-renal-message > button { margin-left: auto; } .sri-renal-header .sri-renal-actions { width: 100%; } }
+@media (prefers-reduced-motion:reduce) { .sri-renal .pci-spin { animation: none; } }
+
+/* CKD-related clinical risk visual map. This is patient-scoped UI, not a diagnostic graphic. */
+.sri-risk-visual { display:grid; gap:16px; border:1px solid color-mix(in srgb,var(--brand-primary) 26%,var(--border-color)); border-radius:18px; padding:18px; background:linear-gradient(145deg,color-mix(in srgb,var(--bg-surface) 88%,var(--brand-primary) 12%),var(--bg-surface)); overflow:hidden; position:relative; }
+.sri-risk-visual::before { content:""; position:absolute; inset:-35% 35% auto -15%; height:260px; border-radius:50%; background:radial-gradient(circle,color-mix(in srgb,var(--brand-primary) 22%,transparent),transparent 68%); pointer-events:none; }
+.sri-risk-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; position:relative; z-index:1; }
+.sri-risk-heading h3 { font-size:1.08rem; margin-top:3px; }
+.sri-risk-heading p { color:var(--text-secondary); font-size:.72rem; margin-top:6px; max-width:78ch; }
+.sri-risk-live { display:inline-flex; align-items:center; gap:7px; white-space:nowrap; padding:6px 9px; border-radius:999px; border:1px solid var(--tone-success-border); background:var(--tone-success-surface); color:var(--tone-success-text); font-size:.64rem; }
+.sri-risk-live > span { width:7px; height:7px; border-radius:50%; background:currentColor; box-shadow:0 0 0 4px color-mix(in srgb,currentColor 15%,transparent); }
+.sri-risk-map { display:grid; grid-template-columns:minmax(0,1fr) minmax(230px,.78fr) minmax(0,1fr); grid-template-areas:"anemia center potassium" "urr center profile"; gap:13px; align-items:stretch; position:relative; z-index:1; }
+.sri-risk-module { display:flex; flex-direction:column; gap:10px; min-height:254px; border:1px solid var(--border-color); border-radius:15px; padding:15px; background:color-mix(in srgb,var(--bg-surface) 92%,transparent); box-shadow:0 12px 30px color-mix(in srgb,var(--text-primary) 7%,transparent); position:relative; overflow:hidden; }
+.sri-risk-module::after { content:""; position:absolute; width:110px; height:110px; border-radius:50%; right:-45px; top:-52px; background:radial-gradient(circle,color-mix(in srgb,currentColor 17%,transparent),transparent 68%); pointer-events:none; }
+.sri-risk-anemia { grid-area:anemia; color:var(--tone-danger-text); }
+.sri-risk-potassium { grid-area:potassium; color:var(--tone-warning-text); }
+.sri-risk-urr { grid-area:urr; color:var(--tone-info-text); }
+.sri-risk-profile { grid-area:profile; color:var(--tone-accent-text); }
+.sri-risk-module h4 { color:var(--text-primary); font-size:.88rem; margin:0; }
+.sri-risk-module p { color:var(--text-secondary); font-size:.66rem; margin-top:3px; }
+.sri-risk-module-top { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+.sri-risk-icon { display:inline-grid; place-items:center; min-width:38px; height:38px; padding:0 8px; border-radius:12px; background:color-mix(in srgb,currentColor 13%,var(--bg-surface)); border:1px solid color-mix(in srgb,currentColor 28%,var(--border-color)); color:currentColor; font-size:.72rem; font-weight:800; letter-spacing:-.02em; }
+.sri-risk-tag { border:1px solid var(--border-color); background:var(--bg-muted); color:var(--text-secondary); border-radius:999px; padding:4px 8px; font-size:.58rem; }
+.sri-risk-spark { width:100%; height:58px; color:currentColor; overflow:visible; }
+.sri-risk-spark-axis { stroke:var(--border-color); stroke-width:1; }
+.sri-risk-spark-line { stroke:currentColor; stroke-width:2.25; vector-effect:non-scaling-stroke; }
+.sri-risk-spark-point { fill:var(--bg-surface); stroke:currentColor; stroke-width:1.7; vector-effect:non-scaling-stroke; }
+.sri-risk-spark-empty { height:58px; display:flex; align-items:center; justify-content:center; gap:7px; border:1px dashed var(--border-color); border-radius:10px; color:var(--text-secondary); font-size:.62rem; }
+.sri-risk-result { display:grid; gap:3px; margin-top:auto; padding-top:9px; border-top:1px solid var(--border-color); color:var(--text-primary); }
+.sri-risk-result > span { color:var(--text-secondary); font-size:.6rem; }
+.sri-risk-result > strong { font-size:1.02rem; line-height:1.3; }
+.sri-risk-result > small { color:var(--text-secondary); font-size:.61rem; }
+.sri-risk-data { display:flex; flex-wrap:wrap; gap:5px; }
+.sri-risk-data > span { border:1px solid var(--border-color); background:var(--bg-muted); color:var(--text-secondary); border-radius:6px; padding:3px 6px; font-size:.56rem; }
+.sri-risk-formula { color:var(--text-primary); background:var(--bg-muted); border:1px solid var(--border-color); border-radius:9px; padding:8px 9px; font-size:.61rem; text-align:center; }
+.sri-risk-center { grid-area:center; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:7px; border:1px solid color-mix(in srgb,var(--brand-primary) 38%,var(--border-color)); border-radius:17px; padding:18px 14px; background:radial-gradient(circle at 50% 35%,color-mix(in srgb,var(--brand-primary) 16%,var(--bg-surface)),var(--bg-surface) 65%); color:var(--brand-primary); position:relative; }
+.sri-risk-center::before { content:""; position:absolute; inset:11px; border:1px dashed color-mix(in srgb,var(--brand-primary) 22%,transparent); border-radius:14px; pointer-events:none; }
+.sri-risk-center-kicker { color:var(--text-secondary); font-size:.6rem; text-transform:uppercase; letter-spacing:.1em; }
+.sri-risk-kidneys { width:min(150px,78%); height:104px; filter:drop-shadow(0 8px 18px color-mix(in srgb,var(--brand-primary) 22%,transparent)); }
+.sri-risk-center > strong { color:var(--text-primary); font-size:1.35rem; letter-spacing:-.04em; }
+.sri-risk-center > span:not(.sri-risk-center-kicker) { color:var(--text-primary); font-size:.72rem; font-weight:650; }
+.sri-risk-center > p { color:var(--text-secondary); font-size:.62rem; max-width:32ch; }
+.sri-risk-center-badges { display:flex; justify-content:center; flex-wrap:wrap; gap:5px; margin-top:5px; }
+.sri-risk-center-badges span { color:var(--text-secondary); border:1px solid var(--border-color); background:color-mix(in srgb,var(--bg-muted) 88%,transparent); border-radius:999px; padding:4px 7px; font-size:.54rem; }
+.sri-risk-trend-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; }
+.sri-risk-trend-list > div { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; column-gap:7px; border:1px solid var(--border-color); border-radius:8px; padding:6px 7px; background:var(--bg-muted); }
+.sri-risk-trend-list span { color:var(--text-primary); font-size:.59rem; }
+.sri-risk-trend-list strong { font-size:.88rem; color:var(--text-accent); }
+.sri-risk-trend-list strong[data-trend="RISING"] { color:var(--tone-warning-text); }
+.sri-risk-trend-list strong[data-trend="FALLING"] { color:var(--tone-info-text); }
+.sri-risk-trend-list small { grid-column:1 / -1; color:var(--text-secondary); font-size:.52rem; }
+.sri-risk-workflow { display:grid; grid-template-columns:repeat(9,auto); justify-content:center; align-items:center; gap:7px; color:var(--text-secondary); font-size:.59rem; position:relative; z-index:1; }
+.sri-risk-workflow span { border:1px solid var(--border-color); background:var(--bg-muted); color:var(--text-primary); border-radius:8px; padding:7px 9px; text-align:center; }
+.sri-risk-workflow b { color:var(--brand-primary); font-size:.86rem; }
+.sri-risk-concept { border-top:1px solid var(--border-color); padding-top:4px; position:relative; z-index:1; }
+.sri-risk-concept summary { color:var(--text-accent); cursor:pointer; font-size:.68rem; font-weight:650; padding:8px 0; }
+.sri-risk-concept figure { margin:8px 0 0; display:grid; gap:8px; }
+.sri-risk-concept img { display:block; width:100%; height:auto; border:1px solid var(--border-color); border-radius:12px; background:#071a31; }
+.sri-risk-concept figcaption { color:var(--text-secondary); font-size:.61rem; }
+@media (max-width:1120px) {
+  .sri-risk-map { grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-areas:"center center" "anemia potassium" "urr profile"; }
+  .sri-risk-center { min-height:260px; }
+  .sri-risk-workflow { grid-template-columns:minmax(0,1fr); justify-items:stretch; }
+  .sri-risk-workflow b { transform:rotate(90deg); justify-self:center; line-height:.7; }
+}
+@media (max-width:700px) {
+  .sri-risk-visual { padding:13px; }
+  .sri-risk-heading { flex-direction:column; }
+  .sri-risk-live { white-space:normal; }
+  .sri-risk-map { grid-template-columns:minmax(0,1fr); grid-template-areas:"center" "anemia" "potassium" "urr" "profile"; }
+  .sri-risk-module { min-height:0; }
+  .sri-risk-center { min-height:240px; }
+  .sri-risk-trend-list { grid-template-columns:minmax(0,1fr); }
+}
+.sri-risk-trend-list > div[data-worsening="true"] { border-color:var(--tone-warning-border); background:var(--tone-warning-surface); }
+.sri-risk-composite-meter { height:7px; border-radius:999px; overflow:hidden; background:var(--bg-muted); border:1px solid var(--border-color); }
+.sri-risk-composite-meter > span { display:block; height:100%; border-radius:inherit; background:linear-gradient(90deg,var(--brand-primary),var(--tone-warning-text)); transition:width .25s ease; }
+@media (prefers-reduced-motion:reduce) { .sri-risk-composite-meter > span { transition:none; } }

@@ -1,0 +1,41 @@
+GovCare Super Admin facility command center — 2026-10-04
+
+Modified existing files (17):
+README.md
+ROLE_DASHBOARD_PERMISSION_MATRIX.md
+THEME_SYSTEM_DOCUMENTATION.md
+THEME_VERIFICATION_REPORT.md
+package.json
+scripts/role-access.test.cjs
+scripts/test-superadmin-java.mjs
+scripts/test-support/SuperadminNetworkHarness.java
+spring-api/src/main/java/lk/gov/health/govcare/dashboard/DashboardIntelligenceService.java
+spring-api/src/main/java/lk/gov/health/govcare/ward/WardBedService.java
+spring-api/src/main/java/lk/gov/health/govcare/ward/WardController.java
+spring-api/src/main/java/lk/gov/health/govcare/ward/WardDtos.java
+src/components/layout/AppShell.tsx
+src/dashboard/dashboardDefinitions.ts
+src/lib/roleAccess.ts
+src/routes/AppRouter.tsx
+src/routes/routePreload.ts
+
+Added files (13):
+CHANGED_FILES_SUPERADMIN_FACILITY.txt
+SUPERADMIN_FACILITY_ADMINISTRATION.md
+SUPERADMIN_FACILITY_TESTING_REPORT.md
+scripts/facility-administration.test.cjs
+spring-api/src/main/java/lk/gov/health/govcare/facility/FacilityAdministrationController.java
+spring-api/src/main/java/lk/gov/health/govcare/facility/FacilityAdministrationService.java
+spring-api/src/main/java/lk/gov/health/govcare/facility/FacilityDtos.java
+spring-api/src/main/resources/db/migration/V33__superadmin_facility_administration.sql
+src/pages/admin/FacilityAdministration.tsx
+src/services/facilityService.ts
+verification/superadmin-facility/automated-checks.md
+verification/superadmin-facility/maven-clean-test.log
+verification/superadmin-facility/postgresql-semantic-check.json
+
+Removed files (0):
+None
+
+Comparison base: GovCare_Theme_Fixed_Full_Source.zip
+Build artifacts and installed dependencies are excluded from both delivery archives.

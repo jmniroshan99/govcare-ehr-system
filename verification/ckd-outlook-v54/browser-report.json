@@ -1,0 +1,13 @@
+{
+  "status": "blocked",
+  "passed": 0,
+  "reason": "Chromium process aborted: process_singleton_posix.cc socket() failed: Operation not permitted. Native browser launch is unavailable in this execution environment.",
+  "runtime": "Downloaded official Chrome for Testing 155.0.8059.79; Playwright launch attempted, no screenshot/DOM interaction completed.",
+  "plannedWidths": [
+    1440,
+    900,
+    390
+  ],
+  "reproduce": "npm run test:ckd:outlook:browser (requires Playwright and Chromium installed on a workstation that permits local browser sockets)",
+  "livePatientDataUsed": false
+}

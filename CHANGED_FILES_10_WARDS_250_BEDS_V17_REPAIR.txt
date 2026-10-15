@@ -1,0 +1,13 @@
+GovCare EHR V17 ward/bed repair
+
+Added:
+- spring-api/src/main/resources/db/migration/V17__repair_ten_wards_and_250_beds.sql
+- database/postgresql/migrations/20260807_repair_ten_wards_and_250_beds.sql
+- FIX-10-WARDS-250-BEDS.txt
+
+Purpose:
+- Repair databases that still expose only the legacy ward/bed rows even if V16
+  has already been attempted or recorded.
+- Guarantee W-01 through W-10 and bed slots 01 through 25 for each ward.
+- Preserve status/current patient/reservation of pre-existing beds.
+- Verify the 10 x 25 result before Flyway marks V17 successful.

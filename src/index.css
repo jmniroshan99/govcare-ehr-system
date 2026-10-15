@@ -1,0 +1,228 @@
+@import "tailwindcss";
+@import "./theme/tokens.css";
+@import "./theme/components.css";
+@plugin "tailwindcss-animate";
+/* User choice, rather than OS preference, controls every dark utility. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme inline {
+  --font-sans: Inter, "Noto Sans Sinhala", "Noto Sans Tamil", "Iskoola Pota", Latha, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --color-background: var(--bg-primary);
+  --color-foreground: var(--text-primary);
+  --color-card: var(--bg-card);
+  --color-surface: var(--bg-surface);
+  --color-muted: var(--bg-muted);
+  --color-muted-foreground: var(--text-secondary);
+  --color-border: var(--border-color);
+  --color-primary: var(--action-primary);
+  --color-primary-foreground: var(--on-primary);
+  --color-secondary: var(--tone-info-solid);
+  --color-destructive: var(--tone-danger-solid);
+  --color-primary-hover: var(--action-primary-hover);
+  --color-control-border: var(--control-border);
+  --color-on-solid: var(--text-inverse);
+  --color-inverse: var(--bg-inverse);
+  --color-backdrop: var(--backdrop-color);
+  --color-paper: var(--paper);
+  --color-paper-ink: var(--paper-ink);
+  --color-shadow-tone: var(--ambient-color);
+  --color-inverse-chip: var(--tone-accent-solid);
+  --color-accent: var(--tone-accent-text);
+  --color-accent-surface: var(--tone-accent-surface);
+  --color-accent-border: var(--tone-accent-border);
+  --color-accent-solid: var(--tone-accent-solid);
+  --color-success: var(--tone-success-text);
+  --color-success-surface: var(--tone-success-surface);
+  --color-success-border: var(--tone-success-border);
+  --color-success-solid: var(--tone-success-solid);
+  --color-info: var(--tone-info-text);
+  --color-info-surface: var(--tone-info-surface);
+  --color-info-border: var(--tone-info-border);
+  --color-info-solid: var(--tone-info-solid);
+  --color-warning: var(--tone-warning-text);
+  --color-warning-surface: var(--tone-warning-surface);
+  --color-warning-border: var(--tone-warning-border);
+  --color-warning-solid: var(--tone-warning-solid);
+  --color-danger: var(--tone-danger-text);
+  --color-danger-surface: var(--tone-danger-surface);
+  --color-danger-border: var(--tone-danger-border);
+  --color-danger-solid: var(--tone-danger-solid);
+  --color-violet: var(--tone-violet-text);
+  --color-violet-surface: var(--tone-violet-surface);
+  --color-violet-border: var(--tone-violet-border);
+  --color-violet-solid: var(--tone-violet-solid);
+  --color-orange: var(--tone-orange-text);
+  --color-orange-surface: var(--tone-orange-surface);
+  --color-orange-border: var(--tone-orange-border);
+  --color-orange-solid: var(--tone-orange-solid);
+  --shadow-sm: var(--card-shadow);
+  --shadow-md: var(--card-shadow);
+  --shadow-lg: var(--card-shadow);
+  --shadow-xl: var(--card-shadow);
+  --shadow-2xl: var(--card-shadow);
+  --shadow-scan-mask: var(--scanner-mask);
+}
+
+@utility opacity-disabled { opacity: var(--opacity-disabled); }
+@utility opacity-inactive { opacity: var(--opacity-inactive); }
+@utility opacity-decoration { opacity: var(--opacity-decoration); }
+
+* { box-sizing: border-box; }
+html { min-height: 100%; color-scheme: light; scroll-behavior: smooth; }
+html.dark { color-scheme: dark; }
+#root { min-height: 100vh; }
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background: radial-gradient(circle at top left, var(--ambient-color), transparent 30rem), var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  text-rendering: optimizeLegibility;
+  transition: background-color 220ms ease, color 220ms ease;
+}
+.professional-surface, .intelligence-panel { box-shadow: var(--card-shadow); }
+.page-hero, .intelligence-hero {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-panel);
+  background: linear-gradient(135deg, var(--hero-start), var(--hero-end));
+  color: var(--text-primary);
+}
+.page-hero { padding: var(--space-panel); }
+.help-strip { border: 1px solid var(--tone-info-border); border-radius: 10px; background: var(--tone-info-surface); color: var(--tone-info-text); }
+.form-error { display: block; margin-top: .35rem; color: var(--tone-danger-text); font-size: .8rem; font-weight: 700; line-height: 1.35; }
+.dashboard-grid { align-items: stretch; }
+.kpi-card { min-height: 8.25rem; }
+.kpi-card :is(p, span) { overflow-wrap: anywhere; }
+.mobile-action-grid > *, .intelligence-dashboard, .intelligence-panel { min-width: 0; }
+.intelligence-metric :is(p, span), .intelligence-hero :is(h1, p) { overflow-wrap: anywhere; }
+.queue-status-badge { min-height: 1.75rem; white-space: nowrap; }
+.emergency-alert-modal { border: 2px solid var(--tone-danger-border); background: var(--tone-danger-surface); color: var(--tone-danger-text); }
+.emergency-alert-modal h2 { color: var(--text-primary); }
+.selection-panel { border: 1px solid var(--tone-accent-border); border-radius: 10px; background: var(--tone-accent-surface); }
+.glass-panel {
+  background: var(--glass-background);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+}
+.intelligence-dashboard { container-type: inline-size; }
+.intelligence-hero { border-radius: var(--radius-panel); }
+.intelligence-metric { transition: transform 180ms cubic-bezier(.16,1,.3,1), box-shadow 180ms ease, border-color 180ms ease; }
+.intelligence-metric:hover { transform: translateY(-2px); box-shadow: var(--card-hover-shadow); }
+.brand-panel, .brand-gradient { background: var(--brand-gradient); color: var(--text-inverse); }
+.brand-panel .clinical-grid { color: inherit; }
+.clinical-grid {
+  background-image: linear-gradient(var(--ambient-color) 1px, transparent 1px), linear-gradient(90deg, var(--ambient-color) 1px, transparent 1px);
+  background-size: 32px 32px;
+  animation: clinical-grid-drift 18s linear infinite;
+}
+/* Keep the hero gradient under the decorative grid instead of replacing it. */
+.intelligence-hero.clinical-grid {
+  background-image: linear-gradient(var(--ambient-color) 1px, transparent 1px), linear-gradient(90deg, var(--ambient-color) 1px, transparent 1px), linear-gradient(135deg, var(--hero-start), var(--hero-end));
+  background-size: 32px 32px, 32px 32px, 100% 100%;
+}
+.card-hover { position: relative; overflow: hidden; transition: transform 220ms cubic-bezier(.16,1,.3,1), box-shadow 220ms ease, border-color 220ms ease, background-color 220ms ease; }
+.card-hover::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(120deg, transparent, var(--shimmer-color) 38%, transparent 64%); opacity: 0; transform: translateX(-35%); transition: opacity 220ms ease, transform 520ms ease; }
+.card-hover:hover { transform: translateY(-2px); box-shadow: var(--card-hover-shadow); border-color: var(--tone-accent-border); }
+.card-hover:hover::after { opacity: 1; transform: translateX(35%); }
+.interactive-control { transform: translateZ(0); transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease, border-color 160ms ease; }
+.interactive-control:hover { transform: translateY(-1px); }
+.interactive-control:active { transform: translateY(0) scale(.985); }
+.clinical-alert-pulse { animation: clinical-alert-pulse 2.4s ease-in-out infinite; }
+.soft-enter { animation: soft-enter 420ms cubic-bezier(.16,1,.3,1) both; }
+.table-row-motion { transition: background-color 160ms ease; }
+.table-row-motion:hover { background: var(--tone-accent-surface); }
+label { color: inherit; }
+input, select, textarea { caret-color: var(--brand-primary); }
+input[aria-invalid="true"], select[aria-invalid="true"], textarea[aria-invalid="true"] { border-color: var(--tone-danger-border); }
+input::placeholder, textarea::placeholder { color: var(--text-secondary); }
+select option { background: var(--bg-surface); color: var(--text-primary); }
+table { font-variant-numeric: tabular-nums; }
+button, input, select, textarea { font: inherit; }
+:focus-visible, .focus-ring:focus-visible { outline: 3px solid var(--text-accent); outline-offset: 3px; }
+/* Presentation attributes accept CSS variables and update without refetching data. */
+.recharts-cartesian-axis-tick-value, .recharts-text { fill: var(--chart-axis); }
+.recharts-cartesian-axis-line, .recharts-cartesian-axis-tick-line { stroke: var(--chart-axis); }
+.recharts-cartesian-grid-horizontal line, .recharts-cartesian-grid-vertical line { stroke: var(--chart-grid); }
+.recharts-legend-item-text { color: var(--text-secondary); }
+.recharts-wrapper { max-width: 100%; }
+.chart-tooltip { border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-surface); color: var(--text-primary); box-shadow: var(--card-shadow); padding: 10px 12px; }
+
+/* Patient registration: one-column reading order, expanding only when space permits. */
+.patient-registration-page { min-width: 0; }
+.registration-section { overflow: hidden; }
+.registration-section-alternate { background: var(--bg-muted); }
+.registration-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+}
+.registration-field {
+  min-width: 0;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding: .75rem;
+  background: var(--bg-surface);
+  transition: border-color 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+}
+.registration-field:focus-within {
+  border-color: var(--action-primary);
+  background: var(--tone-accent-surface);
+  box-shadow: 0 0 0 3px var(--tone-accent-border);
+}
+.registration-grid-full, .registration-grid-span-two { grid-column: 1 / -1; min-width: 0; }
+.additional-registration-details > summary::-webkit-details-marker { display: none; }
+.additional-registration-details[open] > summary svg { transform: rotate(180deg); }
+.additional-registration-details > summary svg { transition: transform 160ms ease; }
+.registration-sticky-actions {
+  position: sticky;
+  z-index: 20;
+  bottom: .75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 1rem;
+  min-width: 0;
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 1rem;
+  background: var(--glass-background);
+  color: var(--text-primary);
+  box-shadow: var(--card-shadow);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+}
+
+@media (min-width: 768px) {
+  .registration-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .registration-sticky-actions { flex-direction: row; align-items: center; }
+}
+
+@media (min-width: 1440px) {
+  .registration-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .registration-grid-span-two { grid-column: span 2 / span 2; }
+}
+
+@keyframes clinical-grid-drift { from { background-position: 0 0, 0 0; } to { background-position: 32px 32px, 32px 32px; } }
+@keyframes clinical-alert-pulse { 0%, 100% { box-shadow: 0 0 0 0 transparent; } 50% { box-shadow: 0 0 0 4px var(--tone-danger-surface); } }
+@keyframes soft-enter { from { opacity: 0; transform: translateY(10px) scale(.99); filter: blur(5px); } to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
+  .interactive-control:hover, .interactive-control:active, .card-hover:hover, .intelligence-metric:hover { transform: none !important; }
+}
+@media (max-width: 640px) {
+  main { padding-inline: .85rem; }
+  .page-hero { padding: 1rem; }
+  .kpi-card { min-height: auto; }
+  .mobile-action-grid { grid-template-columns: 1fr; }
+  .mobile-action-grid a, .mobile-action-grid button { width: 100%; justify-content: center; }
+  .intelligence-hero { border-radius: 1.25rem; }
+}
+@media print {
+  body * { visibility: hidden !important; }
+  .ckd-result-print, .ckd-result-print * { visibility: visible !important; }
+  .ckd-result-print { position: absolute !important; inset: 0 auto auto 0 !important; width: 100% !important; box-shadow: none !important; overflow: visible !important; color: var(--paper-ink); background: var(--paper); print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .ckd-result-print details > * { visibility: visible !important; }
+}

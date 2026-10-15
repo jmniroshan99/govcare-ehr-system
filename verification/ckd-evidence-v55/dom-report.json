@@ -1,0 +1,14 @@
+{
+  "status": "passed",
+  "checks": 6,
+  "checksDetail": [
+    "All five evidence actions honor read-only access",
+    "No source values, dates or verification are prefilled",
+    "Real controlled form sends verified values and dates; errors retain inputs, retry UUID and success refresh callback",
+    "Diabetes context defaults to unknown and can preserve unknown without fabricating lab values",
+    "Demo creation requires a button click, explicitly acknowledges synthetic data and selects a returned new patient",
+    "Unmount cancels the pending demo request and suppresses stale selection"
+  ],
+  "engine": "React 19 + jsdom 26; mocked API transport, real controlled components and request serialization",
+  "limitations": "No native browser layout, modal focus trap, live Spring HTTP or live PostgreSQL verification"
+}

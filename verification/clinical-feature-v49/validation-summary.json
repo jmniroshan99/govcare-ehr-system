@@ -1,0 +1,78 @@
+{
+  "spring": {
+    "tests": 196,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "productionControllerMappings": 46,
+  "djangoTests": 17,
+  "nodeTests": 95,
+  "frontendBuild": "PASSED",
+  "featureMigration": {
+    "status": "passed",
+    "checks": 31,
+    "migrationCount": 44,
+    "lastMigration": "V45__unified_clinical_prediction_features.sql",
+    "engine": "PGlite PostgreSQL WASM; not native Windows PostgreSQL",
+    "scope": "Real existing-table CKD rows migrated to immutable, tenant-scoped feature projections, with saved dates/units, no dialysis fabrication, FK/idempotence and preservation checks"
+  },
+  "sixModulePersistenceChecks": 14,
+  "browser": {
+    "status": "passed",
+    "checks": 27,
+    "widths": [
+      1366,
+      768,
+      375
+    ],
+    "runtimeErrors": [],
+    "checksDetail": [
+      "1366px: six mapped cards, actual CKD values, 9/9 readiness, dated changes, explanations and no overflow",
+      "1366px: mapped summary and clinical creatinine/Hb charts consume dated CKD feature history without pre-HD relabeling",
+      "1366px: useful measured monitoring with independent HD forecast gates and no invented URR",
+      "1366px: existing verified-measurement form submits generic creatinine/date/unit and refreshes the backend mapping",
+      "1366px: undated snapshot is useful while AKI chronology and dialysis verification remain explicit",
+      "1366px: explicit dialysis verification updates the indicator without numeric lab fabrication",
+      "1366px: real paired-session entry contract yields measured URR 65% while the longitudinal forecast stays gated",
+      "1366px: grouped missing data and aligned clinician review retain the mapped rule version / snapshot contract",
+      "1366px: mapped data remain readable with write actions disabled for read-only access",
+      "768px: six mapped cards, actual CKD values, 9/9 readiness, dated changes, explanations and no overflow",
+      "768px: mapped summary and clinical creatinine/Hb charts consume dated CKD feature history without pre-HD relabeling",
+      "768px: useful measured monitoring with independent HD forecast gates and no invented URR",
+      "768px: existing verified-measurement form submits generic creatinine/date/unit and refreshes the backend mapping",
+      "768px: undated snapshot is useful while AKI chronology and dialysis verification remain explicit",
+      "768px: explicit dialysis verification updates the indicator without numeric lab fabrication",
+      "768px: real paired-session entry contract yields measured URR 65% while the longitudinal forecast stays gated",
+      "768px: grouped missing data and aligned clinician review retain the mapped rule version / snapshot contract",
+      "768px: mapped data remain readable with write actions disabled for read-only access",
+      "375px: six mapped cards, actual CKD values, 9/9 readiness, dated changes, explanations and no overflow",
+      "375px: mapped summary and clinical creatinine/Hb charts consume dated CKD feature history without pre-HD relabeling",
+      "375px: useful measured monitoring with independent HD forecast gates and no invented URR",
+      "375px: existing verified-measurement form submits generic creatinine/date/unit and refreshes the backend mapping",
+      "375px: undated snapshot is useful while AKI chronology and dialysis verification remain explicit",
+      "375px: explicit dialysis verification updates the indicator without numeric lab fabrication",
+      "375px: real paired-session entry contract yields measured URR 65% while the longitudinal forecast stays gated",
+      "375px: grouped missing data and aligned clinician review retain the mapped rule version / snapshot contract",
+      "375px: mapped data remain readable with write actions disabled for read-only access"
+    ],
+    "scope": "Actual six-card UI and existing clinical/dialysis/review forms with HTTP boundaries. Mapping/PDF fixtures use real migrated CKD rows from the isolated database. Signed-in native full-stack / clinical validation are not claimed."
+  },
+  "legacyBrowserChecks": 21,
+  "pdf": "Actual OpenPDF exports parsed and visually inspected; dated CKD changes and undated/missing guidance verified",
+  "nativeWindowsPostgresql": "PENDING_TARGET_EXECUTION",
+  "signedInPrivatePatientSession": "NOT_EXECUTED",
+  "clinicalValidation": "NOT_COMPLETED",
+  "newModelTraining": "NONE; original model artifacts and existing gates retained",
+  "release": "V49 unified CKD clinical feature integration",
+  "verifiedAtUtc": "2026-10-12T09:53:36.309004+00:00",
+  "sixModulePersistence": {
+    "status": "passed",
+    "checks": 14,
+    "migrationCount": 44,
+    "lastMigration": "V45__unified_clinical_prediction_features.sql",
+    "engine": "PGlite PostgreSQL WASM; not native Windows PostgreSQL",
+    "scope": "Disposable operational fixtures; persistence, tenant FK, null-score contract, idempotency uniqueness, review version and immutability"
+  },
+  "actualPersistedCkdFixtures": "V45-backfilled existing-schema assessment rows consumed by Java mapping and actual OpenPDF generation"
+}

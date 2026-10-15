@@ -1,0 +1,11 @@
+import {apiRequest} from "./apiClient";
+import type {AuthorizedPatient} from "./patientService";
+export type EvidenceMetric="creatinine"|"egfr"|"acr"|"hemoglobin"|"potassium"|"systolic"|"diastolic";
+export type DiabetesStatus="CONFIRMED_DIABETES"|"NO_KNOWN_DIABETES"|"UNCONFIRMED";
+export type TrendEvidenceInput={requestId:string;metric:EvidenceMetric;unit:string;baselineValue:number;baselineAt:string;baselineSource:string;currentValue:number;currentAt:string;currentSource:string;sourceVerified:true};
+export type DiabetesEvidenceInput={requestId:string;status:DiabetesStatus;verifiedAt:string;sourceNote:string;sourceVerified:true};
+const base=(patient:string)=>`/api/ai-cdss/ckd/patients/${encodeURIComponent(patient)}/clinical-evidence`;
+export const establishClinicalTrend=(patient:string,input:TrendEvidenceInput,signal?:AbortSignal)=>apiRequest<{saved:boolean}>(`${base(patient)}/trends`,{method:"POST",body:JSON.stringify(input),signal});
+export const verifyCkdDiabetesContext=(patient:string,input:DiabetesEvidenceInput,signal?:AbortSignal)=>apiRequest<{saved:boolean}>(`${base(patient)}/diabetes-context`,{method:"POST",body:JSON.stringify(input),signal});
+export const createCkdResearchDemonstrations=(requestId:string,signal?:AbortSignal)=>apiRequest<{synthetic:true;patients:AuthorizedPatient[]}>("/api/ai-cdss/ckd/research-demonstrations",{method:"POST",body:JSON.stringify({requestId,acknowledgedSyntheticData:true}),signal});
+export const isSyntheticCkdPatient=(patient:{patient_no?:string})=>patient.patient_no?.startsWith("SYNTH-CKD-")??false;

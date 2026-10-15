@@ -1,0 +1,14 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> govcare-ehr-system@0.0.0 test:renal:startup:live
+> node --test scripts/renal-port-live.test.cjs
+
+✔ real Django starts on the coordinated fallback, serves health, and retains service authentication (1862.535602ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1954.889621

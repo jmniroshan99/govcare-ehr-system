@@ -1,0 +1,43 @@
+GovCare V55 - modified baseline source/documentation
+
+README.md
+package.json
+spring-api/src/main/java/lk/gov/health/govcare/ai/CkdAssessmentReportService.java
+spring-api/src/main/java/lk/gov/health/govcare/ai/ClinicalFeatureMappingEngine.java
+spring-api/src/main/java/lk/gov/health/govcare/ai/ClinicalPredictionFeatureService.java
+spring-api/src/test/java/lk/gov/health/govcare/ai/ClinicalFeatureUiAndPdfTest.java
+src/components/ai/CkdClinicalWorkspace.tsx
+src/components/ai/RenalClinicalModules.tsx
+src/components/ai/SriLankanRenalPanel.tsx
+src/lib/ckdClinicalRiskDashboard.ts
+
+New release files
+
+CKD_EVIDENCE_ESTABLISHED_V55.md
+scripts/ckd-evidence.test.cjs
+scripts/verify-ckd-evidence-dom.cjs
+scripts/verify-ckd-evidence-migration.mjs
+spring-api/src/main/java/lk/gov/health/govcare/ai/CkdClinicalEvidenceController.java
+spring-api/src/main/java/lk/gov/health/govcare/ai/CkdClinicalEvidenceService.java
+spring-api/src/main/java/lk/gov/health/govcare/ai/CkdResearchDemoService.java
+spring-api/src/main/resources/db/migration/V47__ckd_verified_evidence_and_demo.sql
+spring-api/src/test/java/lk/gov/health/govcare/ai/CkdClinicalEvidenceServiceTest.java
+spring-api/src/test/java/lk/gov/health/govcare/ai/CkdEstablishedEvidencePdfTest.java
+spring-api/src/test/java/lk/gov/health/govcare/ai/CkdEstablishedEvidenceTest.java
+spring-api/src/test/java/lk/gov/health/govcare/ai/CkdResearchDemoServiceTest.java
+src/components/ai/CkdEvidenceSetup.tsx
+src/components/ai/ckd-evidence-setup.css
+src/services/ckdClinicalEvidenceService.ts
+verification/ckd-evidence-v55/VERIFICATION_REPORT.md
+verification/ckd-evidence-v55/client-tests.log
+verification/ckd-evidence-v55/database-report.json
+verification/ckd-evidence-v55/dom-report.json
+verification/ckd-evidence-v55/frontend-build.log
+verification/ckd-evidence-v55/ml-api-tests.log
+verification/ckd-evidence-v55/ml-pipeline-tests.log
+verification/ckd-evidence-v55/preservation-report.json
+verification/ckd-evidence-v55/spring-test-report.json
+verification/ckd-evidence-v55/synthetic-evidence-summary-v55.pdf
+
+Production dist rebuilt; obsolete hashed dist chunks replaced.
+Original model/data/service/startup files and previous migrations preserved.

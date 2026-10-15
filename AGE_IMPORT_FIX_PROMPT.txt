@@ -1,0 +1,7 @@
+FIX PROMPT:
+Analyze the GovCare EHR patient module. The age value exists in the backend (date_of_birth and age_years)
+but is not appearing in the required UI area. Trace the patient data flow:
+Database -> Spring Boot Entity/DTO -> REST API -> React patientService -> component rendering.
+Fix missing age mapping, ensure age is calculated safely from date_of_birth, add null handling,
+and display the formatted age wherever patient identity information is shown.
+Do not change patient records, styling, or existing workflows.

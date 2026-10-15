@@ -1,0 +1,107 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -------------------< lk.gov.health:govcare-ehr-api >--------------------
+[INFO] Building GovCare EHR Spring Boot API 1.0.0
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- dependency:3.8.1:properties (default) @ govcare-ehr-api ---
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ govcare-ehr-api ---
+[INFO] Copying 1 resource from src/main/resources to target/classes
+[INFO] Copying 42 resources from src/main/resources to target/classes
+[INFO] 
+[INFO] --- compiler:3.14.0:compile (default-compile) @ govcare-ehr-api ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ govcare-ehr-api ---
+[INFO] skip non existing resourceDirectory /workspace/scratch/ec0f1809c0d4/work/GovCare_EHR_Modern_Clinical_Intelligence/spring-api/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.14.0:testCompile (default-testCompile) @ govcare-ehr-api ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 21 source files with javac [debug parameters release 21] to target/test-classes
+[INFO] 
+[INFO] --- surefire:3.5.3:test (default-test) @ govcare-ehr-api ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running lk.gov.health.govcare.config.ControllerMappingStartupTest
+OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+02:25:54.400 [main] INFO ca.uhn.fhir.util.VersionUtil -- HAPI FHIR version 7.6.1 - Rev 63b2df5750
+02:25:54.406 [main] INFO ca.uhn.fhir.context.FhirContext -- Creating new FHIR context for FHIR version [R4]
+02:25:56.795 [main] WARN org.springframework.web.context.support.AnnotationConfigWebApplicationContext -- Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'requestMappingHandlerMapping' defined in org.springframework.web.servlet.config.annotation.DelegatingWebMvcConfiguration: Ambiguous mapping. Cannot map 'renalClinicalModuleController' method 
+lk.gov.health.govcare.ai.RenalClinicalModuleController#overview(UUID)
+to {GET [/api/ai-cdss/ckd/patients/{patientId}/predictive-intelligence]}: There is already 'predictiveIntelligenceController' bean method
+lk.gov.health.govcare.ai.PredictiveIntelligenceController#predictiveIntelligence(UUID) mapped.
+[ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 3.464 s <<< FAILURE! -- in lk.gov.health.govcare.config.ControllerMappingStartupTest
+[ERROR] lk.gov.health.govcare.config.ControllerMappingStartupTest -- Time elapsed: 3.464 s <<< ERROR!
+org.springframework.beans.factory.BeanCreationException: 
+Error creating bean with name 'requestMappingHandlerMapping' defined in org.springframework.web.servlet.config.annotation.DelegatingWebMvcConfiguration: Ambiguous mapping. Cannot map 'renalClinicalModuleController' method 
+lk.gov.health.govcare.ai.RenalClinicalModuleController#overview(UUID)
+to {GET [/api/ai-cdss/ckd/patients/{patientId}/predictive-intelligence]}: There is already 'predictiveIntelligenceController' bean method
+lk.gov.health.govcare.ai.PredictiveIntelligenceController#predictiveIntelligence(UUID) mapped.
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1826)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:607)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:529)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:339)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:373)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:337)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:202)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.instantiateSingleton(DefaultListableBeanFactory.java:1222)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingleton(DefaultListableBeanFactory.java:1188)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingletons(DefaultListableBeanFactory.java:1123)
+	at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:987)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:627)
+	at lk.gov.health.govcare.config.ControllerMappingStartupTest.startAllControllerMappings(ControllerMappingStartupTest.java:101)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+Caused by: java.lang.IllegalStateException: Ambiguous mapping. Cannot map 'renalClinicalModuleController' method 
+lk.gov.health.govcare.ai.RenalClinicalModuleController#overview(UUID)
+to {GET [/api/ai-cdss/ckd/patients/{patientId}/predictive-intelligence]}: There is already 'predictiveIntelligenceController' bean method
+lk.gov.health.govcare.ai.PredictiveIntelligenceController#predictiveIntelligence(UUID) mapped.
+	at org.springframework.web.servlet.handler.AbstractHandlerMethodMapping$MappingRegistry.validateMethodMapping(AbstractHandlerMethodMapping.java:676)
+	at org.springframework.web.servlet.handler.AbstractHandlerMethodMapping$MappingRegistry.register(AbstractHandlerMethodMapping.java:637)
+	at org.springframework.web.servlet.handler.AbstractHandlerMethodMapping.registerHandlerMethod(AbstractHandlerMethodMapping.java:331)
+	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping.registerHandlerMethod(RequestMappingHandlerMapping.java:507)
+	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping.registerHandlerMethod(RequestMappingHandlerMapping.java:84)
+	at org.springframework.web.servlet.handler.AbstractHandlerMethodMapping.lambda$detectHandlerMethods$2(AbstractHandlerMethodMapping.java:298)
+	at java.base/java.util.LinkedHashMap.forEach(LinkedHashMap.java:986)
+	at org.springframework.web.servlet.handler.AbstractHandlerMethodMapping.detectHandlerMethods(AbstractHandlerMethodMapping.java:296)
+	at org.springframework.web.servlet.handler.AbstractHandlerMethodMapping.processCandidateBean(AbstractHandlerMethodMapping.java:265)
+	at org.springframework.web.servlet.handler.AbstractHandlerMethodMapping.initHandlerMethods(AbstractHandlerMethodMapping.java:224)
+	at org.springframework.web.servlet.handler.AbstractHandlerMethodMapping.afterPropertiesSet(AbstractHandlerMethodMapping.java:212)
+	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping.afterPropertiesSet(RequestMappingHandlerMapping.java:237)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.invokeInitMethods(AbstractAutowireCapableBeanFactory.java:1873)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1822)
+	... 14 more
+
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Errors: 
+[ERROR]   ControllerMappingStartupTest.startAllControllerMappings:101 » BeanCreation Error creating bean with name 'requestMappingHandlerMapping' defined in org.springframework.web.servlet.config.annotation.DelegatingWebMvcConfiguration: Ambiguous mapping. Cannot map 'renalClinicalModuleController' method 
+lk.gov.health.govcare.ai.RenalClinicalModuleController#overview(UUID)
+to {GET [/api/ai-cdss/ckd/patients/{patientId}/predictive-intelligence]}: There is already 'predictiveIntelligenceController' bean method
+lk.gov.health.govcare.ai.PredictiveIntelligenceController#predictiveIntelligence(UUID) mapped.
+[INFO] 
+[ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  8.270 s
+[INFO] Finished at: 2026-10-11T02:25:56-06:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.5.3:test (default-test) on project govcare-ehr-api: 
+[ERROR] 
+[ERROR] See /workspace/scratch/ec0f1809c0d4/work/GovCare_EHR_Modern_Clinical_Intelligence/spring-api/target/surefire-reports for the individual test results.
+[ERROR] See dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

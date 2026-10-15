@@ -1,0 +1,85 @@
+{
+  "release": "V50 CKD submission audit persistence fix",
+  "verifiedAtUtc": "2026-10-12T11:06:19.262059+00:00",
+  "rootCause": {
+    "sqlState": "42703",
+    "exception": "BadSqlGrammarException",
+    "table": "audit_logs",
+    "invalidV49Columns": [
+      "actor_email",
+      "details"
+    ],
+    "additionalCorrections": [
+      "Required module supplied",
+      "Explicit user_role enum cast"
+    ],
+    "transactionEffect": "Original assessment rolled back"
+  },
+  "baselineV49Regression": {
+    "tests": 5,
+    "failures": 1,
+    "errors": 4,
+    "skipped": 0,
+    "expectedFailure": true,
+    "allDueTo": "Invalid V49 audit insert"
+  },
+  "jdbcPersistence": {
+    "tests": 5,
+    "failed": 0,
+    "scenarios": [
+      "Undated input/projection/audit/FHIR persistence",
+      "Explicit dates through JDBC",
+      "Duplicate request conflict without duplicate records",
+      "Injected audit failure rolls back all assessment records",
+      "Network Super Admin patient-tenant scope"
+    ]
+  },
+  "extendedTypedJdbcSuccessfulSaves": {
+    "tests": 4,
+    "failed": 0
+  },
+  "spring": {
+    "tests": 201,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "productionControllers": 46
+  },
+  "clientAndStartup": {
+    "tests": 95,
+    "failed": 0
+  },
+  "featureMigration": {
+    "status": "passed",
+    "checks": 31,
+    "migrationCount": 44,
+    "lastMigration": "V45__unified_clinical_prediction_features.sql",
+    "engine": "PGlite PostgreSQL WASM; not native Windows PostgreSQL",
+    "scope": "Real existing-table CKD rows migrated to immutable, tenant-scoped feature projections, with saved dates/units, no dialysis fabrication, FK/idempotence and preservation checks"
+  },
+  "portableFixtureStartup": "PASSED",
+  "testEnvironment": {
+    "engine": "PGlite PostgreSQL WASM over TCP",
+    "pgliteVersion": "0.5.9",
+    "socketVersion": "0.2.12",
+    "driver": "Real PostgreSQL JDBC",
+    "transactions": "Real Spring DataSourceTransactionManager",
+    "fixtureScope": "Disposable operational records, not clinical patients",
+    "protocol": "Extended for four successful-submission checks; simple for combined suite and deliberate SQL exception",
+    "productionDatasourceSettingsChanged": false
+  },
+  "targetScreenshot": {
+    "errorId": "50F1B394",
+    "exactServerExceptionMatch": "UNVERIFIED_WITHOUT_WINDOWS_LOG"
+  },
+  "nativeWindowsPostgresql": "NOT_EXECUTED",
+  "authenticatedPrivatePatientBrowserSession": "NOT_EXECUTED",
+  "clinicalValidation": "NOT_COMPLETED",
+  "newMigration": "NONE; all V45 and earlier bytes retained",
+  "priorVerification": "V49 UI/PDF/Django evidence retained as prior verification, not rerun or relabeled",
+  "commands": [
+    "mvn -f spring-api/pom.xml test -Dgovcare.ckd.persistence.jdbc=true -Dgovcare.ckd.persistence.url=<disposable loopback QA URL>",
+    "node --test scripts/renal-api-contracts.test.cjs scripts/clinical-feature-contracts.test.cjs scripts/predictive-access.test.cjs scripts/ckd-workspace.test.cjs scripts/renal-clinical-risk-graphics.test.cjs scripts/run-spring.test.mjs scripts/run-full-stack.test.cjs scripts/api-port.test.cjs scripts/renal-measurement-units.test.mjs",
+    "npm run test:ckd:features"
+  ]
+}

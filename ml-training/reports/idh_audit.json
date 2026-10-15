@@ -1,0 +1,10 @@
+{
+  "status": "INSUFFICIENT_DATA_FOR_RELIABLE_MODEL",
+  "positive_events": null,
+  "negative_events": null,
+  "raw_sessions": "Absent from supplied archive",
+  "patient_id_and_event_timing": "Unavailable in exported dry-weight file",
+  "direct_target_leakage": "Two MLP notebooks use SYS <=90 as target and retain SYS in X",
+  "patient_leakage": "IDH row-random splits appear in notebooks; cannot verify grouped performance",
+  "legacy_metrics_reused": false
+}

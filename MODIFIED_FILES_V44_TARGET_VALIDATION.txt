@@ -1,0 +1,19 @@
+GovCare V44 — modified/added files
+
+MODIFIED
+- scripts/run-renal-ml.cjs
+- package.json
+- RUN_SRI_LANKAN_RENAL.md
+- PACKAGE_MANIFEST.json (regenerated for V44 package)
+
+ADDED
+- scripts/renal-ml-env.test.cjs
+- scripts/verify-live-postgres-v42.mjs
+- scripts/verify-live-ckd-pdf.mjs
+- scripts/verify-target-windows-postgres.ps1
+- verify-target-windows-postgres.bat
+- TARGET_WINDOWS_POSTGRESQL_VALIDATION.md
+- V44_TARGET_WINDOWS_POSTGRESQL_REPORT.md
+- MODIFIED_FILES_V44_TARGET_VALIDATION.txt
+
+No existing clinical tables, patient records, model artifacts, migrations V1–V42, FHIR resources, RBAC rules or existing UI functionality were removed.

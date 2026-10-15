@@ -1,0 +1,62 @@
+.gov-disease-probabilities { min-width: 0; margin: 0 1.25rem 1.25rem; border: 1px solid var(--tone-accent-border); border-radius: var(--radius-panel); background: var(--bg-surface); color: var(--text-primary); overflow: hidden; }
+.gov-probability-header { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 1rem; padding: 1.25rem; background: linear-gradient(115deg, var(--hero-start), var(--hero-end)); border-bottom: 1px solid var(--border-color); }
+.gov-probability-header > div { flex: 1 1 22rem; min-width: 0; }
+.gov-probability-header h3 { display: flex; align-items: center; gap: .6rem; font-size: 1.15rem; font-weight: 650; letter-spacing: -.025em; }
+.gov-probability-header h3 svg { color: var(--text-accent); flex-shrink: 0; }
+.gov-probability-header p { margin-top: .5rem; max-width: 78ch; font-size: .78rem; line-height: 1.65; color: var(--text-secondary); }
+.gov-probability-snapshot { display: flex; align-items: center; gap: .4rem; border: 1px solid var(--tone-accent-border); border-radius: 2rem; padding: .4rem .65rem; color: var(--tone-accent-text); background: var(--tone-accent-surface); font-size: .67rem; }
+.gov-probability-screen { padding: 1.25rem; }
+.gov-probability-current { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; }
+.gov-probability-current > div { display: flex; flex-wrap: wrap; align-items: center; gap: .8rem; font-size: .8rem; }
+.gov-probability-current strong { font-size: 1.45rem; color: var(--text-accent); font-variant-numeric: tabular-nums; }
+.gov-probability-current p { font-size: .7rem; line-height: 1.6; color: var(--text-secondary); overflow-wrap: anywhere; }
+.gov-probability-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: .4rem; margin: 1rem 0; }
+.gov-probability-toolbar > span { flex: 1 1 12rem; text-align: right; color: var(--text-secondary); font-size: .68rem; }
+.gov-probability-grid { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); align-items: start; }
+.gov-probability-card { min-width: 0; padding: 1rem; border: 1px solid var(--border-color); border-radius: 1rem; background: var(--bg-muted); animation: gov-route-arrive var(--motion-enter) ease-out both; transition: border-color var(--motion-fast), box-shadow var(--motion-fast); }
+.gov-probability-card:focus-within { border-color: var(--brand-primary); box-shadow: 0 0 0 2px var(--tone-accent-border); }
+.gov-probability-card[data-available="true"] { background: var(--tone-accent-surface); border-color: var(--tone-accent-border); }
+.gov-probability-card-top { display: flex; justify-content: space-between; align-items: center; gap: .6rem; }
+.gov-probability-status { display: inline-flex; align-items: center; gap: .3rem; color: var(--text-secondary); font-size: .65rem; }
+.gov-probability-status svg { flex-shrink: 0; }
+.gov-probability-card h4 { margin-top: 1rem; font-weight: 650; font-size: .9rem; }
+.gov-probability-value { font-size: 1.3rem; font-weight: 650; letter-spacing: -.03em; margin-top: .45rem; font-variant-numeric: tabular-nums; }
+.gov-probability-card[data-available="true"] .gov-probability-value { color: var(--text-accent); font-size: 1.85rem; }
+.gov-probability-meter { height: .45rem; border-radius: 1rem; background: var(--bg-surface); overflow: hidden; margin-top: .65rem; }
+.gov-probability-meter > span { display: block; height: 100%; border-radius: inherit; background: var(--brand-primary); transition: width var(--motion-fast); }
+.gov-probability-empty { font-size: .67rem; color: var(--text-secondary); margin-top: .6rem; }
+.gov-probability-horizon { display: flex; align-items: center; gap: .35rem; margin-top: .65rem; color: var(--text-secondary); font-size: .7rem; }
+.gov-probability-details { border-top: 1px solid var(--border-color); margin-top: .8rem; font-size: .7rem; color: var(--text-secondary); }
+.gov-probability-details summary { display: flex; justify-content: space-between; align-items: center; gap: .4rem; min-height: 44px; cursor: pointer; list-style: none; font-weight: 600; color: var(--text-accent); }
+.gov-probability-details summary::-webkit-details-marker { display: none; }
+.gov-probability-details summary:focus-visible { outline: 2px solid var(--text-accent); outline-offset: 3px; border-radius: var(--radius-control); }
+.gov-probability-details[open] summary svg { transform: rotate(180deg); }
+.gov-probability-details p { line-height: 1.7; overflow-wrap: anywhere; }
+.gov-probability-details dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .35rem .7rem; margin: .7rem 0; }
+.gov-probability-details dd { color: var(--text-primary); overflow-wrap: anywhere; }
+.gov-probability-legacy, .gov-probability-footer { display: flex; gap: .5rem; align-items: flex-start; font-size: .7rem; line-height: 1.6; color: var(--text-secondary); }
+.gov-probability-legacy { padding: .75rem; margin-top: .8rem; background: var(--tone-warning-surface); border: 1px solid var(--tone-warning-border); border-radius: var(--radius-control); color: var(--tone-warning-text); }
+.gov-probability-legacy svg, .gov-probability-footer svg { flex-shrink: 0; margin-top: .1rem; }
+.gov-probability-footer { padding: .8rem 1.25rem; border-top: 1px solid var(--border-color); background: var(--bg-muted); }
+.gov-probability-no-results { display: grid; gap: .65rem; text-align: center; justify-items: center; padding: 1.5rem; border: 1px dashed var(--border-color); border-radius: var(--radius-control); font-size: .8rem; }
+.gov-probability-no-results svg { color: var(--text-accent); }
+.gov-probability-no-results p { color: var(--text-secondary); font-size: .75rem; }
+.gov-probability-print { display: none; }
+@media (min-width: 768px) { .gov-probability-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1280px) { .gov-probability-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 767px) { .gov-disease-probabilities { margin: 0 .85rem 1rem; } .gov-probability-screen, .gov-probability-header { padding: 1rem; } .gov-probability-toolbar > span { text-align: left; flex-basis: 100%; margin-top: .25rem; } }
+@media (prefers-reduced-motion: reduce) { .gov-probability-card { animation: none; transition: none; } .gov-probability-meter > span { transition: none; } }
+@media print {
+  .gov-disease-probabilities { --text-primary: var(--paper-ink); --text-secondary: var(--print-text-secondary); --text-accent: var(--print-brand); --bg-surface: var(--paper); --bg-muted: var(--print-bg-muted); --border-color: var(--print-border); --tone-accent-border: var(--print-border); --hero-start: var(--paper); --hero-end: var(--paper); margin: 1rem 0; overflow: visible; break-inside: auto; }
+  .gov-probability-screen { display: none !important; }
+  .gov-probability-snapshot { display: none !important; }
+  .gov-probability-print { display: block; padding: 0 1rem 1rem; }
+  .gov-probability-header { break-after: avoid; }
+  .gov-probability-print table { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 8pt; color: var(--paper-ink); }
+  .gov-probability-print caption { padding: .5rem 0; text-align: left; }
+  .gov-probability-print th, .gov-probability-print td { padding: .45rem; border: 1px solid var(--print-border); vertical-align: top; text-align: left; overflow-wrap: anywhere; }
+  .gov-probability-print thead { display: table-header-group; background: var(--print-bg-muted); }
+  .gov-probability-print th:nth-child(1) { width: 21%; } .gov-probability-print th:nth-child(2) { width: 17%; } .gov-probability-print th:nth-child(3) { width: 17%; } .gov-probability-print th:nth-child(4) { width: 45%; }
+  .gov-probability-print tr { break-inside: avoid; }
+  .gov-probability-print td p { margin-top: .3rem; }
+}

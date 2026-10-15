@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "contractVersion": "LK-RENAL-SERVING-1.0",
+  "minimumObservations": 2,
+  "minimumIntervalDays": 14,
+  "maximumIntervalDays": 62,
+  "maximumLatestAgeDays": 62,
+  "minimumCurrentPredictors": 5,
+  "predictors": ["hb", "urr", "albumin", "calcium", "sodium", "potassium_pre", "potassium_post", "creatinine_pre", "creatinine_post"],
+  "requiresVerifiedMaintenanceHemodialysis": true,
+  "missingPredictorPolicy": "Training-only medians may supply up to four predictor values; the current target is mandatory. A supplied measured value is never replaced with a displayed zero.",
+  "persistencePolicy": "The Hb forecast carries forward the current Hb. The existing monthly-cohort eligibility and history gate still applies; previous Hb is required for a trend, not for the carried-forward value."
+}

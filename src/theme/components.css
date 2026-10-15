@@ -1,0 +1,88 @@
+/* One visual language for every role and workflow. Colors come from colors.ts. */
+.gov-shell { isolation: isolate; }
+.gov-main { min-width: 0; }
+.gov-main > * { min-width: 0; }
+.gov-topbar { background: var(--glass-background); border-color: var(--border-color); backdrop-filter: blur(15px); }
+.gov-sidebar { background: var(--bg-surface); border-color: var(--border-color); }
+.gov-sidebar nav a { border-radius: var(--radius-control); }
+.gov-sidebar nav a[aria-current="page"] { background: var(--tone-accent-surface); color: var(--text-accent); box-shadow: inset 3px 0 var(--brand-primary); }
+.gov-card { min-width: 0; border-radius: var(--radius-panel); color: var(--text-primary); }
+.gov-card-header { min-width: 0; padding: var(--space-panel); padding-bottom: 1rem; }
+.gov-card-title { font-size: 1rem; font-weight: 650; letter-spacing: -.02em; line-height: 1.5; }
+.gov-card-content { min-width: 0; padding: var(--space-panel); }
+.gov-button { border-radius: var(--radius-control); font-weight: 600; transition: background-color var(--motion-fast), border-color var(--motion-fast), box-shadow var(--motion-fast), transform var(--motion-fast); }
+.gov-control { min-width: 0; border-radius: var(--radius-control); transition: background-color var(--motion-fast), border-color var(--motion-fast), box-shadow var(--motion-fast); }
+.gov-button:focus-visible, .gov-control:focus-visible { outline: 3px solid var(--text-accent); outline-offset: 3px; }
+.gov-control:focus { border-color: var(--brand-primary); }
+.gov-page-header, .page-hero, .intelligence-hero {
+  display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between;
+  gap: 1.25rem; padding: var(--space-panel); border: 1px solid var(--border-color);
+  border-radius: var(--radius-panel); background: linear-gradient(120deg, var(--hero-start), var(--hero-end));
+  color: var(--text-primary); box-shadow: var(--card-shadow);
+}
+.gov-page-header-main { flex: 1 1 22rem; min-width: 0; }
+.gov-page-header--text { display: block; }
+.gov-page-header h1, .page-hero h1, .intelligence-hero h1 {
+  font-size: clamp(1.4rem, 2.1vw, 2rem); font-weight: 700; letter-spacing: -.035em;
+  line-height: 1.25; overflow-wrap: anywhere; color: var(--text-primary);
+}
+.gov-page-header h1 { margin-top: .7rem; }
+.gov-page-description { margin-top: .6rem; max-width: 68ch; color: var(--text-secondary); font-size: .9rem; line-height: 1.7; }
+.gov-eyebrow { display: flex; align-items: center; gap: .55rem; color: var(--text-accent); font-size: .73rem; font-weight: 650; }
+.gov-icon-tile { display: inline-grid; place-items: center; flex-shrink: 0; width: 2rem; height: 2rem; border: 1px solid var(--tone-accent-border); border-radius: .65rem; background: var(--tone-accent-surface); color: var(--tone-accent-text); }
+.gov-page-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: .5rem; }
+.gov-page-header-footer { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: .6rem; padding-top: 1rem; border-top: 1px solid var(--border-color); }
+.gov-main table, .gov-table { color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.gov-main table thead { background: var(--bg-muted); color: var(--text-secondary); }
+.gov-main table th { font-weight: 650; }
+.gov-main table tbody tr { transition: background-color var(--motion-fast); }
+.gov-main table tbody tr:hover, .gov-main table tbody tr:focus-within { background: var(--tone-accent-surface); }
+.gov-main :where(select, textarea, input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="hidden"])) { max-width: 100%; border-radius: var(--radius-control); }
+.gov-main :where(select, textarea) { color: var(--text-primary); background-color: var(--bg-surface); border-color: var(--control-border); }
+.gov-main :where(input[type="checkbox"], input[type="radio"], progress) { accent-color: var(--brand-primary); }
+.gov-main :where(label):focus-within { color: var(--text-primary); }
+.gov-main :where(h1, h2, h3, p) { overflow-wrap: break-word; }
+.gov-workspace-tabs { display: flex; flex-wrap: wrap; gap: .5rem; padding: .45rem; border: 1px solid var(--border-color); border-radius: var(--radius-panel); background: var(--bg-muted); }
+.gov-workspace-tabs [role="tab"] { display: flex; align-items: center; gap: .75rem; flex: 1 1 15rem; min-width: 0; padding: .85rem 1rem; text-align: left; border: 1px solid transparent; border-radius: var(--radius-control); color: var(--text-secondary); transition: background-color var(--motion-fast), border-color var(--motion-fast), color var(--motion-fast); }
+.gov-workspace-tabs [role="tab"][aria-selected="true"] { background: var(--bg-surface); color: var(--text-accent); border-color: var(--tone-accent-border); box-shadow: var(--card-shadow); }
+.gov-workspace-tabs [role="tab"] strong { display: block; font-size: .85rem; font-weight: 650; }
+.gov-workspace-tabs [role="tab"] small { display: block; margin-top: .2rem; font-size: .7rem; color: var(--text-secondary); }
+.gov-tab-icon { flex-shrink: 0; }
+.gov-patient-context { border: 1px solid var(--tone-accent-border); border-radius: var(--radius-panel); background: linear-gradient(120deg, var(--bg-surface), var(--hero-end)); box-shadow: var(--card-shadow); }
+.gov-patient-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; padding: var(--space-panel); }
+.gov-patient-identity { display: flex; align-items: center; gap: .9rem; min-width: 0; flex: 1 1 20rem; }
+.gov-patient-identity > div { min-width: 0; }
+.gov-patient-identity h2 { font-size: 1.15rem; font-weight: 650; letter-spacing: -.025em; overflow-wrap: anywhere; }
+.gov-patient-identity p { color: var(--text-secondary); font-size: .77rem; margin-top: .3rem; }
+.gov-patient-picker { padding: 0 var(--space-panel) var(--space-panel); }
+.gov-patient-picker[hidden], .gov-clinical-panel[hidden] { display: none; }
+.gov-patient-footer { border-top: 1px solid var(--border-color); padding: .7rem var(--space-panel); color: var(--text-secondary); font-size: .72rem; display: flex; gap: .5rem; align-items: center; }
+.gov-kicker { display: block; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .08em; font-size: .67rem; font-weight: 650; margin-bottom: .25rem; }
+.gov-clinical-panel { min-width: 0; }
+.gov-clinical-field { padding: .8rem; border: 1px solid var(--border-color); border-radius: var(--radius-control); background: var(--bg-surface); min-width: 0; }
+.gov-clinical-field:focus-within { border-color: var(--brand-primary); box-shadow: 0 0 0 3px var(--tone-accent-border); }
+.gov-assessment-actions { position: sticky; bottom: .75rem; z-index: 15; display: flex; flex-wrap: wrap; gap: .75rem; padding: 1rem; border: 1px solid var(--border-color); border-radius: var(--radius-panel); background: var(--glass-background); backdrop-filter: blur(15px); box-shadow: var(--card-shadow); }
+.gov-empty-state { display: grid; place-items: center; text-align: center; gap: .75rem; padding: clamp(1.5rem, 4vw, 3rem); border: 1px dashed var(--border-color); border-radius: var(--radius-panel); background: var(--bg-surface); }
+.gov-empty-state svg { color: var(--text-accent); }
+.gov-empty-state p { max-width: 58ch; color: var(--text-secondary); font-size: .85rem; line-height: 1.7; }
+.gov-clinical-section { border: 1px solid var(--border-color); border-radius: var(--radius-panel); padding: var(--space-panel); background: var(--bg-surface); }
+.gov-clinical-section:nth-of-type(even) { background: var(--bg-muted); }
+.intelligence-metric { border-radius: var(--radius-panel); padding: 1.2rem; }
+.intelligence-metric > div > p { text-transform: none; letter-spacing: 0; font-size: .8rem; }
+.intelligence-metric > p { font-weight: 650; }
+.gov-route-enter { animation: gov-route-arrive var(--motion-enter) ease-out both; }
+.gov-page-header { animation: gov-route-arrive var(--motion-enter) ease-out both; }
+@keyframes gov-route-arrive { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@media (max-width: 767px) {
+  .gov-page-header, .page-hero, .intelligence-hero { padding: 1.15rem; }
+  .gov-page-header-main { flex-basis: 100%; }
+  .gov-page-actions { justify-content: flex-start; width: 100%; }
+  .gov-patient-toolbar { padding: 1rem; }
+  .gov-patient-picker { padding: 0 1rem 1rem; }
+  .gov-assessment-actions > button { width: 100%; flex-basis: 100%; }
+  .gov-workspace-tabs [role="tab"] { flex-basis: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gov-route-enter, .gov-page-header, .clinical-grid { animation: none; }
+  .gov-button:hover, .intelligence-metric:hover { transform: none; }
+}

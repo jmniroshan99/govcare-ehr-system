@@ -1,0 +1,673 @@
+[
+  {
+    "filename": "HeatMap/cleaned_monthly_investigations_alive.xlsx",
+    "type": ".xlsx",
+    "sha256": "1ee30c3abba60bef5a6eb6a3383432370386dba1da15fab2cabfc428d46b5990",
+    "size_bytes": 38532,
+    "sheets": [
+      {
+        "name": "Sheet1",
+        "rows": 387,
+        "columns": [
+          "Subject_ID",
+          "Month",
+          "Albumin (g/L)",
+          "BU - post HD",
+          "BU - pre HD",
+          "Hb (g/dL)",
+          "S Ca (mmol/L)",
+          "SCR- post HD (\u00b5mol/L)",
+          "SCR- pre HD (\u00b5mol/L)",
+          "Serum K Post-HD (mmol/L)",
+          "Serum K Pre-HD (mmol/L)",
+          "Serum Na Pre-HD (mmol/L)",
+          "UA (mg/dL)"
+        ],
+        "missing_counts": {
+          "Subject_ID": 0,
+          "Month": 0,
+          "Albumin (g/L)": 0,
+          "BU - post HD": 0,
+          "BU - pre HD": 0,
+          "Hb (g/dL)": 0,
+          "S Ca (mmol/L)": 0,
+          "SCR- post HD (\u00b5mol/L)": 0,
+          "SCR- pre HD (\u00b5mol/L)": 0,
+          "Serum K Post-HD (mmol/L)": 0,
+          "Serum K Pre-HD (mmol/L)": 0,
+          "Serum Na Pre-HD (mmol/L)": 0,
+          "UA (mg/dL)": 0
+        },
+        "missing_percent": {
+          "Subject_ID": 0.0,
+          "Month": 0.0,
+          "Albumin (g/L)": 0.0,
+          "BU - post HD": 0.0,
+          "BU - pre HD": 0.0,
+          "Hb (g/dL)": 0.0,
+          "S Ca (mmol/L)": 0.0,
+          "SCR- post HD (\u00b5mol/L)": 0.0,
+          "SCR- pre HD (\u00b5mol/L)": 0.0,
+          "Serum K Post-HD (mmol/L)": 0.0,
+          "Serum K Pre-HD (mmol/L)": 0.0,
+          "Serum Na Pre-HD (mmol/L)": 0.0,
+          "UA (mg/dL)": 0.0
+        },
+        "duplicates_exact": 0,
+        "unique_patients": 42,
+        "numeric_ranges": {
+          "Albumin (g/L)": {
+            "min": 21.0,
+            "max": 53.0
+          },
+          "BU - post HD": {
+            "min": 0.02,
+            "max": 20.81
+          },
+          "BU - pre HD": {
+            "min": 3.32,
+            "max": 129.0
+          },
+          "Hb (g/dL)": {
+            "min": 6.3,
+            "max": 17.8
+          },
+          "S Ca (mmol/L)": {
+            "min": 1.08,
+            "max": 2.98
+          },
+          "SCR- post HD (\u00b5mol/L)": {
+            "min": 11.1,
+            "max": 925.0
+          },
+          "SCR- pre HD (\u00b5mol/L)": {
+            "min": 279.0,
+            "max": 1460.0
+          },
+          "Serum K Post-HD (mmol/L)": {
+            "min": 2.1,
+            "max": 5.5
+          },
+          "Serum K Pre-HD (mmol/L)": {
+            "min": 2.14,
+            "max": 12.3
+          },
+          "Serum Na Pre-HD (mmol/L)": {
+            "min": 115.8,
+            "max": 149.0
+          },
+          "UA (mg/dL)": {
+            "min": 63.0,
+            "max": 648.0
+          }
+        },
+        "invalid_numeric_counts": {
+          "Albumin (g/L)": 0,
+          "BU - post HD": 0,
+          "BU - pre HD": 0,
+          "Hb (g/dL)": 0,
+          "S Ca (mmol/L)": 0,
+          "SCR- post HD (\u00b5mol/L)": 0,
+          "SCR- pre HD (\u00b5mol/L)": 0,
+          "Serum K Post-HD (mmol/L)": 0,
+          "Serum K Pre-HD (mmol/L)": 0,
+          "Serum Na Pre-HD (mmol/L)": 0,
+          "UA (mg/dL)": 0
+        },
+        "categorical_counts": {},
+        "observations_per_patient": {
+          "count": 42.0,
+          "mean": 9.214285714285714,
+          "std": 3.6794466331409676,
+          "min": 1.0,
+          "25%": 7.0,
+          "50%": 11.0,
+          "75%": 12.0,
+          "max": 12.0
+        },
+        "identifier_normalization_changes": 0,
+        "identifier_normalization_collisions": 0,
+        "date_range": [
+          "2024-01-01",
+          "2024-12-01"
+        ],
+        "invalid_dates": 0,
+        "date_types": {
+          "Timestamp": 387
+        },
+        "duplicate_patient_date": 0,
+        "direct_identifier_columns": []
+      }
+    ]
+  },
+  {
+    "filename": "HeatMap/urr_data.xlsx",
+    "type": ".xlsx",
+    "sha256": "92a69fe7a438b25670a27898ebba3761d9fa7852e01823193eec0634ef4cd0f8",
+    "size_bytes": 45497,
+    "sheets": [
+      {
+        "name": "Sheet1",
+        "rows": 391,
+        "columns": [
+          "Subject_ID",
+          "Month",
+          "Albumin (g/L)",
+          "BU - post HD",
+          "BU - pre HD",
+          "Hb (g/dL)",
+          "S Ca (mmol/L)",
+          "SCR- post HD (\u00b5mol/L)",
+          "SCR- pre HD (\u00b5mol/L)",
+          "Serum K Post-HD (mmol/L)",
+          "Serum K Pre-HD (mmol/L)",
+          "Serum Na Pre-HD (mmol/L)",
+          "UA (mg/dL)",
+          "URR (%)"
+        ],
+        "missing_counts": {
+          "Subject_ID": 0,
+          "Month": 0,
+          "Albumin (g/L)": 0,
+          "BU - post HD": 0,
+          "BU - pre HD": 0,
+          "Hb (g/dL)": 0,
+          "S Ca (mmol/L)": 0,
+          "SCR- post HD (\u00b5mol/L)": 0,
+          "SCR- pre HD (\u00b5mol/L)": 0,
+          "Serum K Post-HD (mmol/L)": 0,
+          "Serum K Pre-HD (mmol/L)": 0,
+          "Serum Na Pre-HD (mmol/L)": 0,
+          "UA (mg/dL)": 0,
+          "URR (%)": 0
+        },
+        "missing_percent": {
+          "Subject_ID": 0.0,
+          "Month": 0.0,
+          "Albumin (g/L)": 0.0,
+          "BU - post HD": 0.0,
+          "BU - pre HD": 0.0,
+          "Hb (g/dL)": 0.0,
+          "S Ca (mmol/L)": 0.0,
+          "SCR- post HD (\u00b5mol/L)": 0.0,
+          "SCR- pre HD (\u00b5mol/L)": 0.0,
+          "Serum K Post-HD (mmol/L)": 0.0,
+          "Serum K Pre-HD (mmol/L)": 0.0,
+          "Serum Na Pre-HD (mmol/L)": 0.0,
+          "UA (mg/dL)": 0.0,
+          "URR (%)": 0.0
+        },
+        "duplicates_exact": 5,
+        "unique_patients": 42,
+        "numeric_ranges": {
+          "Albumin (g/L)": {
+            "min": 21.0,
+            "max": 53.0
+          },
+          "BU - post HD": {
+            "min": 0.02,
+            "max": 20.81
+          },
+          "BU - pre HD": {
+            "min": 3.32,
+            "max": 129.0
+          },
+          "Hb (g/dL)": {
+            "min": 6.3,
+            "max": 17.8
+          },
+          "S Ca (mmol/L)": {
+            "min": 1.08,
+            "max": 2.98
+          },
+          "SCR- post HD (\u00b5mol/L)": {
+            "min": 11.1,
+            "max": 925.0
+          },
+          "SCR- pre HD (\u00b5mol/L)": {
+            "min": 279.0,
+            "max": 1460.0
+          },
+          "Serum K Post-HD (mmol/L)": {
+            "min": 2.1,
+            "max": 5.5
+          },
+          "Serum K Pre-HD (mmol/L)": {
+            "min": 2.14,
+            "max": 12.3
+          },
+          "Serum Na Pre-HD (mmol/L)": {
+            "min": 115.8,
+            "max": 149.0
+          },
+          "UA (mg/dL)": {
+            "min": 63.0,
+            "max": 648.0
+          },
+          "URR (%)": {
+            "min": -233.433734939759,
+            "max": 99.85
+          }
+        },
+        "invalid_numeric_counts": {
+          "Albumin (g/L)": 0,
+          "BU - post HD": 0,
+          "BU - pre HD": 0,
+          "Hb (g/dL)": 1,
+          "S Ca (mmol/L)": 0,
+          "SCR- post HD (\u00b5mol/L)": 1,
+          "SCR- pre HD (\u00b5mol/L)": 0,
+          "Serum K Post-HD (mmol/L)": 0,
+          "Serum K Pre-HD (mmol/L)": 0,
+          "Serum Na Pre-HD (mmol/L)": 0,
+          "UA (mg/dL)": 0,
+          "URR (%)": 0
+        },
+        "categorical_counts": {},
+        "observations_per_patient": {
+          "count": 42.0,
+          "mean": 9.30952380952381,
+          "std": 3.6525173092733225,
+          "min": 2.0,
+          "25%": 7.25,
+          "50%": 11.0,
+          "75%": 12.0,
+          "max": 13.0
+        },
+        "identifier_normalization_changes": 0,
+        "identifier_normalization_collisions": 0,
+        "date_range": [
+          "2024-01-01",
+          "2024-12-01"
+        ],
+        "invalid_dates": 0,
+        "date_types": {
+          "Timestamp": 391
+        },
+        "duplicate_patient_date": 5,
+        "direct_identifier_columns": []
+      }
+    ]
+  },
+  {
+    "filename": "ML_Model/code/Hb_analysis/model_evaluation_metrics.xlsx",
+    "type": ".xlsx",
+    "sha256": "02fd8e8773b84af3d3088ddf1e32edf2f1beb42156f3e8b8ef94d8d22a69284c",
+    "size_bytes": 5160,
+    "sheets": [
+      {
+        "name": "Sheet1",
+        "rows": 3,
+        "columns": [
+          "Model",
+          "Accuracy(Macro)",
+          "Precision(Macro)",
+          "Recall(Macro)",
+          "F1(Macro)",
+          "ROC-AUC",
+          "Recall (Class 0)",
+          "Recall (Class 1)"
+        ],
+        "missing_counts": {
+          "Model": 0,
+          "Accuracy(Macro)": 0,
+          "Precision(Macro)": 0,
+          "Recall(Macro)": 0,
+          "F1(Macro)": 0,
+          "ROC-AUC": 0,
+          "Recall (Class 0)": 0,
+          "Recall (Class 1)": 0
+        },
+        "missing_percent": {
+          "Model": 0.0,
+          "Accuracy(Macro)": 0.0,
+          "Precision(Macro)": 0.0,
+          "Recall(Macro)": 0.0,
+          "F1(Macro)": 0.0,
+          "ROC-AUC": 0.0,
+          "Recall (Class 0)": 0.0,
+          "Recall (Class 1)": 0.0
+        },
+        "duplicates_exact": 0,
+        "unique_patients": null,
+        "numeric_ranges": {
+          "Accuracy(Macro)": {
+            "min": 0.59,
+            "max": 0.66
+          },
+          "Precision(Macro)": {
+            "min": 0.59,
+            "max": 0.66
+          },
+          "Recall(Macro)": {
+            "min": 0.59,
+            "max": 0.66
+          },
+          "F1(Macro)": {
+            "min": 0.59,
+            "max": 0.66
+          },
+          "ROC-AUC": {
+            "min": 0.54,
+            "max": 0.7
+          },
+          "Recall (Class 0)": {
+            "min": 0.6,
+            "max": 0.67
+          },
+          "Recall (Class 1)": {
+            "min": 0.58,
+            "max": 0.71
+          }
+        },
+        "invalid_numeric_counts": {
+          "Accuracy(Macro)": 0,
+          "Precision(Macro)": 0,
+          "Recall(Macro)": 0,
+          "F1(Macro)": 0,
+          "ROC-AUC": 0,
+          "Recall (Class 0)": 0,
+          "Recall (Class 1)": 0
+        },
+        "categorical_counts": {
+          "Model": {
+            "XGB + LGBM Ensemble": 1,
+            "BalancedBagging + LGBM": 1,
+            "EasyEnsembleClassifier": 1
+          }
+        },
+        "direct_identifier_columns": []
+      }
+    ]
+  },
+  {
+    "filename": "ML_Model/code/dry_weight_predict/dry_weight_predictions.xlsx",
+    "type": ".xlsx",
+    "sha256": "2d66049730e2ce549689958ea0d645ce4171f71ab5f79932fa9f9a8fed399f10",
+    "size_bytes": 52560,
+    "sheets": [
+      {
+        "name": "Sheet1",
+        "rows": 763,
+        "columns": [
+          "AP (mmHg)",
+          "AUF (ml)",
+          "BFR (ml/min)",
+          "HD duration (h)",
+          "PUF (ml)",
+          "Post HD weight (kg)",
+          "Pre HD weight (kg)",
+          "TMP (mmHg)",
+          "VP (mmHg)",
+          "Weight gain (kg)",
+          "SYS (mmHg)",
+          "DIA (mmHg)",
+          "True_Dry_Weight",
+          "Predicted_Dry_Weight"
+        ],
+        "missing_counts": {
+          "AP (mmHg)": 0,
+          "AUF (ml)": 0,
+          "BFR (ml/min)": 0,
+          "HD duration (h)": 0,
+          "PUF (ml)": 0,
+          "Post HD weight (kg)": 0,
+          "Pre HD weight (kg)": 0,
+          "TMP (mmHg)": 0,
+          "VP (mmHg)": 0,
+          "Weight gain (kg)": 0,
+          "SYS (mmHg)": 0,
+          "DIA (mmHg)": 0,
+          "True_Dry_Weight": 0,
+          "Predicted_Dry_Weight": 0
+        },
+        "missing_percent": {
+          "AP (mmHg)": 0.0,
+          "AUF (ml)": 0.0,
+          "BFR (ml/min)": 0.0,
+          "HD duration (h)": 0.0,
+          "PUF (ml)": 0.0,
+          "Post HD weight (kg)": 0.0,
+          "Pre HD weight (kg)": 0.0,
+          "TMP (mmHg)": 0.0,
+          "VP (mmHg)": 0.0,
+          "Weight gain (kg)": 0.0,
+          "SYS (mmHg)": 0.0,
+          "DIA (mmHg)": 0.0,
+          "True_Dry_Weight": 0.0,
+          "Predicted_Dry_Weight": 0.0
+        },
+        "duplicates_exact": 0,
+        "unique_patients": null,
+        "numeric_ranges": {
+          "AP (mmHg)": {
+            "min": -274.0,
+            "max": 132.0
+          },
+          "AUF (ml)": {
+            "min": 100.0,
+            "max": 5700.0
+          },
+          "BFR (ml/min)": {
+            "min": 20.0,
+            "max": 370.0
+          },
+          "HD duration (h)": {
+            "min": 1.0,
+            "max": 5.0
+          },
+          "PUF (ml)": {
+            "min": 200.0,
+            "max": 6000.0
+          },
+          "Post HD weight (kg)": {
+            "min": 30.0,
+            "max": 102.5
+          },
+          "Pre HD weight (kg)": {
+            "min": 30.5,
+            "max": 107.2
+          },
+          "TMP (mmHg)": {
+            "min": 4.0,
+            "max": 250.0
+          },
+          "VP (mmHg)": {
+            "min": 14.0,
+            "max": 265.0
+          },
+          "Weight gain (kg)": {
+            "min": -3.4,
+            "max": 5.7
+          },
+          "SYS (mmHg)": {
+            "min": 84.0,
+            "max": 273.0
+          },
+          "DIA (mmHg)": {
+            "min": 48.0,
+            "max": 140.0
+          },
+          "True_Dry_Weight": {
+            "min": 30.0,
+            "max": 101.5
+          },
+          "Predicted_Dry_Weight": {
+            "min": 30.25800000000001,
+            "max": 101.485
+          }
+        },
+        "invalid_numeric_counts": {
+          "AP (mmHg)": 0,
+          "AUF (ml)": 0,
+          "BFR (ml/min)": 0,
+          "HD duration (h)": 0,
+          "PUF (ml)": 0,
+          "Post HD weight (kg)": 0,
+          "Pre HD weight (kg)": 0,
+          "TMP (mmHg)": 0,
+          "VP (mmHg)": 0,
+          "Weight gain (kg)": 0,
+          "SYS (mmHg)": 0,
+          "DIA (mmHg)": 0,
+          "True_Dry_Weight": 0,
+          "Predicted_Dry_Weight": 0
+        },
+        "categorical_counts": {},
+        "direct_identifier_columns": []
+      }
+    ]
+  },
+  {
+    "filename": "ML_Server/db.sqlite3",
+    "type": ".sqlite3",
+    "sha256": "4f7314827745279b129a824582aaf76ea039dea2e6e24b97a430c69dd52d7f40",
+    "size_bytes": 131072,
+    "tables": [
+      {
+        "name": "django_migrations",
+        "rows": 18
+      },
+      {
+        "name": "sqlite_sequence",
+        "rows": 6
+      },
+      {
+        "name": "auth_group_permissions",
+        "rows": 0
+      },
+      {
+        "name": "auth_user_groups",
+        "rows": 0
+      },
+      {
+        "name": "auth_user_user_permissions",
+        "rows": 0
+      },
+      {
+        "name": "django_admin_log",
+        "rows": 0
+      },
+      {
+        "name": "django_content_type",
+        "rows": 6
+      },
+      {
+        "name": "auth_permission",
+        "rows": 24
+      },
+      {
+        "name": "auth_group",
+        "rows": 0
+      },
+      {
+        "name": "auth_user",
+        "rows": 0
+      },
+      {
+        "name": "django_session",
+        "rows": 0
+      }
+    ],
+    "scope": "Empty Django service/authentication database; not clinical training data"
+  },
+  {
+    "filename": "Software_Component/backend/data-import/patient-data.xlsx",
+    "type": ".xlsx",
+    "sha256": "e35abb02e87231c1ed78bec8ffc72d7b92a96bbb61c51b6c6e388be9c0ef16f0",
+    "size_bytes": 12437,
+    "sheets": [
+      {
+        "name": "Patient Data",
+        "rows": 45,
+        "columns": [
+          "Subject ID",
+          "DOB",
+          "Sex",
+          "Primary renal diagnosis",
+          "Dialysis access",
+          "Outcome"
+        ],
+        "missing_counts": {
+          "Subject ID": 0,
+          "DOB": 3,
+          "Sex": 0,
+          "Primary renal diagnosis": 0,
+          "Dialysis access": 0,
+          "Outcome": 0
+        },
+        "missing_percent": {
+          "Subject ID": 0.0,
+          "DOB": 6.667,
+          "Sex": 0.0,
+          "Primary renal diagnosis": 0.0,
+          "Dialysis access": 0.0,
+          "Outcome": 0.0
+        },
+        "duplicates_exact": 0,
+        "unique_patients": 45,
+        "numeric_ranges": {},
+        "invalid_numeric_counts": {},
+        "categorical_counts": {
+          "Sex": {
+            "M": 29,
+            "F": 16
+          },
+          "Primary renal diagnosis": {
+            "Diabetic kidney disease": 13,
+            "?": 8,
+            "ESKD secondary to DKD": 3,
+            "FSGS": 2,
+            "Crescentic Glomerular Nephritis": 2,
+            "Diabetic kidney disease secondary to type 2 diabetes mellitus": 1,
+            "CIN+B/L Dysplastic Kidney": 1,
+            "Diabetic kidney disease, Hypertension": 1,
+            "ANCA negative crescentic GN-ESKD": 1,
+            "Hypertension ": 1,
+            "Secondary to PCKD": 1,
+            "ESRF secondary to diabetic kidney disease": 1,
+            "FSGS (Background chronic hypertension)": 1,
+            "Obstructive uropathy": 1,
+            "Neurogenic bladder": 1,
+            "Diabetic kidney dieseae, Hypertension": 1,
+            "Anti GBM disease": 1,
+            "Obstructive uropathy+urosepsis": 1,
+            "CKD": 1,
+            "Chronic interstitial nephritis": 1,
+            "Hypertension+Obstructive uropathy": 1,
+            "Diabetic kidney disease + Hypertension": 1
+          },
+          "Dialysis access": {
+            "Fistula(AVF)": 25,
+            "Permcath": 13,
+            "IJC, Fistula(AVF)": 3,
+            "IJC": 3,
+            "Permcath, Fistula(AVF)": 1
+          },
+          "Outcome": {
+            "Alive": 44,
+            "Dead": 1
+          }
+        },
+        "observations_per_patient": {
+          "count": 45.0,
+          "mean": 1.0,
+          "std": 0.0,
+          "min": 1.0,
+          "25%": 1.0,
+          "50%": 1.0,
+          "75%": 1.0,
+          "max": 1.0
+        },
+        "identifier_normalization_changes": 0,
+        "identifier_normalization_collisions": 0,
+        "dob_types": {
+          "str": 21,
+          "datetime": 21,
+          "missing": 3
+        },
+        "direct_identifier_columns": []
+      }
+    ]
+  }
+]

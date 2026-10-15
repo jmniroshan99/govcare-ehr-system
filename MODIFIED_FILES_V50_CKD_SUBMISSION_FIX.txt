@@ -1,0 +1,22 @@
+Changed from V49
+README.md
+spring-api/src/main/java/lk/gov/health/govcare/ai/ClinicalPredictionFeatureService.java
+
+Added in V50
+MODIFIED_FILES_V50_CKD_SUBMISSION_FIX.txt
+V50_CKD_SUBMISSION_AUDIT_FIX.md
+spring-api/src/test/java/lk/gov/health/govcare/ai/CkdSubmissionPersistenceJdbcTest.java
+verification/ckd-submission-v50/audit-baseline-v49.json
+verification/ckd-submission-v50/ckd-jdbc-all.log
+verification/ckd-submission-v50/ckd-jdbc-baseline.log
+verification/ckd-submission-v50/ckd-jdbc-extended.log
+verification/ckd-submission-v50/ckd-jdbc-fixed.log
+verification/ckd-submission-v50/feature-regression-v50.log
+verification/ckd-submission-v50/node-regression-v50.log
+verification/ckd-submission-v50/preservation.json
+verification/ckd-submission-v50/source-diff.patch
+verification/ckd-submission-v50/start-jdbc-fixture.mjs
+verification/ckd-submission-v50/validation-summary.json
+
+PACKAGE_MANIFEST.json and FULL_SOURCE_MANIFEST_SHA256.txt regenerated.
+All previous source/evidence files retained. Existing migrations, frontend build and all ML source/data/artifacts unchanged.

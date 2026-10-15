@@ -1,0 +1,21 @@
+GovCare ten-hospital demo dataset
+Baseline: GovCare_EHR_Access_Roles_COMPILE_FIXED_FULL_SOURCE(1).zip
+
+Modified
+README.md
+package.json
+package-lock.json
+
+Added
+DEMO_NETWORK_SETUP.md
+DEMO_NETWORK_TESTING_REPORT.md
+CHANGED_FILES_DEMO_NETWORK.txt
+setup-demo-network-windows.bat
+scripts/seed-demo-network.mjs
+scripts/demo-network.test.mjs
+database/postgresql/seed-demo-network.sql
+database/postgresql/verify-demo-network.sql
+database/postgresql/demo-network-credentials.csv
+
+Existing Spring API source, authentication/RBAC implementation, CKD/FHIR modules,
+Flyway migrations and frontend application code are preserved from the uploaded ZIP.

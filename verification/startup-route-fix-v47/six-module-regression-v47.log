@@ -1,0 +1,21 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> govcare-ehr-system@0.0.0 test:renal:six-modules
+> node --test scripts/renal-clinical-risk-graphics.test.cjs scripts/renal-api-contracts.test.cjs && node scripts/verify-renal-six-module-migration.mjs
+
+✔ clinical overview uses the existing intelligence endpoint and forwards cancellation (61.623483ms)
+✔ six-module overview retains the predictive-intelligence endpoint (10.38337ms)
+✔ six-module clinician review posts the unchanged review payload to its dedicated route (8.049892ms)
+✔ active assessment replaces the legacy disease probability panel with the authorized renal workspace (1.290359ms)
+✔ live six modules are sourced from the patient-scoped Spring contract (0.541634ms)
+✔ missing data and directional percentages are labelled without manufactured probabilities (0.29928ms)
+✔ research illustration is retained and six cards have desktop tablet mobile layouts (0.351909ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 351.364935
+{"status":"passed","checks":14,"migrationCount":42,"lastMigration":"V43__renal_six_module_snapshots.sql","engine":"PGlite PostgreSQL WASM; not native Windows PostgreSQL","scope":"Disposable operational fixtures; persistence, tenant FK, null-score contract, idempotency uniqueness, review version and immutability"}

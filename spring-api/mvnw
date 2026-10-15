@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+# GovCare Maven launcher
+# Uses system Maven. Install Maven 3.9+ if mvn is not available.
+if command -v mvn >/dev/null 2>&1; then
+  exec mvn "$@"
+fi
+
+echo "Maven is not installed. Please install Apache Maven 3.9+ and add it to PATH." >&2
+exit 1

@@ -1,0 +1,59 @@
+{
+  "status": "passed",
+  "sourceArchive": "GovCare_V50_CKD_Submission_Audit_Fix_FULL.zip",
+  "noOriginalNonDistFilesRemoved": true,
+  "preservedScopes": {
+    "ai-cdss-service/": {
+      "files": 13,
+      "sha256ByteComparison": "identical"
+    },
+    "ml-training/": {
+      "files": 65,
+      "sha256ByteComparison": "identical"
+    },
+    "spring-api/src/main/resources/db/migration/": {
+      "files": 44,
+      "sha256ByteComparison": "identical"
+    },
+    "src/pages/CKDAICDSS.tsx": {
+      "files": 1,
+      "sha256ByteComparison": "identical"
+    },
+    "src/services/aiCdssService.ts": {
+      "files": 1,
+      "sha256ByteComparison": "identical"
+    },
+    "spring-api/src/main/java/lk/gov/health/govcare/ai/CkdPredictionService.java": {
+      "files": 1,
+      "sha256ByteComparison": "identical"
+    },
+    "spring-api/src/main/java/lk/gov/health/govcare/ai/ClinicalFeatureNormalizer.java": {
+      "files": 1,
+      "sha256ByteComparison": "identical"
+    },
+    "spring-api/src/main/java/lk/gov/health/govcare/ai/ClinicalPredictionFeatureService.java": {
+      "files": 1,
+      "sha256ByteComparison": "identical"
+    },
+    "spring-api/src/main/java/lk/gov/health/govcare/ai/RenalClinicalModuleService.java": {
+      "files": 1,
+      "sha256ByteComparison": "identical"
+    },
+    "spring-api/src/main/java/lk/gov/health/govcare/ai/SriLankanRenalIntelligenceService.java": {
+      "files": 1,
+      "sha256ByteComparison": "identical"
+    }
+  },
+  "changedSourceFiles": [
+    "package.json",
+    "spring-api/src/main/java/lk/gov/health/govcare/ai/CkdAssessmentReportService.java",
+    "spring-api/src/main/java/lk/gov/health/govcare/ai/ClinicalFeatureMappingEngine.java",
+    "spring-api/src/test/java/lk/gov/health/govcare/ai/ClinicalFeatureUiAndPdfTest.java",
+    "src/components/ai/CKDRiskResultDashboard.tsx",
+    "src/components/ai/RenalClinicalModules.tsx",
+    "src/components/ai/SriLankanRenalPanel.tsx",
+    "src/components/ai/renal-clinical-modules.css",
+    "src/services/renalIntelligenceService.ts"
+  ],
+  "generatedFrontendAssets": "dist regenerated from current source; stale hashed assets replaced"
+}

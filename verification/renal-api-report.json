@@ -1,0 +1,51 @@
+{
+  "operationalFixturesNotClinicalValidation": true,
+  "clinicalValidationSubjects": 0,
+  "checks": [
+    "unauthenticated patient access denied",
+    "real doctor/super_admin/patient password logins",
+    "patient role denied clinical renal access",
+    "unassigned patient denied",
+    "authorized patient association",
+    "empty history persists insufficient status",
+    "two verified monthly observations persisted through real Spring HTTP",
+    "observation request idempotency",
+    "duplicate observation timestamp rejected",
+    "unverified source rejected",
+    "unknown unit rejected",
+    "current G5D requires explicit verified dialysis",
+    "history remains two observations",
+    "observation timestamps preserve submitted ISO instants",
+    "reused JDBC history reads preserve measured dates",
+    "real Spring JWT to Django Hb inference",
+    "Hb serves honest persistence baseline",
+    "Hb no fabricated probability or SHAP",
+    "prediction request idempotency",
+    "idempotency key cannot change model",
+    "real Spring JWT to Django URR inference",
+    "real SHAP contributions",
+    "research and governance status visible",
+    "artifact and source provenance",
+    "dry weight unavailable without a defensible model",
+    "clinical review reason required",
+    "persist ACCEPT with optimistic version",
+    "persist MODIFY with optimistic version",
+    "persist DEFER with optimistic version",
+    "persist DISMISS with optimistic version",
+    "stale clinician review rejected",
+    "stored review projects in overview",
+    "snapshot and review timestamps preserve current ISO instants"
+  ],
+  "passed": 33,
+  "predictions": {
+    "hb": {
+      "method": "PERSISTENCE_BASELINE",
+      "prediction": 10.8
+    },
+    "urr": {
+      "method": "RESEARCH_MODEL",
+      "prediction": 67.36503601074219
+    }
+  },
+  "databaseEngine": "PGlite 0.5.8 over pglite-server 0.1.5; not native PostgreSQL"
+}

@@ -1,0 +1,15 @@
+GovCare EHR - 10 wards / 250 beds V16 fix
+
+Added/changed:
+- spring-api/src/main/resources/db/migration/V16__seed_ten_wards_and_beds.sql
+- WARD_250_BEDS_V16_FIX.md
+- CHANGED_FILES_10_WARDS_250_BEDS.txt
+
+Seed result on a clean V15 database:
+- W-01 to W-10 = 10 wards
+- 25 beds per ward
+- 250 seeded beds total
+
+Critical fix:
+- V16 now writes wards.ward_code (NOT NULL after V11) as well as legacy wards.ward_no.
+- Beds write both beds.bed_no and beds.bed_code.

@@ -1,0 +1,89 @@
+✔ renal ML launcher loads local .env without printing or dropping its service secret (1.618499ms)
+✖ renal ML binds the selected loopback port after loading a stale local port (117.419036ms)
+✖ combined launcher skips an occupied ML port and shares one address with both child services (111.926475ms)
+✔ startup cleans stale Maven output before launching Spring Boot (107.94431ms)
+✔ Maven failure reaches npm as the original nonzero exit code (109.521767ms)
+✔ startup works when ZIP extraction loses the wrapper's executable bit (107.974055ms)
+✔ build mode retains clean package and skipTests behavior (116.129614ms)
+✔ launch from another directory still uses this project's backend and .env (117.197077ms)
+✔ full-stack port is appended to configured CORS origins after loading backend .env (131.340589ms)
+✔ selected API port survives backend .env overrides and keeps both Spring bindings aligned (116.705842ms)
+✔ invalid selected API port fails before invoking Maven (61.969416ms)
+✖ selected renal ML address survives the backend .env and reaches Spring (121.624779ms)
+✔ a separately started Spring API preserves its configured remote ML service (101.515653ms)
+✔ an unknown mode fails before invoking Maven (57.847164ms)
+✔ missing Maven returns a readable error and a failure status (58.687621ms)
+✔ failure to spawn the launcher reports a controlled error (52.276329ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 13
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1352.03486
+
+✖ failing tests:
+
+test at scripts/renal-ml-env.test.cjs:21:1
+✖ renal ML binds the selected loopback port after loading a stale local port (117.419036ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    [
+      'runserver',
+  +   '127.0.0.1:8001',
+  -   '127.0.0.1:39627',
+      '--noreload'
+    ]
+  
+      at TestContext.<anonymous> (/workspace/scratch/c50db8dbd74b/work/GovCare_EHR_Modern_Clinical_Intelligence/scripts/renal-ml-env.test.cjs:48:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'runserver', '127.0.0.1:8001', '--noreload' ],
+    expected: [ 'runserver', '127.0.0.1:39627', '--noreload' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at scripts/run-renal-stack.test.cjs:37:1
+✖ combined launcher skips an occupied ML port and shares one address with both child services (111.926475ms)
+  AssertionError [ERR_ASSERTION]: The launcher must select and share a usable ML port.
+      at TestContext.<anonymous> (/workspace/scratch/c50db8dbd74b/work/GovCare_EHR_Modern_Clinical_Intelligence/scripts/run-renal-stack.test.cjs:48:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at scripts/run-spring.test.mjs:140:1
+✖ selected renal ML address survives the backend .env and reaches Spring (121.624779ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'http://127.0.0.1:8001'
+  - 'http://127.0.0.1:18001'
+                      ^
+  
+      at TestContext.<anonymous> (file:///workspace/scratch/c50db8dbd74b/work/GovCare_EHR_Modern_Clinical_Intelligence/scripts/run-spring.test.mjs:145:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'http://127.0.0.1:8001',
+    expected: 'http://127.0.0.1:18001',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

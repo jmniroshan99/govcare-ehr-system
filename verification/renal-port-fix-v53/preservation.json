@@ -1,0 +1,75 @@
+{
+  "checked_at_utc": "2026-10-15T03:19:39.232096+00:00",
+  "baseline": "GovCare_V52_CKD_Dashboard_Trained_Models_FULL.zip",
+  "baseline_sha256": "283e5f326adb5de63cec5fff73d63a931b7ae0f8f420d09d516c938d80ce4581",
+  "baseline_entries": 1198,
+  "unchanged_original_files": 1188,
+  "changed_original_files": [
+    {
+      "file": "ML_Server/.env.example",
+      "before_sha256": "c1c0c13ce0ac1a804c71c296b68eb3a5fcc82a8e54fb1ed93484dd327b1d2de0",
+      "after_sha256": "38c82a1341855a3735d55e0bef96991d5dd0daa1f829503fe0e8059ea0761791"
+    },
+    {
+      "file": "README.md",
+      "before_sha256": "5bd452aad043f0e0d63926245872926480eeb1a8b2cf6824ab3cf460429bb759",
+      "after_sha256": "c3f7f7bb0a2edb315a6c06ea86dd99504d52041b6131dfcf5c32943cd84a6fdd"
+    },
+    {
+      "file": "RUN_SRI_LANKAN_RENAL.md",
+      "before_sha256": "435b8cef44fbdac14887f81910f60c1fddd8a30fa23494c533cb80022f4ca9f8",
+      "after_sha256": "cc783e52cd42dd7b7307c0fbacae502ce49d5a5032fb0a80eacfed78759df18a"
+    },
+    {
+      "file": "package.json",
+      "before_sha256": "9f5079609ac6eef364c9b071098ca7a5d50e3006309404c00affe4d3867e1b6b",
+      "after_sha256": "55bd851fef40fc49ce010824e8aa069547e480ed835ffaf20e7086fedf3f0f21"
+    },
+    {
+      "file": "scripts/renal-ml-env.test.cjs",
+      "before_sha256": "97effa87621923f92307fe93911b413ff9eab45e3598387d5f6ad934329b1c65",
+      "after_sha256": "5e625a40c5517159bec88a6e32a5a1c8c1617e44b24a7ea805a77ad23de46ab1"
+    },
+    {
+      "file": "scripts/run-renal-ml.cjs",
+      "before_sha256": "4024973fc472c32cbf2672046ac2514cad60074856790f537a9bab65663d1e59",
+      "after_sha256": "1d165bf92a16ed25010dc1d31a0f4d806921202b317a0f4289c69707203f841b"
+    },
+    {
+      "file": "scripts/run-renal-stack.cjs",
+      "before_sha256": "e5f450e077d325e714e02eb6d650ad3ed26a3264aaf6f639a527021b89039371",
+      "after_sha256": "daae203c03ca5d4b17dc22c69c556c3616cd78f7376ea4d1a011922488616c61"
+    },
+    {
+      "file": "scripts/run-spring.mjs",
+      "before_sha256": "0dd70dacc553c2858b6cef0566411c6787f9a7625d6da7698a46547b0866dbab",
+      "after_sha256": "98670128790e4d01efdfe4f6a84a9dc486cd8b9cc2f5eb23322c28383fd717d7"
+    },
+    {
+      "file": "scripts/run-spring.test.mjs",
+      "before_sha256": "337ccbedc6bcf3840b4d452e7c2c0fd688b50be2cf5dffa86436380f5a42a51a",
+      "after_sha256": "7bba93ea06649d80344712f217e648771cbe1b7f3731a2f42455337cd7f36097"
+    },
+    {
+      "file": "spring-api/.env.example",
+      "before_sha256": "62a791c6d920403f74785913c74b7a05f4e1a0c42fb0d9651d0561b5d0285177",
+      "after_sha256": "8a13a4ce698f88339c39eddde9e6b4a227f9b689a224bfa7c6e544671658319b"
+    }
+  ],
+  "all_original_files_present": true,
+  "preserved_groups": {
+    "frontend_source": 229,
+    "spring_source_and_resources": 241,
+    "training_data_and_splits": 2,
+    "active_model_files": 14,
+    "v52_training_run": 34
+  },
+  "serving_contract_unchanged": true,
+  "package_lock_unchanged": true,
+  "windows_batch_launchers_unchanged": true,
+  "active_model_sha256": {
+    "hb-risk": "d81abfee0f345dcf59a2e2ce51617f9038a3693b4630de8cc97b1b0216eb4211",
+    "urr-risk": "7de2f633c04a8a8c58d5629f81483ca32c3e3fa6f6ef3dde47d5ff2c8732a1e2",
+    "hyperkalemia-risk": "9a561de7f66e3418ee6397e531306e4a63f86a929fff651b6f30d18594c5481b"
+  }
+}

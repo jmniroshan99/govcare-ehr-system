@@ -1,0 +1,40 @@
+{
+  "status": "passed",
+  "checks": 27,
+  "widths": [
+    1366,
+    768,
+    375
+  ],
+  "runtimeErrors": [],
+  "checksDetail": [
+    "1366px: six mapped cards, actual CKD values, 9/9 readiness, dated changes, explanations and no overflow",
+    "1366px: mapped summary and clinical creatinine/Hb charts consume dated CKD feature history without pre-HD relabeling",
+    "1366px: useful measured monitoring with independent HD forecast gates and no invented URR",
+    "1366px: existing verified-measurement form submits generic creatinine/date/unit and refreshes the backend mapping",
+    "1366px: undated snapshot is useful while AKI chronology and dialysis verification remain explicit",
+    "1366px: explicit dialysis verification updates the indicator without numeric lab fabrication",
+    "1366px: real paired-session entry contract yields measured URR 65% while the longitudinal forecast stays gated",
+    "1366px: grouped missing data and aligned clinician review retain the mapped rule version / snapshot contract",
+    "1366px: mapped data remain readable with write actions disabled for read-only access",
+    "768px: six mapped cards, actual CKD values, 9/9 readiness, dated changes, explanations and no overflow",
+    "768px: mapped summary and clinical creatinine/Hb charts consume dated CKD feature history without pre-HD relabeling",
+    "768px: useful measured monitoring with independent HD forecast gates and no invented URR",
+    "768px: existing verified-measurement form submits generic creatinine/date/unit and refreshes the backend mapping",
+    "768px: undated snapshot is useful while AKI chronology and dialysis verification remain explicit",
+    "768px: explicit dialysis verification updates the indicator without numeric lab fabrication",
+    "768px: real paired-session entry contract yields measured URR 65% while the longitudinal forecast stays gated",
+    "768px: grouped missing data and aligned clinician review retain the mapped rule version / snapshot contract",
+    "768px: mapped data remain readable with write actions disabled for read-only access",
+    "375px: six mapped cards, actual CKD values, 9/9 readiness, dated changes, explanations and no overflow",
+    "375px: mapped summary and clinical creatinine/Hb charts consume dated CKD feature history without pre-HD relabeling",
+    "375px: useful measured monitoring with independent HD forecast gates and no invented URR",
+    "375px: existing verified-measurement form submits generic creatinine/date/unit and refreshes the backend mapping",
+    "375px: undated snapshot is useful while AKI chronology and dialysis verification remain explicit",
+    "375px: explicit dialysis verification updates the indicator without numeric lab fabrication",
+    "375px: real paired-session entry contract yields measured URR 65% while the longitudinal forecast stays gated",
+    "375px: grouped missing data and aligned clinician review retain the mapped rule version / snapshot contract",
+    "375px: mapped data remain readable with write actions disabled for read-only access"
+  ],
+  "scope": "Actual six-card UI and existing clinical/dialysis/review forms with HTTP boundaries. Mapping/PDF fixtures use real migrated CKD rows from the isolated database. Signed-in native full-stack / clinical validation are not claimed."
+}

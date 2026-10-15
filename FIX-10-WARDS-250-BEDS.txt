@@ -1,0 +1,22 @@
+GovCare EHR - Ward/Bed Repair Build
+===================================
+
+This build contains:
+- V16__seed_ten_wards_and_beds.sql
+- V17__repair_ten_wards_and_250_beds.sql
+
+V17 is intentionally included as a corrective migration for databases that
+already recorded V16 but still show only the legacy ward/bed rows.
+
+Expected NHSL result after Spring API startup:
+- W-01 through W-10
+- 25 bed slots in each ward
+- 250 seeded bed slots total
+- Existing occupied/reserved bed state is preserved
+
+Verify startup log contains:
+  Migrating schema "public" to version "17 - repair ten wards and 250 beds"
+  Successfully applied ... now at version v17
+
+Then refresh the Admissions -> New Admission page and use "Clear ward filters"
+if an old department/type filter remains selected in the browser.

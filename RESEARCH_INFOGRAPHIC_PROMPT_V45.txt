@@ -1,0 +1,37 @@
+Image-generation provenance
+Mode: built-in imagegen; new infographic plus one targeted edit.
+
+Create a professional 16:9 healthcare university research infographic with a dark navy-to-blue gradient, glassmorphism cards, readable white/cyan typography, realistic 3D kidneys and medical icons. No cartoon style, logos, watermarks, patient photographs or invented probabilities.
+
+Title: CKD-Related Clinical Risks & Predictive Intelligence
+Subtitle: Sri Lankan Longitudinal Renal & Hemodialysis Data
+Centre: detailed human kidney pair, subtle renal vessel glow; Chronic Kidney Disease / Kidney Failure (G5D); Longitudinal Clinical Monitoring; G5D: verified maintenance dialysis.
+
+Four interconnected modules:
+1. Anemia / Hb Deterioration
+Monitors declining Hemoglobin; Predicts next-period Hb risk.
+Data: Hb, Albumin, Urea, Creatinine, Calcium, Potassium.
+Realistic blood cells and blood-drop icon; declining illustrative Hb trend; Baseline forecast label.
+
+2. Hyperkalemia Monitoring
+Detects rising Potassium patterns; Supports early clinical review.
+Data: Pre-HD K+, Post-HD K+, K+ Difference, Creatinine, Longitudinal K+ Trend.
+K+ electrolyte ions, heart ECG symbol and increasing illustrative potassium trend; Research risk model label.
+
+3. Dialysis Adequacy / URR
+Measures effectiveness of urea removal; Forecasts next-period inadequate dialysis risk.
+URR = ((Pre-HD Urea − Post-HD Urea) / Pre-HD Urea) × 100
+Data: Pre-HD Urea, Post-HD Urea, Current URR, Previous URR, URR Trend.
+Realistic hemodialysis machine and filter, red blood entering with more waste and leaving with fewer waste particles; Research forecast label.
+
+4. Renal Clinical Deterioration
+Combines multiple renal trends; Stable • Improving • Declining.
+Data: Creatinine ↑, Urea ↑, Potassium ↑, Hemoglobin ↓, Albumin ↓, URR ↓.
+Multiple qualitative trend lines and a clinical review warning; Trend composite label.
+
+Bottom workflow: Sri Lankan Longitudinal Patient Data -> Clinical Data Validation -> Predictive Intelligence -> Explainable AI -> Clinician Review.
+Badges: Longitudinal Data; Explainable AI; Clinician-in-the-Loop; FHIR R4 Compatible.
+Footer: Research concept • Illustrative trends • Clinical review signals.
+Clinical meaning: monitoring and research signals, never confirmed diagnoses. No numeric chart ticks or fabricated patient measurements. Hb is a persistence baseline; URR is a research forecast; hyperkalemia is a research risk model; deterioration is a heuristic directional composite.
+
+Targeted correction: change only the top-right hyperkalemia pill from 'Baseline forecast' to 'Research risk model'. Preserve the anemia baseline label and all other requested text, illustrations, layout and data-flow lines.

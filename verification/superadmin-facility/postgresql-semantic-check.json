@@ -1,0 +1,9 @@
+{
+  "engine": "PGlite PostgreSQL compatibility engine",
+  "patientGrowthRows": 30,
+  "bulkBedsInserted": 10,
+  "firstBedNumber": "B001",
+  "lastBedNumber": "B010",
+  "status": "PASS",
+  "scope": "Dashboard activity_day CTE and bulk-bed INSERT/RETURNING SQL semantics"
+}

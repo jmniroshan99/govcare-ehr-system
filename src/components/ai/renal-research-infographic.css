@@ -1,0 +1,47 @@
+/* Presentation concept stays visibly distinct from patient-specific clinical results. */
+.renal-research { display:grid; gap:14px; min-width:0; padding:18px; border:1px solid #237194; border-radius:18px; background:linear-gradient(135deg,#07172f,#0b315b); color:#f2f8ff; box-shadow:0 12px 32px #04132924; }
+.renal-research-header { display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:14px; }
+.renal-research-header > div { flex:1 1 300px; min-width:0; }
+.renal-research-kicker { color:#8de4ed; font-size:.65rem; letter-spacing:.08em; text-transform:uppercase; }
+.renal-research .renal-research-header h3 { margin:5px 0; color:#f2f8ff; font-size:1rem; line-height:1.4; }
+.renal-research .renal-research-header p { color:#bddef0; font-size:.75rem; }
+.renal-research-actions { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
+.renal-research-actions a { display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:40px; padding:8px 10px; border:1px solid #4285a6; border-radius:9px; background:#123b5c; color:#f2f8ff; font-size:.7rem; line-height:1.4; text-decoration:none; }
+.renal-research-actions a:hover { background:#1b5276; border-color:#7ae0eb; }
+.renal-research svg { flex-shrink:0; }
+.renal-research summary { padding:9px 0; cursor:pointer; color:#9de8f2; font-size:.74rem; font-weight:600; }
+.renal-research a:focus-visible, .renal-research summary:focus-visible { outline:3px solid #95eff7; outline-offset:4px; border-radius:6px; }
+.renal-research figure { display:grid; gap:12px; margin:4px 0 0; }
+.renal-research-image-link { display:block; width:100%; border-radius:12px; overflow:hidden; border:1px solid #34728f; background:#071a31; }
+.renal-research-image-link img { display:block; width:100%; height:auto; aspect-ratio:16 / 9; object-fit:contain; }
+.renal-research figcaption { display:flex; align-items:flex-start; gap:8px; color:#c0deec; font-size:.7rem; line-height:1.65; }
+.renal-research figcaption svg { margin-top:3px; }
+.renal-research-fallback { padding:18px; border:1px dashed #76c3d5; border-radius:10px; background:#12334e; font-size:.8rem; }
+.renal-research-transcript { border-top:1px solid #39667f; padding-top:3px; }
+.renal-research-center-text { margin:6px 0 12px !important; color:#d5e9f5; font-size:.76rem; }
+.renal-research-modules { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin-top:10px; }
+.renal-research-modules article { padding:15px; background:#10324d; border:1px solid #366d89; border-radius:12px; }
+.renal-research-modules h4 { margin:0 0 7px; color:#aeedf3; font-size:.88rem; }
+.renal-research-modules p { color:#e4f0f9; font-size:.74rem; }
+.renal-research-indicators, .renal-research-badges { display:flex; flex-wrap:wrap; gap:6px; list-style:none; margin:12px 0; padding:0; }
+.renal-research-indicators li, .renal-research-badges li { padding:4px 8px; border:1px solid #47829a; border-radius:7px; color:#dff6fa; font-size:.69rem; }
+.renal-research-modules .renal-research-method { color:#b4cfdf; font-size:.7rem; }
+.renal-research-formula { padding:9px; margin-top:9px !important; background:#09243d; border-radius:8px; overflow-wrap:anywhere; }
+.renal-research-workflow { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:10px; list-style:none; margin:16px 0 0; padding:0; }
+.renal-research-workflow li { position:relative; padding:10px 12px; border:1px solid #44859c; border-radius:9px; color:#edfaff; font-size:.7rem; text-align:center; }
+.renal-research-workflow li:not(:last-child)::after { content:"→"; position:absolute; right:-9px; top:50%; transform:translateY(-50%); color:#89e4ed; z-index:1; }
+@media (max-width:700px) {
+  .renal-research { padding:13px; }
+  .renal-research-header > div { flex-basis:100%; }
+  .renal-research-actions { width:100%; }
+  .renal-research-actions a { flex:1 1 130px; }
+  .renal-research-modules, .renal-research-workflow { grid-template-columns:minmax(0,1fr); }
+  .renal-research-workflow li:not(:last-child)::after { right:50%; top:auto; bottom:-11px; transform:translateX(50%) rotate(90deg); }
+}
+@media print {
+  .renal-research { padding:0; border:0; box-shadow:none; background:white; }
+  .renal-research-header, .renal-research summary, .renal-research-transcript { display:none; }
+  .renal-research-figure > figure { display:grid !important; }
+  .renal-research figcaption { color:#182c3a; }
+  .renal-research-image-link { border:0; break-inside:avoid; }
+}

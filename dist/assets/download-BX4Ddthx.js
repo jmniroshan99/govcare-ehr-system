@@ -1,0 +1,2 @@
+function e(e,t,n=`text/plain;charset=utf-8`){let r=new Blob([t],{type:n}),i=URL.createObjectURL(r),a=document.createElement(`a`);a.href=i,a.download=e,document.body.appendChild(a),a.click(),a.remove(),window.setTimeout(()=>URL.revokeObjectURL(i),500)}function t(e){return e.map(e=>e.map(e=>`"${String(e).replaceAll(`"`,`""`)}"`).join(`,`)).join(`
+`)}function n(e,t){return`${e}-${new Date().toISOString().slice(0,19).replace(/[-:T]/g,``)}.${t}`}export{n,t as r,e as t};

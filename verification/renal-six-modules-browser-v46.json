@@ -1,0 +1,43 @@
+{
+  "scope": "Real six-card React component with Java-assembled operational fixture. No signed-in clinical API session is simulated; browser interaction is layout/read-only/detail/review-form verification.",
+  "checks": [
+    {
+      "check": "Six modules appear in the exact required order at desktop/tablet/mobile widths, with 3/2/1 columns and no overflow",
+      "status": "passed"
+    },
+    {
+      "check": "Read-only operational view disables every run/review control",
+      "status": "passed"
+    },
+    {
+      "check": "Real clinician review dialog supports Modify and requires a revised interpretation",
+      "status": "passed"
+    },
+    {
+      "check": "Empty history retains all six cards without a zero or manufactured research probability",
+      "status": "passed"
+    }
+  ],
+  "layouts": [
+    {
+      "width": 1366,
+      "columns": 3,
+      "horizontalOverflow": false,
+      "status": "passed"
+    },
+    {
+      "width": 768,
+      "columns": 2,
+      "horizontalOverflow": false,
+      "status": "passed"
+    },
+    {
+      "width": 375,
+      "columns": 1,
+      "horizontalOverflow": false,
+      "status": "passed"
+    }
+  ],
+  "errors": [],
+  "status": "passed"
+}

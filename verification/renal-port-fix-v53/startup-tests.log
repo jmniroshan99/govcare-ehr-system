@@ -1,0 +1,56 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> govcare-ehr-system@0.0.0 test:startup
+> node --test scripts/run-spring.test.mjs scripts/run-full-stack.test.cjs scripts/api-port.test.cjs scripts/run-renal-stack.test.cjs scripts/renal-port.test.cjs scripts/renal-ml-env.test.cjs scripts/renal-local-config.test.cjs
+
+✔ API wildcard probe detects an existing loopback listener and chooses a fallback (10.711338ms)
+✔ an explicitly requested occupied API port fails without reusing or stopping its owner (3.20125ms)
+✔ API selection excludes the frontend port (1.170643ms)
+✔ configured backend PORT is preferred when available (2.19167ms)
+✔ Spring SERVER_PORT takes precedence over its PORT placeholder (1.934363ms)
+✔ explicit API selection overrides a different backend configuration (2.188515ms)
+✔ invalid API port values fail validation before launching anything (0.30549ms)
+✔ renal setup creates matching dedicated secrets without printing them (85.619011ms)
+✔ repeated renal setup preserves existing configuration and credential bytes (152.788422ms)
+✔ mismatched existing renal credentials fail without overwriting either service (66.947362ms)
+✔ renal ML launcher loads local .env without printing or dropping its service secret (1.430594ms)
+✔ renal ML binds the selected loopback port after loading a stale local port (179.331254ms)
+✔ default and configured local ML addresses provide the preferred port (4.411693ms)
+✔ local port preference and Spring .env precedence are consistent with the child launchers (1.617315ms)
+✔ the local launcher rejects remote or invalid ML URLs without echoing their contents (5.401553ms)
+✔ the real loopback probe detects an occupied ML port without stopping its owner (13.42231ms)
+✔ permission-denied and occupied defaults fall back to a permitted ML port (1.157763ms)
+✔ OS-selected port is used if all preferred defaults are blocked (0.257808ms)
+✔ frontend and API ports are excluded even if they are otherwise available (0.369106ms)
+✔ an explicit ML port overrides local preferences and is never silently changed (0.942019ms)
+✔ standalone ML selection fails rather than leave a running Spring process pointing elsewhere (0.371359ms)
+✔ a completely blocked range returns useful diagnostics (0.422676ms)
+✔ invalid ML ports fail validation before any bind attempt (0.487614ms)
+✔ skips an occupied port and selects a bindable fallback (13.163391ms)
+✔ explicit unavailable port fails instead of silently opening a different URL (1.788212ms)
+✔ full-stack launcher passes the same port to Vite and the API (165.00055ms)
+✔ an occupied configured API port gets a fallback shared with the frontend (126.897852ms)
+✔ combined launcher skips an occupied ML port and shares one address with both child services (153.512372ms)
+✔ a pinned occupied ML port fails before starting frontend, Spring or Django (80.760356ms)
+✔ startup cleans stale Maven output before launching Spring Boot (149.087564ms)
+✔ Maven failure reaches npm as the original nonzero exit code (147.289672ms)
+✔ startup works when ZIP extraction loses the wrapper's executable bit (121.751037ms)
+✔ build mode retains clean package and skipTests behavior (131.149294ms)
+✔ launch from another directory still uses this project's backend and .env (115.837613ms)
+✔ full-stack port is appended to configured CORS origins after loading backend .env (126.489212ms)
+✔ selected API port survives backend .env overrides and keeps both Spring bindings aligned (124.810264ms)
+✔ invalid selected API port fails before invoking Maven (71.484719ms)
+✔ selected renal ML address survives the backend .env and reaches Spring (128.286337ms)
+✔ a separately started Spring API preserves its configured remote ML service (123.183539ms)
+✔ invalid selected renal ML port fails before invoking Maven (59.282505ms)
+✔ an unknown mode fails before invoking Maven (61.81564ms)
+✔ missing Maven returns a readable error and a failure status (65.457152ms)
+✔ failure to spawn the launcher reports a controlled error (66.269707ms)
+ℹ tests 43
+ℹ suites 0
+ℹ pass 43
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1625.13616

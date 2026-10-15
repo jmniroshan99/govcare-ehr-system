@@ -1,0 +1,92 @@
+{
+  "model": "LK-RENAL-HYPERK-1.0",
+  "metrics": {
+    "train": {
+      "Accuracy": 0.8489583333333334,
+      "BalancedAccuracy": 0.6835526315789473,
+      "Precision": 0.7619047619047619,
+      "Recall": 0.4,
+      "Sensitivity": 0.4,
+      "Specificity": 0.9671052631578947,
+      "F1": 0.5245901639344263,
+      "ROC_AUC": 0.9355263157894737,
+      "PR_AUC_average_precision": 0.7704646180922022,
+      "BrierScore": 0.08967856115200452,
+      "ConfusionMatrix": [
+        [
+          147,
+          5
+        ],
+        [
+          24,
+          16
+        ]
+      ],
+      "PositiveEvents": 40,
+      "NegativeEvents": 152,
+      "threshold": 0.5,
+      "Prevalence": 0.20833333333333334
+    },
+    "validation": {
+      "Accuracy": 0.6527777777777778,
+      "BalancedAccuracy": 0.5081818181818182,
+      "Precision": 0.3333333333333333,
+      "Recall": 0.13636363636363635,
+      "Sensitivity": 0.13636363636363635,
+      "Specificity": 0.88,
+      "F1": 0.1935483870967742,
+      "ROC_AUC": 0.7636363636363637,
+      "PR_AUC_average_precision": 0.5247666392117886,
+      "BrierScore": 0.20209381439365187,
+      "ConfusionMatrix": [
+        [
+          44,
+          6
+        ],
+        [
+          19,
+          3
+        ]
+      ],
+      "PositiveEvents": 22,
+      "NegativeEvents": 50,
+      "threshold": 0.5,
+      "Prevalence": 0.3055555555555556
+    },
+    "test": {
+      "Accuracy": 0.7848101265822784,
+      "BalancedAccuracy": 0.6337064676616916,
+      "Precision": 0.3333333333333333,
+      "Recall": 0.4166666666666667,
+      "Sensitivity": 0.4166666666666667,
+      "Specificity": 0.8507462686567164,
+      "F1": 0.37037037037037035,
+      "ROC_AUC": 0.6616915422885572,
+      "PR_AUC_average_precision": 0.2623061015199587,
+      "BrierScore": 0.18400750372712402,
+      "ConfusionMatrix": [
+        [
+          57,
+          10
+        ],
+        [
+          7,
+          5
+        ]
+      ],
+      "PositiveEvents": 12,
+      "NegativeEvents": 67,
+      "threshold": 0.5,
+      "Prevalence": 0.1518987341772152
+    }
+  },
+  "limitations": [
+    "Small single Sri Lankan maintenance-hemodialysis cohort; no external or prospective clinical validation.",
+    "Research label is next pre-dialysis potassium >=5.5 mmol/L within the next observed 14\u201362 day interval; it is not a diagnosis or treatment threshold decision.",
+    "Held-out discrimination is modest and probability calibration is not established; the output must be displayed as a research risk score only.",
+    "Original raw data are absent from this packaged training run; upstream interpolation or preprocessing leakage cannot be fully excluded.",
+    "Secondary research-use permission remains UNVERIFIED in the supplied project documentation.",
+    "Medication exposure, dialysis prescription/dose, diet, residual kidney function and acute illness confounders are not available.",
+    "Model output does not replace the separate rule-based current-potassium safety gate or clinician review."
+  ]
+}

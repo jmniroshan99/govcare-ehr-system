@@ -1,0 +1,8 @@
+{
+  "status": "passed",
+  "checks": 22,
+  "migrations": 45,
+  "lastMigration": "V46__ckd_five_year_outlook.sql",
+  "engine": "PGlite PostgreSQL WASM; native Windows PostgreSQL not verified",
+  "scope": "Additive schema, immutable evidence/reviews, tenant/patient foreign keys, idempotency, explicit null risks, ordered 2/5-year probabilities"
+}

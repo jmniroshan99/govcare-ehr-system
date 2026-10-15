@@ -1,0 +1,57 @@
+Changed from V48 (excluding regenerated frontend assets)
+README.md
+package.json
+scripts/verify-target-windows-postgres.ps1
+spring-api/src/main/java/lk/gov/health/govcare/ai/CkdAssessmentReportService.java
+spring-api/src/main/java/lk/gov/health/govcare/ai/CkdPredictionService.java
+spring-api/src/main/java/lk/gov/health/govcare/ai/RenalClinicalModuleService.java
+spring-api/src/main/java/lk/gov/health/govcare/ai/RenalClinicalModules.java
+spring-api/src/main/java/lk/gov/health/govcare/ai/SriLankanRenalIntelligenceService.java
+spring-api/src/test/java/lk/gov/health/govcare/ai/SriLankanRenalIntelligenceServiceTest.java
+src/components/ai/CKDRiskResultDashboard.tsx
+src/components/ai/CkdClinicalWorkspace.tsx
+src/components/ai/RenalClinicalModules.tsx
+src/components/ai/SriLankanRenalPanel.tsx
+src/components/ai/renal-clinical-modules.css
+src/pages/PredictiveClinicalIntelligence.tsx
+src/services/renalIntelligenceService.ts
+
+Added in V49 (excluding regenerated frontend assets)
+MODIFIED_FILES_V49_CLINICAL_FEATURE_LAYER.txt
+V49_CLINICAL_FEATURE_LAYER_IMPLEMENTATION.md
+scripts/clinical-feature-contracts.test.cjs
+scripts/verify-clinical-feature-browser.mjs
+scripts/verify-clinical-feature-migration.mjs
+scripts/verify-live-postgres-v45.mjs
+spring-api/src/main/java/lk/gov/health/govcare/ai/ClinicalFeatureMappingEngine.java
+spring-api/src/main/java/lk/gov/health/govcare/ai/ClinicalFeatureNormalizer.java
+spring-api/src/main/java/lk/gov/health/govcare/ai/ClinicalPredictionFeatureService.java
+spring-api/src/main/resources/db/migration/V45__unified_clinical_prediction_features.sql
+spring-api/src/test/java/lk/gov/health/govcare/ai/CkdAssessmentFeatureBridgeTest.java
+spring-api/src/test/java/lk/gov/health/govcare/ai/ClinicalFeatureMappingEngineTest.java
+spring-api/src/test/java/lk/gov/health/govcare/ai/ClinicalFeatureUiAndPdfTest.java
+spring-api/src/test/java/lk/gov/health/govcare/ai/ClinicalPredictionFeatureServiceTest.java
+src/components/ai/ClinicalMeasurementDialog.tsx
+verification/clinical-feature-v49/baseline-expected-failures.txt
+verification/clinical-feature-v49/browser-report.json
+verification/clinical-feature-v49/browser-verification.log
+verification/clinical-feature-v49/changed-source-files.json
+verification/clinical-feature-v49/clinical-features-dated-v49.pdf
+verification/clinical-feature-v49/clinical-features-undated-v49.pdf
+verification/clinical-feature-v49/database-report.json
+verification/clinical-feature-v49/django-tests.log
+verification/clinical-feature-v49/feature-migration.log
+verification/clinical-feature-v49/frontend-build.log
+verification/clinical-feature-v49/legacy-browser-report.json
+verification/clinical-feature-v49/legacy-browser-verification.log
+verification/clinical-feature-v49/node-tests.log
+verification/clinical-feature-v49/preservation.json
+verification/clinical-feature-v49/screenshots/clinical-features-1366.png
+verification/clinical-feature-v49/screenshots/clinical-features-375.png
+verification/clinical-feature-v49/screenshots/clinical-features-768.png
+verification/clinical-feature-v49/six-module-persistence.log
+verification/clinical-feature-v49/spring-tests.log
+verification/clinical-feature-v49/validation-summary.json
+
+Prebuilt dist/ regenerated. PACKAGE_MANIFEST.json and FULL_SOURCE_MANIFEST_SHA256.txt regenerated.
+809 original V44 files retained. Previous evidence, existing migrations, ML source/data/artifacts and original CKD logistic coefficients preserved.

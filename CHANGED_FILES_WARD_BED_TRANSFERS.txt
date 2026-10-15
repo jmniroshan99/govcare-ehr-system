@@ -1,0 +1,42 @@
+Backend
+- spring-api/src/main/java/lk/gov/health/govcare/common/ApiException.java
+- spring-api/src/main/java/lk/gov/health/govcare/ward/WardDtos.java
+- spring-api/src/main/java/lk/gov/health/govcare/ward/WardWorkflowSupport.java
+- spring-api/src/main/java/lk/gov/health/govcare/ward/WardBedService.java
+- spring-api/src/main/java/lk/gov/health/govcare/ward/BedAllocationService.java
+- spring-api/src/main/java/lk/gov/health/govcare/ward/InternalTransferService.java
+- spring-api/src/main/java/lk/gov/health/govcare/ward/WardController.java
+- spring-api/src/main/java/lk/gov/health/govcare/transfer/TransferDtos.java
+- spring-api/src/main/java/lk/gov/health/govcare/transfer/InterHospitalTransferService.java
+- spring-api/src/main/java/lk/gov/health/govcare/transfer/TransferPdfService.java
+- spring-api/src/main/java/lk/gov/health/govcare/transfer/InterHospitalTransferController.java
+- spring-api/src/main/resources/db/migration/V11__ward_bed_allocation_and_patient_transfers.sql
+
+Frontend
+- src/types/ward.ts
+- src/types/transfer.ts
+- src/services/wardService.ts
+- src/services/transferService.ts
+- src/pages/wards/WardDashboard.tsx
+- src/pages/wards/WardManagement.tsx
+- src/pages/wards/BedBoard.tsx
+- src/pages/wards/BedAllocation.tsx
+- src/pages/transfers/InternalTransfers.tsx
+- src/pages/transfers/InterHospitalTransfers.tsx
+- src/routes/AppRouter.tsx
+- src/components/layout/navItems.ts
+- src/lib/roleAccess.ts
+- src/i18n/locales/en.json
+- src/i18n/locales/si.json
+- src/i18n/locales/ta.json
+
+Documentation
+- WARD_BED_TRANSFER_IMPLEMENTATION.md
+- WARD_BED_TRANSFER_TEST_CHECKLIST.md
+- CHANGED_FILES_WARD_BED_TRANSFERS.txt
+- VALIDATION_WARD_BED_TRANSFERS.md
+
+Runtime startup/build fixes:
+- src/types/file-saver.d.ts
+- spring-api/src/main/resources/db/migration/V11__ward_bed_allocation_and_patient_transfers.sql (legacy status normalization)
+- WARD_BED_V11_STARTUP_FIX.md

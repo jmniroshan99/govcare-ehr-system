@@ -1,0 +1,8 @@
+Configured build: VITE_API_BASE_URL=http://127.0.0.1:14002 npm run build
+Result: PASS. Six compiled API consumers contain that exact URL.
+dist/assets/PatientProfile-N8xVHyyF.js
+dist/assets/aiCdssService-jB6hKMEF.js
+dist/assets/apiClient-DUob3AUN.js
+dist/assets/documentService-Bv7xp4Jj.js
+dist/assets/profilePhoto-BdE1Qn0F.js
+dist/assets/springMediaService-B2AHSrDb.js

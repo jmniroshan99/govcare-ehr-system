@@ -1,0 +1,34 @@
+{
+  "status": "passed",
+  "checks": 21,
+  "widths": [
+    1366,
+    768,
+    375
+  ],
+  "runtimeErrors": [],
+  "checksDetail": [
+    "1366px: exact six-card order, 3 columns, partial trends, dates and no overflow",
+    "1366px: verification CTA opens the existing source form without pre-verifying dialysis",
+    "1366px: standalone clinical verification refreshes G5D and model eligibility without inventing laboratory values",
+    "1366px: real review drawer alignment, mobile sheet, Modify fields and persisted request contract",
+    "1366px: zero-domain, eligibility, absent-model and service-error states remain distinct",
+    "1366px: existing entry workflow sends real units/date/null-safe payload and refreshes backend readiness",
+    "1366px: read-only actions disabled and backend failures keep a technical reference",
+    "768px: exact six-card order, 2 columns, partial trends, dates and no overflow",
+    "768px: verification CTA opens the existing source form without pre-verifying dialysis",
+    "768px: standalone clinical verification refreshes G5D and model eligibility without inventing laboratory values",
+    "768px: real review drawer alignment, mobile sheet, Modify fields and persisted request contract",
+    "768px: zero-domain, eligibility, absent-model and service-error states remain distinct",
+    "768px: existing entry workflow sends real units/date/null-safe payload and refreshes backend readiness",
+    "768px: read-only actions disabled and backend failures keep a technical reference",
+    "375px: exact six-card order, 1 columns, partial trends, dates and no overflow",
+    "375px: verification CTA opens the existing source form without pre-verifying dialysis",
+    "375px: standalone clinical verification refreshes G5D and model eligibility without inventing laboratory values",
+    "375px: real review drawer alignment, mobile sheet, Modify fields and persisted request contract",
+    "375px: zero-domain, eligibility, absent-model and service-error states remain distinct",
+    "375px: existing entry workflow sends real units/date/null-safe payload and refreshes backend readiness",
+    "375px: read-only actions disabled and backend failures keep a technical reference"
+  ],
+  "scope": "Actual SriLankanRenalPanel and all existing entry/review components; Java-assembled operational responses and captured HTTP boundaries. No signed-in native full-stack session or clinical validation."
+}

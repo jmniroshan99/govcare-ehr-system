@@ -1,0 +1,23 @@
+Changed from V46 (excluding regenerated frontend assets)
+README.md
+package.json
+spring-api/src/main/java/lk/gov/health/govcare/ai/PredictiveIntelligenceController.java
+src/services/predictiveIntelligenceService.ts
+
+Added in V47 (excluding frontend assets and this inventory)
+V47_SPRING_STARTUP_ROUTE_FIX.md
+scripts/renal-api-contracts.test.cjs
+spring-api/src/test/java/lk/gov/health/govcare/config/ControllerMappingStartupTest.java
+verification/startup-route-fix-v47/clients-after-fix-v47.log
+verification/startup-route-fix-v47/clients-before-fix-v47.log
+verification/startup-route-fix-v47/frontend-build-v47.log
+verification/startup-route-fix-v47/frontend-startup-tests-v47.log
+verification/startup-route-fix-v47/mapping-after-fix-v47.log
+verification/startup-route-fix-v47/mapping-before-fix-v47.log
+verification/startup-route-fix-v47/six-module-regression-v47.log
+verification/startup-route-fix-v47/spring-tests-v47.log
+verification/startup-route-fix-validation-v47.json
+verification/startup-route-fix-preservation-v47.json
+
+Prebuilt dist/ regenerated. PACKAGE_MANIFEST.json and FULL_SOURCE_MANIFEST_SHA256.txt regenerated.
+Previous verification evidence, existing migration bytes and all ML source/training/artifact bytes retained.

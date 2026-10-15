@@ -1,0 +1,30 @@
+{
+  "originalV44FilesRetained": 809,
+  "originalV44EvidenceRetainedUnchanged": 20,
+  "previousV46EvidenceFilesRetainedUnchanged": 35,
+  "existingMigrationFilesRetainedUnchanged": 42,
+  "mlServerTrainingAndArtifactsUnchangedFromV46": true,
+  "missingPreviousSourceFiles": [],
+  "supersededDistAssetsRemovedByFreshBuild": [],
+  "changedFromV46ExcludingDist": [
+    "README.md",
+    "package.json",
+    "spring-api/src/main/java/lk/gov/health/govcare/ai/PredictiveIntelligenceController.java",
+    "src/services/predictiveIntelligenceService.ts"
+  ],
+  "addedInV47ExcludingDist": [
+    "V47_SPRING_STARTUP_ROUTE_FIX.md",
+    "scripts/renal-api-contracts.test.cjs",
+    "spring-api/src/test/java/lk/gov/health/govcare/config/ControllerMappingStartupTest.java",
+    "verification/startup-route-fix-v47/clients-after-fix-v47.log",
+    "verification/startup-route-fix-v47/clients-before-fix-v47.log",
+    "verification/startup-route-fix-v47/frontend-build-v47.log",
+    "verification/startup-route-fix-v47/frontend-startup-tests-v47.log",
+    "verification/startup-route-fix-v47/mapping-after-fix-v47.log",
+    "verification/startup-route-fix-v47/mapping-before-fix-v47.log",
+    "verification/startup-route-fix-v47/six-module-regression-v47.log",
+    "verification/startup-route-fix-v47/spring-tests-v47.log",
+    "verification/startup-route-fix-validation-v47.json"
+  ],
+  "sourceArchiveSha256": "e3c8ecd1205283e5721e4c4156e86295a40a8f184198dae187c5c8d2555d60a2"
+}

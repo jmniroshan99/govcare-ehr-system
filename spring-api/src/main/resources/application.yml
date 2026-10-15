@@ -1,0 +1,82 @@
+server:
+  port: ${PORT:4002}
+  error:
+    include-message: always
+
+spring:
+  application:
+    name: govcare-ehr-spring-api
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/govcare_ehr_v2}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:12}
+      minimum-idle: 2
+      connection-timeout: 10000
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        format_sql: false
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: ${FLYWAY_ENABLED:true}
+    baseline-on-migrate: true
+    baseline-version: 3
+    locations: classpath:db/migration
+    validate-on-migrate: true
+  servlet:
+    multipart:
+      max-file-size: ${MAX_FILE_SIZE:25MB}
+      max-request-size: ${MAX_REQUEST_SIZE:30MB}
+  jackson:
+    default-property-inclusion: non_null
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+govcare:
+  flyway:
+    repair-on-startup: ${GOVCARE_FLYWAY_REPAIR_ON_STARTUP:true}
+  jwt:
+    secret: ${JWT_SECRET:}
+    expiration-minutes: ${JWT_EXPIRATION_MINUTES:480}
+  cors:
+    allowed-origins: ${CORS_ORIGIN:http://127.0.0.1:5300,http://localhost:5300,http://127.0.0.1:5173,http://localhost:5173}
+  storage:
+    root: ${STORAGE_ROOT:./govcare-storage}
+  documents:
+    max-bytes: ${DOCUMENT_MAX_BYTES:26214400}
+  pdf:
+    hospital-logo: ${HOSPITAL_LOGO:}
+  renal-ml:
+    base-url: ${GOVCARE_RENAL_ML_URL:http://127.0.0.1:8001}
+    jwt-secret: ${GOVCARE_RENAL_JWT_SECRET:}
+    timeout-seconds: ${GOVCARE_RENAL_ML_TIMEOUT_SECONDS:15}
+
+logging:
+  file:
+    name: ${LOG_FILE:logs/govcare-spring-api.log}
+  level:
+    root: INFO
+    lk.gov.health.govcare: INFO
+    org.springframework.security: WARN
+    org.hibernate.SQL: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{48} - %msg%n"
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 14
+      total-size-cap: 200MB

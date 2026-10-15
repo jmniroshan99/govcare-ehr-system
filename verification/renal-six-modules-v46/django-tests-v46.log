@@ -1,0 +1,53 @@
+test_chronology_future_date_units_and_nonfinite_values (renal_service.tests.AuthAndInferenceTests.test_chronology_future_date_units_and_nonfinite_values) ... Unprocessable Entity: /api/ml/predict/hb/
+Unprocessable Entity: /api/ml/predict/hb/
+Unprocessable Entity: /api/ml/predict/hb/
+Unprocessable Entity: /api/ml/predict/hb/
+Unprocessable Entity: /api/ml/predict/hb/
+Unprocessable Entity: /api/ml/predict/hb/
+Unprocessable Entity: /api/ml/predict/hb/
+ok
+test_dry_weight_is_not_manufactured (renal_service.tests.AuthAndInferenceTests.test_dry_weight_is_not_manufactured) ... ok
+test_expiry_signature_audience_issuer_and_required_claims (renal_service.tests.AuthAndInferenceTests.test_expiry_signature_audience_issuer_and_required_claims) ... Unauthorized: /api/ml/predict/hb/
+Unauthorized: /api/ml/predict/hb/
+Unauthorized: /api/ml/predict/hb/
+Unauthorized: /api/ml/predict/hb/
+Unauthorized: /api/ml/predict/hb/
+Unauthorized: /api/ml/predict/hb/
+Unauthorized: /api/ml/predict/hb/
+Unauthorized: /api/ml/predict/hb/
+ok
+test_extreme_current_potassium_blocks_research_score (renal_service.tests.AuthAndInferenceTests.test_extreme_current_potassium_blocks_research_score) ... ok
+test_hb_persistence_and_urr_model_inference (renal_service.tests.AuthAndInferenceTests.test_hb_persistence_and_urr_model_inference) ... ok
+test_hyperkalemia_research_probability_is_explicitly_nonclinical (renal_service.tests.AuthAndInferenceTests.test_hyperkalemia_research_probability_is_explicitly_nonclinical) ... ok
+test_invalid_input_does_not_echo_sensitive_values (renal_service.tests.AuthAndInferenceTests.test_invalid_input_does_not_echo_sensitive_values) ... Unprocessable Entity: /api/ml/predict/hb/
+Unprocessable Entity: /api/ml/predict/hb/
+Not Found: /api/ml/predict/unknown/
+ok
+test_invalid_urr_not_clamped_and_missingness_reported (renal_service.tests.AuthAndInferenceTests.test_invalid_urr_not_clamped_and_missingness_reported) ... ok
+test_measured_unit_conversion_matches_training_contract (renal_service.tests.AuthAndInferenceTests.test_measured_unit_conversion_matches_training_contract) ... ok
+test_missing_and_stale_inputs_are_suppressed (renal_service.tests.AuthAndInferenceTests.test_missing_and_stale_inputs_are_suppressed) ... ok
+test_missing_service_key_fails_closed (renal_service.tests.AuthAndInferenceTests.test_missing_service_key_fails_closed) ... Service Unavailable: /api/ml/predict/hb/
+ok
+test_numeric_strings_questions_negatives_and_invalid_urr_denominator_are_rejected (renal_service.tests.AuthAndInferenceTests.test_numeric_strings_questions_negatives_and_invalid_urr_denominator_are_rejected) ... Unprocessable Entity: /api/ml/predict/hyperkalemia/
+Unprocessable Entity: /api/ml/predict/hyperkalemia/
+Unprocessable Entity: /api/ml/predict/hyperkalemia/
+Unprocessable Entity: /api/ml/predict/hyperkalemia/
+Unprocessable Entity: /api/ml/predict/hyperkalemia/
+ok
+test_only_exact_health_paths_are_public (renal_service.tests.AuthAndInferenceTests.test_only_exact_health_paths_are_public) ... Unauthorized: /health/anything
+Unauthorized: /api/ml/models/
+Unauthorized: /api/ml/predict/hb/
+ok
+test_registry_requires_auth_and_metadata_is_honest (renal_service.tests.AuthAndInferenceTests.test_registry_requires_auth_and_metadata_is_honest) ... ok
+test_role_and_scope (renal_service.tests.AuthAndInferenceTests.test_role_and_scope) ... Forbidden: /api/ml/predict/hb/
+Forbidden: /api/ml/predict/hb/
+Forbidden: /api/ml/predict/hb/
+ok
+
+----------------------------------------------------------------------
+Ran 15 tests in 0.359s
+
+OK
+Found 15 test(s).
+Skipping setup of unused database(s): default.
+System check identified no issues (0 silenced).

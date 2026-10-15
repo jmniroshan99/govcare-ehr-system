@@ -1,0 +1,43 @@
+{
+  "baseManifestPayloadHashesVerified": 779,
+  "launcherStaticChecks": [
+    {
+      "file": "start-renal-fullstack-windows.bat",
+      "allExitPathsFollowPause": true,
+      "allGotoLabelsResolved": true,
+      "crlfLineEndings": true,
+      "priorPauseCount": 0,
+      "newPauseCount": 2,
+      "exitCount": 2
+    },
+    {
+      "file": "setup-renal-ml-windows.bat",
+      "allExitPathsFollowPause": true,
+      "allGotoLabelsResolved": true,
+      "crlfLineEndings": true,
+      "priorPauseCount": 0,
+      "newPauseCount": 2,
+      "exitCount": 2
+    }
+  ],
+  "researchFilesPreserved": 54,
+  "windowsExecutionVerified": false,
+  "checkedAtUtc": "2026-10-10T03:46:17.451628+00:00",
+  "scope": "Windows renal launcher error visibility and prerequisite diagnostics",
+  "freshStartupRegression": {
+    "command": "node --test scripts/run-spring.test.mjs scripts/run-full-stack.test.cjs scripts/api-port.test.cjs",
+    "executedPlatform": "Linux",
+    "tests": 22,
+    "passed": 22,
+    "failed": 0,
+    "skipped": 0,
+    "exitCode": 0
+  },
+  "priorBroadTestEvidenceRetainedNotReexecuted": true,
+  "modelsRetrained": false,
+  "clinicalApiImplementationChanged": false,
+  "machineSpecificRootCauseKnown": false,
+  "batchExecutionEvidence": "STATIC_ONLY",
+  "clinicalValidation": "NOT_COMPLETED",
+  "datasetPermissionStatus": "UNVERIFIED"
+}

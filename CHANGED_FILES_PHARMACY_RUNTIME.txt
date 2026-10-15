@@ -1,0 +1,17 @@
+PHARMACY RUNTIME DATA-FORMAT FIX
+
+Added:
+- src/utils/dataNormalization.ts
+- PHARMACY_RUNTIME_DATA_FIX.md
+- CHANGED_FILES_PHARMACY_RUNTIME.txt
+
+Changed:
+- src/services/workflowService.ts
+- src/pages/PharmacyModule.tsx
+- src/components/ErrorBoundary.tsx
+- spring-api/src/main/java/lk/gov/health/govcare/common/SqlSupport.java
+
+Resolved error:
+- selected.allergies?.join is not a function
+
+The fix is non-destructive and requires no database recreation.
