@@ -1,0 +1,15 @@
+{
+  "seed": 42,
+  "horizons_days": [730.5, 1826.25],
+  "estimand": "cif",
+  "minimum_patients": 100,
+  "minimum_training_kidney_events": 30,
+  "minimum_training_death_events_for_cif": 15,
+  "minimum_partition_kidney_events": 5,
+  "minimum_at_risk_per_partition_at_horizon": 10,
+  "minimum_censoring_survival_at_horizon": 0.1,
+  "logistic_hazard": {"neural": false, "maximum_bins": 8, "minimum_training_events_per_bin": 5},
+  "neural_complexity_gate": {"minimum_training_patients": 1000, "minimum_training_events": 200},
+  "selection": "Validation IPCW Brier at five years; must beat development Aalen-Johansen baseline by >=5% for CIF (Kaplan-Meier for net)",
+  "policy_note": "Conservative research engineering gates, not universal sample-size criteria or evidence of clinical validation. Formal sample-size planning and external evaluation still required."
+}

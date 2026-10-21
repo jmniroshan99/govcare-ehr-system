@@ -7,6 +7,28 @@ const { spawnSync } = require('node:child_process');
 const { selectFrontendPort } = require('./frontend-port.cjs');
 const { loadEnvFile } = require('./run-renal-ml.cjs');
 
+test('Windows batch launcher prefers Python 3.12, retains legacy fallback and respects an explicit interpreter', {skip:process.platform !== 'win32'}, t => {
+  const root=fs.mkdtempSync(path.join(os.tmpdir(),'govcare python selection '));
+  t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
+  const batch=fs.readFileSync(path.join(__dirname,'..','start-renal-fullstack-windows.bat'),'utf8');
+  const selection=batch.slice(batch.indexOf('rem Match run-renal-ml.cjs:'),batch.indexOf('if not exist "%GOVCARE_RENAL_PYTHON%"'));
+  assert.match(selection,/\.venv-cdss312/);
+  const probe=path.join(root,'selection.cmd');
+  fs.writeFileSync(probe,`@echo off\r\n${selection}\r\necho %GOVCARE_RENAL_PYTHON%\r\n`);
+  const compatible=path.join(root,'.venv-cdss312','Scripts','python.exe');
+  const legacy=path.join(root,'ML_Server','.venv','Scripts','python.exe');
+  fs.mkdirSync(path.dirname(compatible),{recursive:true});fs.mkdirSync(path.dirname(legacy),{recursive:true});
+  fs.writeFileSync(legacy,'');
+  const run=override=>{
+    const env={...process.env};delete env.GOVCARE_RENAL_PYTHON;if(override)env.GOVCARE_RENAL_PYTHON=override;
+    const result=spawnSync('cmd.exe',['/d','/c','selection.cmd'],{cwd:root,env,encoding:'utf8',timeout:10000});
+    assert.ifError(result.error);assert.equal(result.status,0,result.stderr);return result.stdout.trim();
+  };
+  assert.equal(run(),legacy);
+  fs.writeFileSync(compatible,'');assert.equal(run(),compatible);
+  const explicit=path.join(root,'custom environment','python.exe');assert.equal(run(explicit),explicit);
+});
+
 test('renal ML launcher loads local .env without printing or dropping its service secret', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'govcare-renal-env-'));
   const file = path.join(dir, '.env');

@@ -1,0 +1,12 @@
+{
+  "selected_method": "random_forest",
+  "best_candidate": "random_forest",
+  "gate_passed": true,
+  "improvement": 0.2002855118408341,
+  "selection_uses_test": false,
+  "criterion": "Validation Brier; >=5% better than training-prevalence and ROC AUC >=0.5",
+  "frozen_before_test": true,
+  "status": "TRAINED_RESEARCH_ONLY",
+  "served": false,
+  "deployment_reason": "Staged benchmark only; existing approved serving location is retained."
+}

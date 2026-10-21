@@ -9,11 +9,27 @@ import java.util.*;
 
 /** Pure, reproducible long-term assessment; no inference calls, imputation or future lab curves. */
 public final class CkdOutlookEngine {
-    public static final String VERSION = "GOVCARE-CKD-OUTLOOK-1.0";
+    public static final String VERSION = "GOVCARE-CKD-OUTLOOK-1.1";
     private static final ObjectMapper JSON = new ObjectMapper();
     private CkdOutlookEngine() {}
     public record Confirmation(String sexForEquation, boolean confirmedChronicCkd,
         boolean noKidneyReplacementTherapy, boolean clinicallyStable, String sourceNote) {}
+
+    /** Packaged offline audit conclusion, not a training trigger or a patient risk. */
+    public static ObjectNode learnedModelReadiness() {
+        try(var in=CkdOutlookEngine.class.getResourceAsStream("/cdss/current_five_year_readiness.json")) {
+            if(in==null)throw new IllegalStateException("Missing readiness audit");
+            JsonNode value=JSON.readTree(in);
+            if(!"CDSS-SURVIVAL-1".equals(value.path("schema_version").asText())||!"INSUFFICIENT_LONG_TERM_OUTCOME_DATA".equals(value.path("status").asText()))throw new IllegalStateException("Unreviewed readiness state");
+            ObjectNode out=((ObjectNode)value).deepCopy();
+            out.putNull("probability").putNull("modelVersion").putNull("curve").put("method","NOT_INSTALLED").put("horizonYears",5)
+                .put("endpoint","First maintenance kidney replacement therapy").put("validationStatus","NOT_COMPLETED").put("unit","probability");
+            return out;
+        } catch(Exception ignored) {
+            var out=JSON.createObjectNode().put("status","NOT_AVAILABLE").putNull("probability").putNull("curve");
+            out.putArray("reasons").add("Reviewed five-year model readiness evidence is unavailable. Continue eligible published-equation assessment.");return out;
+        }
+    }
 
     public static ObjectNode model() {
         ObjectNode m=JSON.createObjectNode().put("key","kfre_four_variable_nna").put("version",KfreFourVariableEquation.VERSION)
@@ -67,7 +83,9 @@ public final class CkdOutlookEngine {
         e.put("stage",e.path("maintenanceDialysis").asBoolean()?"G5D":Double.isFinite(gfr)&&gfr>0&&!inputs.path("egfr").path("state").asText().equals("INVALID")?gfr>=90?"G1":gfr>=60?"G2":gfr>=45?"G3a":gfr>=30?"G3b":gfr>=15?"G4":"G5":"Unknown");
         e.put("sourceSnapshotId",modules.path("snapshotId").asText());
         var identity=e.deepCopy();identity.remove(List.of("sourceSnapshotId","history","excludedData"));
-        e.put("fingerprint",ClinicalIntelligenceEngine.sha256(identity.toString()));
+        // JSONB may reorder nested properties on reload. Hash semantic evidence,
+        // not serializer insertion order, so unchanged evidence stays calculable.
+        e.put("fingerprint",ClinicalIntelligenceEngine.sha256(canonical(identity).toString()));
         var monitoring=e.putArray("monitoring");
         for(String key:List.of("anemia","hyperkalemia","dialysisAdequacy","renalDeterioration","cardiovascularMonitoring")) {
             JsonNode module=modules.path(key), clinical=module.has("clinicalAssessment")?module.path("clinicalAssessment"):module;
@@ -83,6 +101,7 @@ public final class CkdOutlookEngine {
     public static ObjectNode assess(ObjectNode evidence, Confirmation confirmation, Instant now) {
         var result=JSON.createObjectNode().put("schemaVersion",1).put("ruleVersion",VERSION).put("assessedAt",now.toString());
         result.set("model",model());result.set("evidence",evidence.deepCopy());
+        result.set("learnedModel",learnedModelReadiness());
         result.putNull("twoYearRisk").putNull("fiveYearRisk").putNull("riskCategory");
         var missing=result.putArray("missingInputs");var blocks=result.putArray("reasons");
         JsonNode inputs=result.path("evidence").path("inputs");
@@ -129,8 +148,18 @@ public final class CkdOutlookEngine {
             .add("No five-year eGFR, anemia, potassium, cardiovascular, dialysis adequacy or survival model is installed.")
             .add("Two- and five-year risks are separate event estimates, not annual rates or dates of dialysis.")
             .add("Current treatment, competing mortality and population calibration require clinician interpretation.");
+        result.put("resultType",result.path("status").asText().equals("AVAILABLE")?"PUBLISHED_EQUATION_ESTIMATE":"INSUFFICIENT_EVIDENCE");
         return result;
     }
 
+    static JsonNode canonical(JsonNode value) {
+        if(value.isObject()) {
+            ObjectNode out=JSON.createObjectNode();var keys=new TreeSet<String>();value.fieldNames().forEachRemaining(keys::add);
+            for(String key:keys)out.set(key,canonical(value.get(key)));return out;
+        }
+        if(value.isArray()) {var out=JSON.createArrayNode();for(JsonNode item:value)out.add(canonical(item));return out;}
+        if(value.isNumber())return JSON.getNodeFactory().numberNode(value.decimalValue().stripTrailingZeros());
+        return value.deepCopy();
+    }
     static Instant time(JsonNode v) {try{return v.isTextual()?Instant.parse(v.asText()):null;}catch(RuntimeException ignored){return null;}}
 }

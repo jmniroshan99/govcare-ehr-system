@@ -48,12 +48,13 @@ public class RenalClinicalModuleService {
         // Quality freshness changes by UTC date. Reviews do not change immutable clinical evidence identity.
         for(String key:RenalClinicalModules.ORDER){ObjectNode module=(ObjectNode)identity.get(key);module.remove("lastUpdated");((ObjectNode)module.get("readiness")).remove("lastEvaluated");if(module.path("researchReadiness") instanceof ObjectNode research)research.remove("lastEvaluated");}
         for(JsonNode prediction:identity.path("predictions")) if(prediction instanceof ObjectNode object) object.remove(List.of("review_state","review_version","reason","note","modified_interpretation","reviewed_by","reviewed_at"));
+        if(identity.path("renalTimeline") instanceof ObjectNode timeline)timeline.remove("evaluatedAt");
         String fingerprint=digest(identity.toString());Map<String,Object> p=params(scoped,patient);p.put("fingerprint",fingerprint);
         sql.required("select pg_advisory_xact_lock(hashtextextended(:lock,0)) as held",Map.of("lock","renal-modules|"+scoped.hospitalId()+"|"+patient),"Cannot serialize the renal snapshot.");
         Optional<Map<String,Object>> existing=sql.one("select id,outputs from renal_clinical_module_snapshots where hospital_id=:h and patient_id=:p and source_fingerprint=:fingerprint",p);
         if(existing.isPresent()) {output=decode(existing.get().get("outputs"));p.put("id",existing.get().get("id"));}
         else {
-            UUID id=UUID.randomUUID();p.put("id",id);output.put("snapshotId",id.toString());p.put("outputs",output.toString());p.put("version",RenalClinicalModules.VERSION);
+            UUID id=UUID.randomUUID();p.put("id",id);output.put("snapshotId",id.toString());ClinicalIntelligenceRules.bindSnapshot(output,id.toString());p.put("outputs",output.toString());p.put("version",ClinicalRuleRegistry.VERSION);
             sql.update("insert into renal_clinical_module_snapshots(id,hospital_id,patient_id,requested_by,source_fingerprint,rule_version,outputs) values(:id,:h,:p,:actor,:fingerprint,:version,cast(:outputs as jsonb))",p);
             persistFhir(scoped,patient,id,output,null,null,null);
             audit(p,"RENAL_SIX_MODULE_SNAPSHOT_CREATED",Map.of("ruleVersion",RenalClinicalModules.VERSION,"sourceFingerprint",fingerprint,"moduleOrder",RenalClinicalModules.ORDER));
@@ -75,18 +76,35 @@ public class RenalClinicalModuleService {
     @Transactional
     public ObjectNode assessmentReportSnapshot(GovCarePrincipal actor,UUID patient,UUID assessment) {
         var scoped=access.clinicalScope(actor,patient,false);var p=params(scoped,patient);p.put("assessment",assessment.toString());
-        var matching=sql.one("select id,outputs from renal_clinical_module_snapshots where hospital_id=:h and patient_id=:p and outputs #>> '{clinicalFeatureData,latestAssessmentId}'=:assessment order by created_at desc,id desc limit 1",p);
+        sql.required("select pg_advisory_xact_lock(hashtextextended(:lock,0)) as held",Map.of("lock","renal-modules|"+scoped.hospitalId()+"|"+patient),"Cannot serialize the historical report snapshot.");
+        var matching=sql.one("select id,outputs from renal_clinical_module_snapshots where hospital_id=:h and patient_id=:p and outputs #>> '{clinicalFeatureData,latestAssessmentId}'=:assessment order by created_at asc,id asc limit 1",p);
         if(matching.isPresent()){
             p.put("id",matching.get().get("id"));var frozen=decode(matching.get().get("outputs"));decorateReviews(frozen,p);frozen.put("reportAssessmentId",assessment.toString());
             audit(p,"RENAL_SIX_MODULE_REPORT_READ",Map.of("snapshotId",p.get("id").toString(),"assessmentId",assessment.toString(),"source","MATCHING_ASSESSMENT_SNAPSHOT_NO_INFERENCE"));return frozen;
         }
         var registry=sql.list("select model_key,version,display_name,model_type,runtime_status,validation_status,local_validation_status,validation_metadata from predictive_model_registry where model_key in ('hb','urr','hyperkalemia') and version='1.0.0' order by model_key",Map.of());
-        var stored=RenalClinicalModules.assemble(renal.reportOverview(actor,patient),metadata.enrich(registry),Instant.now());
-        var output=ClinicalFeatureMappingEngine.apply(stored,clinicalFeatures.load(actor,patient,assessment),Instant.now());
+        var features=clinicalFeatures.load(actor,patient,assessment);var source=renal.reportOverview(actor,patient);
+        Instant cutoff=features.snapshots().stream().filter(s->s.path("assessmentId").asText().equals(assessment.toString())).map(s->ClinicalFeatureNormalizer.instant(s.path("recordedAt").asText())).filter(Objects::nonNull).findFirst().orElseThrow(()->ApiException.conflict("Historical assessment recording time is unavailable."));
+        var bounded=new SriLankanRenalIntelligenceService.Overview(patient,scoped.hospitalId(),new SriLankanRenalIntelligenceService.RenalStatus(null,"Historical context unverified","No later dialysis status is applied to a historical assessment"),source.observations().stream().filter(o->!o.observedAt().isAfter(cutoff)&&o.samplingContext()!=null&&ClinicalFeatureNormalizer.instant(Objects.toString(o.samplingContext().get("recordedAt"),null))!=null&&!ClinicalFeatureNormalizer.instant(o.samplingContext().get("recordedAt").toString()).isAfter(cutoff)).toList(),source.predictions().stream().filter(prediction->!prediction.createdAt().isAfter(cutoff)).toList(),null,source.canReview(),source.historyTruncated());
+        // A current demographic field is not proof of the sex/pregnancy pathway at an old assessment.
+        if(features.clinicalContext()!=null)features.clinicalContext().remove("demographics");
+        var stored=RenalClinicalModules.assemble(bounded,metadata.enrich(registry),cutoff);
+        var output=ClinicalFeatureMappingEngine.apply(stored,features,cutoff);
         for(String key:RenalClinicalModules.ORDER){var module=(ObjectNode)output.get(key);module.put("moduleReviewState","AWAITING_REVIEW").put("moduleReviewVersion",0).putNull("clinicianReview");}
         output.put("reportAssessmentId",assessment.toString()).put("reportFeaturePolicy","Requested CKD assessment and clinical records available by its recording time; dialysis session / stored research outputs retain their separately displayed source dates.");
+        UUID id=UUID.randomUUID();output.put("snapshotId",id.toString());ClinicalIntelligenceRules.bindSnapshot(output,id.toString());
+        p.put("id",id);p.put("outputs",output.toString());p.put("version",ClinicalRuleRegistry.VERSION);p.put("fingerprint",digest("historical-report|"+assessment+"|"+ClinicalRuleRegistry.VERSION));
+        sql.update("insert into renal_clinical_module_snapshots(id,hospital_id,patient_id,requested_by,source_fingerprint,rule_version,outputs) values(:id,:h,:p,:actor,:fingerprint,:version,cast(:outputs as jsonb))",p);
         audit(p,"CKD_FEATURE_REPORT_MAPPED",Map.of("assessmentId",assessment.toString(),"mappingVersion",ClinicalFeatureMappingEngine.VERSION,"source","SAVED_ASSESSMENT_NO_INFERENCE"));
         return output;
+    }
+    /** An explicit screen snapshot creates a new report version; it never replaces historical evidence. */
+    public ObjectNode selectedReportSnapshot(GovCarePrincipal actor,UUID patient,UUID assessment,UUID snapshot){
+        if(snapshot==null)return assessmentReportSnapshot(actor,patient,assessment);
+        var scoped=access.clinicalScope(actor,patient,false);var p=params(scoped,patient);p.put("id",snapshot);p.put("assessment",assessment.toString());
+        var stored=sql.required("select id,outputs from renal_clinical_module_snapshots where id=:id and hospital_id=:h and patient_id=:p and outputs #>> '{clinicalFeatureData,latestAssessmentId}'=:assessment",p,"The selected clinical snapshot does not belong to this patient and assessment. Refresh the workspace.");
+        var output=decode(stored.get("outputs"));decorateReviews(output,p);output.put("reportAssessmentId",assessment.toString());
+        audit(p,"RENAL_SIX_MODULE_REPORT_READ",Map.of("snapshotId",snapshot.toString(),"assessmentId",assessment.toString(),"source","EXPLICIT_SAVED_SCREEN_SNAPSHOT"));return output;
     }
     @Transactional
     public Map<String,Object> review(GovCarePrincipal actor,UUID patient,ReviewRequest r) {
@@ -113,6 +131,7 @@ public class RenalClinicalModuleService {
         p.put("version",latest+1);p.put("fingerprint",fp);p.put("department",scoped.departmentId());p.put("method",module.path("method").asText());
         p.put("modelVersion",module.path("modelVersion").asText(RenalClinicalModules.VERSION));p.put("moduleSnapshot",module.toString());
         sql.update("insert into renal_clinical_module_reviews(id,hospital_id,patient_id,snapshot_id,module_key,actor_id,department_id,request_id,action,reason,clinical_note,modified_interpretation,review_version,input_fingerprint,method,model_version,module_snapshot) values(:review,:h,:p,:id,:module,:actor,:department,:request,:action,:reason,:note,:modified,:version,:fingerprint,:method,:modelVersion,cast(:moduleSnapshot as jsonb))",p);
+        decorateReviews(outputs,p);
         persistFhir(scoped,patient,review,outputs,r.moduleKey(),r.action(),reason+(modified==null?"":". Revised interpretation: "+modified));
         p.put("id",review);
         audit(p,"RENAL_MODULE_CLINICIAN_REVIEWED",Map.of("snapshotId",r.snapshotId().toString(),"module",r.moduleKey(),"action",r.action(),"reviewVersion",latest+1,"modelVersion",p.get("modelVersion")));
@@ -127,6 +146,10 @@ public class RenalClinicalModuleService {
             module.put("moduleReviewVersion",r==null?0:((Number)r.get("review_version")).intValue());
             module.put("moduleReviewState",r==null?"AWAITING_REVIEW":r.get("action").toString());
             if(r!=null)module.set("clinicianReview",mapper.valueToTree(r));else {module.putNull("clinicianReview");pending++;}
+            if(module.path("clinicalAssessment") instanceof ObjectNode clinical&&clinical.path("review") instanceof ObjectNode review){
+                review.put("status",module.path("moduleReviewState").asText()).put("version",module.path("moduleReviewVersion").asInt()).put("note",r==null?"":Objects.toString(r.get("clinical_note"),""));
+                module.set("review",review.deepCopy());
+            }
         }
         output.putObject("clinicianReviewStatus").put("pendingModules",pending).put("state",pending>0?"AWAITING_REVIEW":"REVIEWED");
     }
@@ -140,6 +163,10 @@ public class RenalClinicalModuleService {
         var ext=body.putArray("extension");ext.addObject().put("url","urn:govcare:renal-module-version").put("valueString",RenalClinicalModules.VERSION);
         ext.addObject().put("url","urn:govcare:renal-module-snapshot").put("valueString",output.path("snapshotId").asText());
         ext.addObject().put("url","urn:govcare:clinical-validation").put("valueString","NOT_CLINICALLY_VALIDATED");
+        if(output.path("schemaVersion").asInt()>=4){
+            ext.addObject().put("url","urn:govcare:clinical-rules-version").put("valueString",output.path("clinicalRulesVersion").asText());
+            ext.addObject().put("url","urn:govcare:saved-clinical-results").put("valueString",ClinicalIntelligenceRules.fhirContract(output).toString());
+        }
         if(module!=null){ext.addObject().put("url","urn:govcare:renal-model-version").put("valueString",output.path(module).path("modelVersion").asText(RenalClinicalModules.VERSION));ext.addObject().put("url","urn:govcare:renal-method").put("valueString",output.path(module).path("method").asText());}
         for(JsonNode o:output.path("observations"))body.withArray("supportingInfo").addObject().putObject("identifier").put("system","urn:govcare:renal-session").put("value",o.path("id").asText());
         for(JsonNode assessment:output.path("clinicalFeatureData").path("assessmentSources"))body.withArray("supportingInfo").addObject().putObject("identifier").put("system","urn:govcare:ckd-assessment").put("value",assessment.path("assessmentId").asText());

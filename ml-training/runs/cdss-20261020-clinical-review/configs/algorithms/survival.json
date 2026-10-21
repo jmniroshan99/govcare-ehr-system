@@ -1,0 +1,9 @@
+{
+  "cox_elastic_net": [{"l1_ratio": 0.5, "alphas": [0.05]}, {"l1_ratio": 0.9, "alphas": [0.05]}],
+  "weibull_aft": [{"penalizer": 0.1}, {"penalizer": 1.0}],
+  "random_survival_forest": [{"n_estimators": 100, "min_samples_leaf": 10, "max_depth": 4}, {"n_estimators": 100, "min_samples_leaf": 20, "max_depth": 4}],
+  "extra_survival_trees": [{"n_estimators": 100, "min_samples_leaf": 10, "max_depth": 4}, {"n_estimators": 100, "min_samples_leaf": 20, "max_depth": 4}],
+  "gradient_boosting_survival": [{"n_estimators": 80, "max_depth": 2, "learning_rate": 0.05}, {"n_estimators": 80, "max_depth": 1, "learning_rate": 0.05}],
+  "xgboost_aft": [{"max_depth": 2, "aft_loss_distribution": "normal", "aft_loss_distribution_scale": 1.2}, {"max_depth": 1, "aft_loss_distribution": "normal", "aft_loss_distribution_scale": 1.2}],
+  "logistic_hazard": [{"C": 0.1, "n_bins": 6}, {"C": 1.0, "n_bins": 6}]
+}

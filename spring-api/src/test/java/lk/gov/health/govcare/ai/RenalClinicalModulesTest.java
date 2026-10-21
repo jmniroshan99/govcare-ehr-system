@@ -13,7 +13,7 @@ class RenalClinicalModulesTest {
     private SriLankanRenalIntelligenceService.ObservationView row(int days,boolean hd,Map<String,Double> overrides) {
         Map<String,Double> values=new HashMap<>(Map.of("hb",10.5,"albumin",38.0,"calcium",2.2,"sodium",138.0,"creatinine_pre",700.0,"potassium_pre",4.8,"urea_pre",20.0,"urea_post",7.0));values.putAll(overrides);
         Map<String,String> units=new HashMap<>(Map.of("hb","g/dL","albumin","g/L","calcium","mmol/L","sodium","mmol/L","creatinine_pre","umol/L","potassium_pre","mmol/L","urea_pre","mmol/L","urea_post","mmol/L"));
-        return new SriLankanRenalIntelligenceService.ObservationView(UUID.randomUUID(),now.minus(days,ChronoUnit.DAYS),hd,values,units,"OPERATIONAL FIXTURE ONLY",List.of());
+        return new SriLankanRenalIntelligenceService.ObservationView(UUID.randomUUID(),now.minus(days,ChronoUnit.DAYS),hd,values,units,"OPERATIONAL FIXTURE ONLY",List.of(),Map.of("patientId","SYNTHETIC-PATIENT","sessionId","SYNTH-"+days,"sourceVerified",true,"preCollectedAt",now.minus(days,ChronoUnit.DAYS).minusSeconds(14400).toString(),"postCollectedAt",now.minus(days,ChronoUnit.DAYS).toString()));
     }
     private SriLankanRenalIntelligenceService.Overview data(List<SriLankanRenalIntelligenceService.ObservationView> rows,List<SriLankanRenalIntelligenceService.PredictionView> predictions,boolean truncated) {
         return new SriLankanRenalIntelligenceService.Overview(UUID.randomUUID(),UUID.randomUUID(),new SriLankanRenalIntelligenceService.RenalStatus(null,"Unconfirmed","No verified renal stage"),rows,predictions,null,true,truncated);
@@ -50,7 +50,7 @@ class RenalClinicalModulesTest {
     @Test void compositeCountsValidDomainsAndKeepsPercentageDistinctFromProbability() {
         var out=RenalClinicalModules.assemble(data(List.of(row(31,true,Map.of()),row(1,true,Map.of("hb",9.0,"albumin",34.0,"creatinine_pre",800.0,"urea_pre",25.0,"urea_post",10.0,"potassium_pre",5.6))),List.of(),false),registry,now);
         assertEquals("DECLINING",out.path("renalTrajectory").path("signal").asText());
-        var c=out.path("renalDeterioration");assertEquals(6,c.path("evaluatedComponents").asInt());assertEquals(6,c.path("worseningComponents").asInt());assertEquals(100,c.path("directionalPercent").asInt());assertTrue(c.path("researchRiskScore").isNull());
+        var c=out.path("renalDeterioration");assertEquals(6,c.path("evaluatedComponents").asInt());assertEquals(6,c.path("worseningComponents").asInt());assertTrue(c.path("directionalPercent").isNull());assertTrue(c.path("researchRiskScore").isNull());
     }
     @Test void clinicalTrendUnitConversionDoesNotCreateFalseDirectionalChange() {
         var first=row(31,true,Map.of());var second=row(1,true,Map.of("hb",105.0));Map<String,String> units=new HashMap<>(second.units());units.put("hb","g/L");

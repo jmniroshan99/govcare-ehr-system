@@ -12,8 +12,9 @@ import pandas as pd
 TRAINING=Path(__file__).resolve().parents[2]/'ml-training'
 sys.path.insert(0,str(TRAINING))
 from preprocessing.normalize_units import normalize_value,calculate_urr,CANONICAL_UNITS
-from preprocessing.longitudinal_features import feature_frame,PREDICTORS
+from preprocessing.longitudinal_features import feature_frame,feature_names,PREDICTORS
 from explainability.xai import explain_pipeline
+from .artifact_contract import validate_metadata
 
 KEYS={'hb':'hb-risk','urr':'urr-risk','hyperkalemia':'hyperkalemia-risk','dry-weight':'dry-weight'}
 
@@ -32,12 +33,14 @@ def load_artifact(key):
     directory=TRAINING/'artifacts'/KEYS[key]
     meta=json.loads((directory/'metadata.json').read_text(encoding='utf-8'))
     if key=='dry-weight': return meta,None
+    validate_metadata(meta,key,feature_names())
     path=directory/'model.joblib'
     if hashlib.sha256(path.read_bytes()).hexdigest()!=meta['artifact_sha256']:
         raise RuntimeError('Artifact digest mismatch')
     # Only newly fitted, locally packaged, hash-checked pipelines are executed.
     if meta.get("served_method")=="PERSISTENCE_BASELINE": return meta,None
-    return meta,joblib.load(path)
+    try:return meta,joblib.load(path)
+    except Exception as error:raise RuntimeError('Trusted artifact could not be deserialized') from error
 
 def registry():
     entries=[]
@@ -45,7 +48,7 @@ def registry():
         try:
             meta,model=load_artifact(key)
             entry={k:meta.get(k) for k in ['model_key','model','model_version','status','algorithm','served_method','unit','partitions',
-                'clinical_validation','dataset_permission_status','validation_status','selection_reason','source_dataset_sha256','artifact_sha256','feature_names','target_definition','training_date','population','limitations']}
+                'clinical_validation','dataset_permission_status','validation_status','selection_reason','source_dataset_sha256','artifact_sha256','artifact_revision','training_run_id','feature_names','target_definition','training_date','population','limitations']}
             entry['serving_input_contract']=serving_contract()
             entry['required_measurements']=meta.get('required_measurements',[])
             entries.append(entry)
@@ -105,7 +108,7 @@ def predict(key,payload):
     meta,model=load_artifact(key)
     frame,flags=parse_history(payload)
     origin=frame.observed_at.iloc[-1]
-    base={'status':'INSUFFICIENT_DATA','model_key':key,'model':meta['model'],'model_version':meta['model_version'],
+    base={'event_probability':None,'calibration_status':'NOT_ESTABLISHED','status':'INSUFFICIENT_DATA','model_key':key,'model':meta['model'],'model_version':meta['model_version'],
           'method':meta.get('served_method','RESEARCH_MODEL'),
           'algorithm':'LAST_OBSERVATION_CARRIED_FORWARD' if meta.get('served_method')=='PERSISTENCE_BASELINE' else meta.get('algorithm','NOT_EXECUTED'),
           'research_candidate_algorithm':meta.get('algorithm','NOT_EXECUTED'),
@@ -113,6 +116,7 @@ def predict(key,payload):
           'validation_status':'INTERNAL_RESEARCH_EVALUATION','clinical_validation':'NOT_COMPLETED',
           'dataset_permission_status':'UNVERIFIED','requires_clinician_review':True,
           'source_dataset_sha256':meta.get('source_dataset_sha256'),'artifact_sha256':meta.get('artifact_sha256'),
+          'artifact_revision':meta.get('artifact_revision'),'training_run_id':meta.get('training_run_id'),
           'training_date':meta.get('training_date'),'training_population':meta.get('population'),
           'feature_names':meta.get('feature_names',[]),'target_definition':meta.get('target_definition'),
           'serving_input_contract':contract,'required_measurements':meta.get('required_measurements',[]),
@@ -133,20 +137,25 @@ def predict(key,payload):
         base['explanation']['limitations']+=['At least two fresh, verified chronological observations 14–62 days apart, the current outcome value and five model predictor values are required. This monthly-cohort model is not a per-session prediction model.']
         return base
     X=feature_frame(frame)[meta['feature_names']].iloc[[-1]]
+    base['data_quality']['imputed_features']=[name for name in meta['feature_names'] if pd.isna(X.iloc[0][name])]
+    base['event_probability']=None
+    base['calibration_status']='NOT_ESTABLISHED_FOR_CLINICAL_PROBABILITY'
     method=meta['served_method']
-    if key=='hyperkalemia' and current['potassium_pre']>=8:
-        base['explanation']['limitations'].append('Extreme current potassium requires prompt clinical source review; research inference is blocked.')
+    if not pd.isna(current['potassium_pre']) and (current['potassium_pre']<2.5 or current['potassium_pre']>=6.5):
+        base['explanation']['limitations'].append('Recorded severe low/high potassium requires prompt source/date verification and clinical review; research inference is blocked. The abnormal-value finding is retained by clinical monitoring.')
         return base
     if key=='hyperkalemia':
         probability=float(model.predict_proba(X)[0,1])
         if not math.isfinite(probability) or not 0<=probability<=1: raise RuntimeError('Nonfinite probability')
         base.update(status='AVAILABLE',prediction=None,probability=probability,risk_category='RESEARCH_RISK_SCORE')
+        base.update(output_type='RESEARCH_MODEL_SCORE',research_score=probability)
+        base['explanation']['contribution_unit']='log odds of the model research outcome'
         base['explanation']['method']='SHAP'
         explanation,_=explain_pipeline(model,X,meta['feature_names'])
         vals=explanation.values[0];top=np.argsort(np.abs(vals))[-8:][::-1]
         base['explanation']['top_factors']=[{'feature':meta['feature_names'][int(i)],
             'value':None if pd.isna(X.iloc[0,int(i)]) else float(X.iloc[0,int(i)]),
-            'contribution':float(vals[i]),'direction':'INCREASES_RESEARCH_LOG_ODDS' if vals[i]>0 else 'DECREASES_RESEARCH_LOG_ODDS'} for i in top]
+            'imputed':bool(pd.isna(X.iloc[0,int(i)])),'contribution':float(vals[i]),'direction':'INCREASES_RESEARCH_LOG_ODDS' if vals[i]>0 else 'DECREASES_RESEARCH_LOG_ODDS'} for i in top]
         for variable in ('potassium_pre','potassium_post','creatinine_pre','hb'):
             actual=frame[variable].dropna().tail(3)
             if len(actual)>=2:
@@ -162,6 +171,8 @@ def predict(key,payload):
         base['explanation']['limitations']+=['Model generated an out-of-range forecast; clinical output suppressed.']
         return base
     base.update(status='AVAILABLE',prediction=value,risk_category='RESEARCH_FORECAST')
+    base['output_type']='PREDICTED_VALUE'
+    base['explanation']['contribution_unit']=meta.get('unit') if method=='RESEARCH_MODEL' else None
     width=meta['interval_half_width']
     base['interval']={'low':value-width,'high':value+width,'level':.95,'method':meta['interval_method']}
     base['explanation']['method']='SHAP' if method=='RESEARCH_MODEL' else 'BASELINE'
@@ -170,7 +181,7 @@ def predict(key,payload):
         vals=explanation.values[0];top=np.argsort(np.abs(vals))[-8:][::-1]
         base['explanation']['top_factors']=[{'feature':meta['feature_names'][int(i)],
             'value':None if pd.isna(X.iloc[0,int(i)]) else float(X.iloc[0,int(i)]),
-            'contribution':float(vals[i]),'direction':'INCREASES_FORECAST' if vals[i]>0 else 'DECREASES_FORECAST'} for i in top]
+            'imputed':bool(pd.isna(X.iloc[0,int(i)])),'contribution':float(vals[i]),'direction':'INCREASES_FORECAST' if vals[i]>0 else 'DECREASES_FORECAST'} for i in top]
     else:
         base['explanation']['top_factors']=[{'feature':key,'value':value,'contribution':None,'direction':'LAST_OBSERVATION_CARRIED_FORWARD'}]
         base['explanation']['limitations']+=[meta['selection_reason']]

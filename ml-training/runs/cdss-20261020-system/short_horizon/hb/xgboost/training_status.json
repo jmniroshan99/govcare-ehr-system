@@ -1,0 +1,57 @@
+{
+  "registered": true,
+  "training_status": "TRAINED_RESEARCH_ONLY",
+  "evaluated": false,
+  "served": false,
+  "parameters": {
+    "n_estimators": 80,
+    "max_depth": 2,
+    "learning_rate": 0.05,
+    "reg_lambda": 10,
+    "subsample": 0.8,
+    "colsample_bytree": 0.7,
+    "min_child_weight": 10
+  },
+  "tuning": [
+    {
+      "parameters": {
+        "n_estimators": 80,
+        "max_depth": 2,
+        "learning_rate": 0.05,
+        "reg_lambda": 10,
+        "subsample": 0.8,
+        "colsample_bytree": 0.7,
+        "min_child_weight": 5
+      },
+      "fold_scores": [
+        0.8821135967969895,
+        0.9861030608888655,
+        0.8640893875606475
+      ],
+      "mean": 0.9107686817488342
+    },
+    {
+      "parameters": {
+        "n_estimators": 80,
+        "max_depth": 2,
+        "learning_rate": 0.05,
+        "reg_lambda": 10,
+        "subsample": 0.8,
+        "colsample_bytree": 0.7,
+        "min_child_weight": 10
+      },
+      "fold_scores": [
+        0.889973083138466,
+        0.9680792066786023,
+        0.8650979935176789
+      ],
+      "mean": 0.9077167611115824
+    }
+  ],
+  "validation": {
+    "MAE": 1.0470571147070988,
+    "RMSE": 1.272540317293846,
+    "R2": 0.4422248184421931,
+    "MedianAbsoluteError": 1.0300656318664547
+  }
+}

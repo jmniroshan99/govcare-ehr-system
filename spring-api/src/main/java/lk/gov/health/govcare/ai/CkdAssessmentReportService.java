@@ -119,6 +119,14 @@ public class CkdAssessmentReportService {
 
     @Transactional
     public Map<String, Object> generate(GovCarePrincipal actor, UUID assessmentId) throws IOException {
+        return generate(actor,assessmentId,null,null);
+    }
+    @Transactional
+    public Map<String,Object> generate(GovCarePrincipal actor,UUID assessmentId,UUID clinicalSnapshotId,UUID outlookSnapshotId)throws IOException{
+        return generate(actor,assessmentId,clinicalSnapshotId,outlookSnapshotId,false);
+    }
+    @Transactional
+    public Map<String,Object> generate(GovCarePrincipal actor,UUID assessmentId,UUID clinicalSnapshotId,UUID outlookSnapshotId,boolean technicalAppendix)throws IOException{
         actor = predictions.assessmentScope(actor, assessmentId, true);
         Map<String, Object> m = sql.required("""
             select p.id::text,p.patient_id::text patient_id,p.probability,p.risk_category,p.confidence,
@@ -137,6 +145,7 @@ public class CkdAssessmentReportService {
 
         UUID patient = UUID.fromString(String.valueOf(m.get("patient_id")));
         access.requireClinicalWrite(actor, patient);
+        m=new LinkedHashMap<>(m);boolean synthetic=ClinicalTestPatientPolicy.synthetic(sql,actor,patient);m.put("synthetic",synthetic);
         List<Map<String, Object>> inputs = sql.list("""
             select i.feature_key,i.value_numeric,i.value_text,i.unit,i.source_type,i.manual_override,i.source_metadata,
                    o.coding_system,o.code,o.extraction_confidence,r.original_filename source_report
@@ -158,10 +167,9 @@ public class CkdAssessmentReportService {
         Map<Integer,CkdProgressionForecastService.Forecast> forecasts = intelligence == null ? Map.of() : intelligence.reportForecasts(actor, patient);
         SriLankanRenalIntelligenceService.Overview renalOverview = renalIntelligence == null ? null : renalIntelligence.reportOverview(actor, patient);
         List<SriLankanRenalIntelligenceService.PredictionView> renalPredictions = renalOverview == null ? List.of() : renalOverview.predictions();
-        JsonNode moduleSnapshot = renalModules == null ? null : renalModules.assessmentReportSnapshot(actor, patient, assessmentId);
-        JsonNode outlookSnapshot = outlook == null ? null : outlook.storedForReport(actor, patient);
-        byte[] bytes = pdf(m, inputs, factors, recommendations, assessmentId, predictive, forecasts, renalPredictions, renalOverview, moduleSnapshot,
-                outlook == null ? null : outlookSnapshot == null ? com.fasterxml.jackson.databind.node.NullNode.getInstance() : outlookSnapshot);
+        JsonNode moduleSnapshot = renalModules == null ? null : clinicalSnapshotId==null?renalModules.assessmentReportSnapshot(actor, patient, assessmentId):renalModules.selectedReportSnapshot(actor,patient,assessmentId,clinicalSnapshotId);
+        JsonNode outlookSnapshot = outlook == null ? null : outlookSnapshotId==null?outlook.storedForReport(actor, patient):outlook.selectedForReport(actor,patient,outlookSnapshotId);
+        byte[] bytes = CkdConciseReportPdf.render(m,inputs,factors,recommendations,assessmentId,moduleSnapshot,technicalAppendix);
         String filename = "govcare-ckd-" + m.get("patient_no") + "-" + assessmentId + ".pdf";
         DocumentStorageService.StoredFile f = storage.storeBytes(actor.hospitalId(), patient, "OTHER_CLINICAL_DOCUMENT", bytes, filename, "application/pdf");
 
@@ -171,6 +179,7 @@ public class CkdAssessmentReportService {
         dp.put("title", "CKD AI Clinical Decision Support Report"); dp.put("file", f.fileName()); dp.put("original", f.originalFileName());
         dp.put("size", f.size()); dp.put("key", f.storageKey()); dp.put("sha", f.checksum()); dp.put("actor", actor.id());
         sql.update("insert into patient_documents(id,hospital_id,patient_id,source_department_id,document_type,title,description,file_name,original_file_name,mime_type,file_size_bytes,storage_key,sha256_checksum,document_status,patient_release_status,visibility_level,created_by) values(:id,:h,:p,:dep,'OTHER_CLINICAL_DOCUMENT',:title,'Structured CKD AI assessment with coding assistance; clinician review required',:file,:original,'application/pdf',:size,:key,:sha,'SUBMITTED','NOT_RELEASED','CARE_TEAM',:actor)", dp);
+        if(synthetic)sql.update("update patient_documents set document_classification='TEST_DOCUMENT' where id=:id and hospital_id=:h and patient_id=:p",dp);
 
         Map<String, Object> gp = new HashMap<>();
         gp.put("h", actor.hospitalId()); gp.put("p", patient); gp.put("a", assessmentId); gp.put("d", document); gp.put("file", filename);
@@ -183,6 +192,7 @@ public class CkdAssessmentReportService {
         documentReference.setStatus(Enumerations.DocumentReferenceStatus.CURRENT);
         documentReference.setSubject(new Reference("Patient/patient-" + patient));
         documentReference.setDescription("GovCare structured CKD AI clinical decision support report");
+        documentReference.getMeta().addTag().setSystem("urn:govcare:document-classification").setCode(synthetic?"TEST_DOCUMENT":"CLINICAL_DOCUMENT");
         documentReference.addContent().setAttachment(new Attachment().setContentType("application/pdf").setTitle(filename));
         documentReference.addExtension().setUrl("urn:govcare:forecast-method").setValue(new CodeType("TREND_PROJECTION"));
         documentReference.addExtension().setUrl("urn:govcare:model-version").setValue(new StringType(CkdProgressionForecastService.MODEL_VERSION));
@@ -299,9 +309,9 @@ public class CkdAssessmentReportService {
 
             section(d, "CKD RISK SUMMARY");
             PdfPTable risk = table(3, new float[]{1,1,1});
-            summaryCell(risk, "Predicted CKD risk", pct(m.get("probability")), riskColor(m.get("risk_category")));
+            summaryCell(risk, "CKD screening model score", modelScore(m.get("probability")), riskColor(m.get("risk_category")));
             summaryCell(risk, "Risk category", pretty(m.get("risk_category")), riskColor(m.get("risk_category")));
-            summaryCell(risk, "AI confidence", pct(m.get("confidence")), TEAL);
+            summaryCell(risk, "Selected-class model score", modelScore(m.get("confidence")), TEAL);
             d.add(risk); spacer(d, 10);
 
 
@@ -381,6 +391,7 @@ public class CkdAssessmentReportService {
 
     private static void addSixRenalModules(Document d, PdfWriter writer, JsonNode snapshot,
             SriLankanRenalIntelligenceService.Overview overview) throws Exception {
+        if(snapshot!=null&&snapshot.path("schemaVersion").asInt()>=4){ClinicalIntelligencePdfSummary.add(d,writer,snapshot);RenalTrendPdf.add(d,writer,snapshot);return;}
         addClinicalRiskDashboard(d,writer,snapshot);
         boolean mapped=snapshot!=null&&snapshot.path("clinicalFeatureData").isObject();
         d.newPage();
@@ -419,7 +430,7 @@ public class CkdAssessmentReportService {
                     if(module.path("readiness").path("technicalReference").isTextual())card.addElement(new Paragraph("Request reference: "+module.path("readiness").path("technicalReference").asText(),font(6,Font.NORMAL,Color.DARK_GRAY)));
                 }
                 if(module.path("currentValue").isNumber())card.addElement(new Paragraph("Latest measured: "+pdfNodeNumber(module.path("currentValue"))+" "+module.path("unit").asText()+" | "+module.path("currentAt").asText("Date not recorded")+(module.path("previousValue").isNumber()?" | Previous: "+pdfNodeNumber(module.path("previousValue")):""),font(7,Font.NORMAL,Color.DARK_GRAY)));
-                if(module.path("researchRiskScore").isNumber())card.addElement(new Paragraph("Research Risk Score: "+pct(module.path("researchRiskScore").asDouble())+" (not clinically calibrated)",font(8,Font.BOLD,ORANGE)));
+                if(module.path("researchRiskScore").isNumber())card.addElement(new Paragraph("Research score: "+String.format(java.util.Locale.ROOT,"%.4f",module.path("researchRiskScore").asDouble())+" (0-1; not clinically calibrated)",font(8,Font.BOLD,ORANGE)));
                 if(module.path("forecast").isNumber())card.addElement(new Paragraph("Next-period research forecast: "+pdfNodeNumber(module.path("forecast"))+" "+module.path("unit").asText(),font(8,Font.BOLD,TEAL)));
                 if(module.path("directionalPercent").isNumber()&&module.path("evaluatedComponents").asInt()>0)card.addElement(new Paragraph("Directional composite: "+module.path("directionalPercent").asInt()+"% | "+module.path("worseningComponents").asInt()+"/"+module.path("evaluatedComponents").asInt()+" domains. NOT A DISEASE PROBABILITY.",font(7,Font.BOLD,ORANGE)));
                 if(key.equals("dialysisAdequacy"))card.addElement(new Paragraph("Current measured URR: "+pdfNodeNumber(module.path("currentValue"))+"% | Next-period forecast: "+(module.path("forecast").isNumber()?pdfNodeNumber(module.path("forecast"))+"%":"Not ready / not run"),font(7,Font.NORMAL,TEAL)));
@@ -469,60 +480,93 @@ public class CkdAssessmentReportService {
         Color navy=new Color(11,37,69);
         section(d,"CKD Related Clinical Intelligence Summary");
         d.add(new Paragraph("Source evidence, monitoring status and next clinical actions",font(9,Font.NORMAL,navy)));
-        d.add(new Paragraph(snapshot==null?"No related-risk snapshot available. No values or risk results have been inferred.":"Assessment-linked snapshot: "+snapshot.path("snapshotId").asText("Not recorded")+" | Evaluated: "+snapshot.path("generatedAt").asText("Not recorded"),font(7,Font.NORMAL,Color.GRAY)));
+        d.add(dashboardLine(snapshot==null?"No related-risk snapshot available. No values or risk results have been inferred.":"Assessment-linked snapshot: "+snapshot.path("snapshotId").asText("Not recorded"),8,Font.NORMAL,Color.DARK_GRAY));
+        if(snapshot!=null)d.add(dashboardLine("Evaluated: "+dashboardEvaluationDate(snapshot.path("generatedAt")),8,Font.NORMAL,Color.DARK_GRAY));
         spacer(d,8);
         var keys=List.of("anemia","hyperkalemia","dialysisAdequacy","renalDeterioration","cardiovascular");
         var labels=List.of("Anemia Monitoring","Hyperkalemia Risk Monitoring","Dialysis Effectiveness Monitoring","Renal Function Progression","CKD Cardiovascular Monitoring");
         var colors=List.of(new Color(229,57,53),new Color(126,87,194),new Color(2,136,209),new Color(0,105,92),new Color(216,27,96));
-        PdfPTable cards=table(2,new float[]{1,1});cards.setSplitRows(true);
+        PdfPTable cards=table(2,new float[]{1,1});cards.setSplitRows(true);cards.setSplitLate(true);
+        PdfPCell continued=new PdfPCell(new Phrase("CKD Related Clinical Intelligence Summary - continued",font(9,Font.BOLD,TEAL)));
+        continued.setColspan(2);continued.setBorder(Rectangle.NO_BORDER);continued.setPaddingBottom(8);cards.addCell(continued);
+        cards.setHeaderRows(1);cards.setSkipFirstHeader(true);
         for(int i=0;i<keys.size();i++){
             String key=keys.get(i);boolean cv=key.equals("cardiovascular");JsonNode m=snapshot==null?null:snapshot.path(cv?"cardiovascularMonitoring":key);
             JsonNode c=m==null?null:cv?m:m.path("clinicalAssessment"),r=c==null?null:c.path("dataReadiness");Color disease=colors.get(i);
-            PdfPCell card=new PdfPCell();card.setPadding(9);card.setBorderColor(new Color(222,231,238));card.setBackgroundColor(new Color(249,251,253));
-            card.addElement(new Paragraph(labels.get(i),font(10,Font.BOLD,disease)));
-            String status=cv?"Surveillance recommended":clinicalDashboardStatus(m);
-            card.addElement(new Paragraph("Risk status: "+status+(cv?" | Risk not estimated":""),font(8,Font.BOLD,navy)));
-            if(c!=null&&c.path("currentValue").isNumber())card.addElement(new Paragraph((key.equals("anemia")?"Current Hb: ":key.equals("hyperkalemia")?"Current potassium: ":"Measured URR: ")+pdfNodeNumber(c.path("currentValue"))+" "+c.path("unit").asText()+" | "+clinicalDashboardDate(c.path("currentAt")),font(9,Font.BOLD,navy)));
-            else if(key.equals("dialysisAdequacy"))card.addElement(new Paragraph("URR: Not calculated",font(9,Font.BOLD,navy)));
-            else if(c!=null&&c.path("creatinineChangePercent").isNumber())card.addElement(new Paragraph("Measured creatinine change: "+pdfNodeNumber(c.path("creatinineChangePercent"))+"% (not probability)",font(9,Font.BOLD,navy)));
+            PdfPCell card=new PdfPCell();card.setPadding(11);card.setBorderColor(new Color(222,231,238));card.setBackgroundColor(new Color(249,251,253));
+            card.addElement(dashboardLine(labels.get(i),11,Font.BOLD,disease));
+            String status=cv?(c!=null&&c.isObject()?"Surveillance recommended":"Data required"):clinicalDashboardStatus(m);
+            card.addElement(dashboardLine("Monitoring status: "+status,8,Font.BOLD,navy));
+            if(cv)card.addElement(dashboardLine("Risk not estimated",9,Font.BOLD,navy));
+            if(c!=null&&c.path("currentValue").isNumber()){
+                card.addElement(dashboardLine((key.equals("anemia")?"Current Hb: ":key.equals("hyperkalemia")?"Current potassium: ":"Measured URR: ")+pdfNodeNumber(c.path("currentValue"))+" "+c.path("unit").asText(),9,Font.BOLD,navy));
+                card.addElement(dashboardLine("Measurement date: "+clinicalDashboardDate(c.path("currentAt")),8,Font.NORMAL,Color.DARK_GRAY));
+            }
+            else if(key.equals("dialysisAdequacy"))card.addElement(dashboardLine("URR: Not calculated",9,Font.BOLD,navy));
+            else if(c!=null&&c.path("creatinineChangePercent").isNumber())card.addElement(dashboardLine("Measured creatinine change: "+pdfNodeNumber(c.path("creatinineChangePercent"))+"% (not probability)",9,Font.BOLD,navy));
             if(r!=null&&r.path("requiredCount").asInt()>0){
-                card.addElement(new Paragraph("Monitoring inputs: "+r.path("percent").asInt()+"% available | Available evidence: "+r.path("availableCount").asInt()+"/"+r.path("requiredCount").asInt()+" monitoring inputs",font(7,Font.BOLD,disease)));
-                PdfPTable progress=table(1,new float[]{1});PdfPCell bar=new PdfPCell(new Phrase(" ",font(1,Font.NORMAL,disease)));bar.setFixedHeight(4);bar.setBackgroundColor(r.path("percent").asInt()>0?disease:LIGHT_GRAY);bar.setBorder(Rectangle.NO_BORDER);progress.addCell(bar);progress.setWidthPercentage(Math.max(1,r.path("percent").asInt()));progress.setHorizontalAlignment(Element.ALIGN_LEFT);card.addElement(progress);
-            }else card.addElement(new Paragraph("Available evidence: coverage not established",font(7,Font.NORMAL,Color.GRAY)));
-            if(c!=null){
+                card.addElement(dashboardLine("Monitoring inputs: "+r.path("percent").asInt()+"% available ("+r.path("availableCount").asInt()+"/"+r.path("requiredCount").asInt()+")",8,Font.BOLD,disease));
+                card.addElement(dashboardProgress(r.path("percent").asInt(),disease));
+            }else card.addElement(dashboardLine("Available evidence: coverage not established",8,Font.NORMAL,Color.DARK_GRAY));
+            if(c!=null&&c.isObject()){
                 List<String> indicators=new ArrayList<>(),missing=new ArrayList<>();
                 for(JsonNode f:c.path("featuresUsed"))indicators.add(f.path("label").asText()+" "+pdfNodeNumber(f.path("value"))+" "+f.path("unit").asText());
                 for(JsonNode requirement:c.path("requirements"))if(!requirement.path("satisfied").asBoolean())missing.add(requirement.path("label").asText());
-                card.addElement(new Paragraph("Clinical indicators: "+(indicators.isEmpty()?"Source measurements required":String.join("; ",indicators)),font(7,Font.NORMAL,Color.DARK_GRAY)));
-                card.addElement(new Paragraph("Missing information: "+(missing.isEmpty()?"Listed monitoring inputs recorded":String.join("; ",missing)),font(7,Font.NORMAL,ORANGE)));
-                if(key.equals("anemia"))card.addElement(new Paragraph("Extended workup: PCV, RBC count, ferritin and iron profile are not linked to this snapshot; review CBC / iron-study sources.",font(7,Font.NORMAL,Color.GRAY)));
+                if(!c.path("currentValue").isNumber())card.addElement(dashboardLine("Clinical indicators: "+(indicators.isEmpty()?"Source measurements required":String.join("; ",indicators)),8,Font.NORMAL,Color.DARK_GRAY));
+                String coverage=missing.isEmpty()?(r.path("requiredCount").asInt()>0&&r.path("availableCount").asInt()>=r.path("requiredCount").asInt()?"Listed monitoring inputs recorded.":"Required input coverage is not established."):"Missing information: "+String.join("; ",missing);
+                card.addElement(dashboardLine(coverage,8,Font.NORMAL,missing.isEmpty()?Color.DARK_GRAY:new Color(150,73,14)));
+                if(key.equals("anemia"))card.addElement(dashboardLine("Extended workup: CBC / iron-study sources (PCV, RBC count, ferritin, iron profile) are not linked.",8,Font.NORMAL,Color.DARK_GRAY));
                 JsonNode trend=c.path("trend");if(trend.path("ready").asBoolean()){
-                    card.addElement(new Paragraph("Dated trend: "+pdfNodeNumber(trend.path("previousValue"))+" to "+pdfNodeNumber(trend.path("currentValue"))+" "+trend.path("unit").asText(),font(7,Font.BOLD,disease)));
+                    card.addElement(dashboardLine("Dated trend: "+pdfNodeNumber(trend.path("previousValue"))+" to "+pdfNodeNumber(trend.path("currentValue"))+" "+trend.path("unit").asText(),8,Font.BOLD,disease));
                     Image chart=moduleSparkline(writer,trend.path("points"),disease);if(chart!=null){chart.scaleToFit(195,22);card.addElement(chart);}
                 }
-                card.addElement(new Paragraph("AI explanation / clinical rule: "+(c.path("explanations").isEmpty()?"Insufficient source evidence for interpretation.":clinicalSummaryText(clinicalPdfText(c.path("explanations").get(0).asText()),185)),font(7,Font.NORMAL,Color.DARK_GRAY)));
-                if(key.equals("dialysisAdequacy"))card.addElement(new Paragraph("URR = ((Pre-HD urea - Post-HD urea) / Pre-HD urea) x 100",font(7,Font.NORMAL,disease)));
+                card.addElement(dashboardLine("AI explanation / clinical rule: "+(c.path("explanations").isEmpty()?"Insufficient source evidence for interpretation.":clinicalSummaryText(clinicalPdfText(c.path("explanations").get(0).asText()),185)),8,Font.NORMAL,Color.DARK_GRAY));
+                if(key.equals("dialysisAdequacy"))card.addElement(dashboardLine("URR = ((Pre-HD urea - Post-HD urea) / Pre-HD urea) x 100",8,Font.NORMAL,disease));
                 if(cv){
                     JsonNode context=c.path("diabetesContext");String diabetes=switch(context.path("status").asText()){case "CONFIRMED_DIABETES"->"Diabetes documented in the verified record";case "NO_KNOWN_DIABETES"->"No known diabetes in the reviewed record";default->"Unconfirmed";};
-                    card.addElement(new Paragraph("Diabetes context: "+diabetes+" | "+clinicalDashboardDate(context.path("verifiedAt")),font(7,Font.NORMAL,navy)));
-                    if(context.path("sourceNote").isTextual())card.addElement(new Paragraph("Context source: "+clinicalSummaryText(clinicalPdfText(context.path("sourceNote").asText()),180),font(7,Font.NORMAL,Color.DARK_GRAY)));
-                    card.addElement(new Paragraph("Prediction readiness: cardiovascular model unavailable; factor completeness is not a risk probability.",font(7,Font.NORMAL,Color.GRAY)));
+                    card.addElement(dashboardLine("Diabetes context: "+diabetes+(context.path("verifiedAt").isTextual()?" | "+clinicalDashboardDate(context.path("verifiedAt")):""),8,Font.NORMAL,navy));
+                    if(context.path("sourceNote").isTextual())card.addElement(dashboardLine("Context source: "+clinicalSummaryText(clinicalPdfText(context.path("sourceNote").asText()),180),8,Font.NORMAL,Color.DARK_GRAY));
+                    card.addElement(dashboardLine("Prediction readiness: cardiovascular model unavailable; factor completeness is not a risk probability.",8,Font.NORMAL,Color.DARK_GRAY));
                 }
-                else if(m!=null&&m.has("modelKey"))card.addElement(new Paragraph("Research prediction: "+m.path("researchReadiness").path("resultTitle").asText("Eligibility not established"),font(7,Font.NORMAL,Color.GRAY)));
-                card.addElement(new Paragraph("Clinical action: "+(cv?c.path("nextAction").path("label").asText("Review cardiovascular factors"):m.path("readiness").path("nextAction").path("label").asText("Review source evidence")),font(7,Font.BOLD,navy)));
-            }else card.addElement(new Paragraph("Missing information: dated clinical source evidence required. Open the patient workspace to review inputs.",font(7,Font.NORMAL,Color.GRAY)));
+                else if(m!=null&&m.has("modelKey"))card.addElement(dashboardLine("Research prediction: "+m.path("researchReadiness").path("resultTitle").asText("Eligibility not established"),8,Font.NORMAL,Color.DARK_GRAY));
+                card.addElement(dashboardLine("Clinical action: "+(cv?c.path("nextAction").path("label").asText("Review cardiovascular factors"):m.path("readiness").path("nextAction").path("label").asText("Review source evidence")),8,Font.BOLD,navy));
+            }else card.addElement(dashboardLine("Missing information: dated clinical source evidence required. Open the patient workspace to review inputs.",8,Font.NORMAL,Color.DARK_GRAY));
             JsonNode review=m==null?null:m.path("clinicianReview");
-            card.addElement(new Paragraph("Clinician notes: "+(review!=null&&review.isObject()?review.path("clinical_note").asText(review.path("reason").asText("No notes stored")):cv?"Review / record findings in the existing patient clinical record.":"No notes stored for this module snapshot."),font(7,Font.ITALIC,Color.DARK_GRAY)));
+            card.addElement(dashboardLine("Clinician notes: "+(review!=null&&review.isObject()?review.path("clinical_note").asText(review.path("reason").asText("No notes stored")):cv?"Review / record findings in the existing patient clinical record.":"No notes stored for this module snapshot."),8,Font.ITALIC,Color.DARK_GRAY));
             cards.addCell(card);
         }
         PdfPCell explanation=new PdfPCell();explanation.setPadding(11);explanation.setBackgroundColor(new Color(235,244,248));explanation.setBorderColor(new Color(222,231,238));
-        explanation.addElement(new Paragraph("Why this result?",font(11,Font.BOLD,navy)));
-        explanation.addElement(new Paragraph("Interpret recorded creatinine, eGFR, potassium and hemoglobin with their actual source dates. Arrows and trends require repeated dated observations. Missing values do not imply low risk.",font(8,Font.NORMAL,navy)));
-        explanation.addElement(new Paragraph("Clinical monitoring uses transparent existing measurement rules. Research forecasts remain separately gated. Detailed source evidence, model information, limitations and stored clinician reviews follow.",font(8,Font.NORMAL,navy)));
+        explanation.addElement(dashboardLine("Why this result?",11,Font.BOLD,navy));
+        explanation.addElement(dashboardLine("Interpret recorded creatinine, eGFR, potassium and hemoglobin with their actual source dates. Arrows and trends require repeated dated observations. Missing values do not imply low risk.",9,Font.NORMAL,navy));
+        explanation.addElement(dashboardLine("Clinical monitoring uses transparent existing measurement rules. Research forecasts remain separately gated. Detailed source evidence, model information, limitations and stored clinician reviews follow.",9,Font.NORMAL,navy));
         cards.addCell(explanation);d.add(cards);spacer(d,8);
         d.add(new Paragraph("Data completeness is not diagnostic certainty, forecast eligibility or disease probability. No inference is run during export.",font(8,Font.ITALIC,navy)));
     }
-    private static String clinicalDashboardDate(JsonNode node){String value=node.asText(null);return value!=null&&value.length()>=10?value.substring(0,10):"Undated snapshot; verify date";}
+    private static Paragraph dashboardLine(String text,int size,int style,Color color){
+        Paragraph line=new Paragraph(clinicalPdfText(text),font(size,style,color));
+        line.setLeading(size*1.3f);line.setSpacingAfter(2);return line;
+    }
+    static PdfPTable dashboardProgress(int percent,Color color){
+        float fraction=Math.max(0,Math.min(100,percent))/100f;
+        PdfPTable progress=table(1,new float[]{1});progress.setSpacingBefore(3);progress.setSpacingAfter(5);
+        PdfPCell bar=new PdfPCell();bar.setFixedHeight(5);bar.setPadding(0);bar.setBorder(Rectangle.NO_BORDER);
+        bar.setCellEvent((cell,position,canvases)->{
+            PdfContentByte canvas=canvases[PdfPTable.BACKGROUNDCANVAS];canvas.saveState();
+            canvas.setColorFill(new Color(224,231,237));canvas.rectangle(position.getLeft(),position.getBottom(),position.getWidth(),position.getHeight());canvas.fill();
+            if(fraction>0){canvas.setColorFill(color);canvas.rectangle(position.getLeft(),position.getBottom(),position.getWidth()*fraction,position.getHeight());canvas.fill();}
+            canvas.restoreState();
+        });
+        progress.addCell(bar);return progress;
+    }
+    private static String clinicalDashboardDate(JsonNode node){
+        String value=node.asText(null);if(value==null)return "Undated snapshot; verify date";
+        try{return OffsetDateTime.parse(value).toLocalDate().toString();}catch(java.time.format.DateTimeParseException ignored){}
+        try{return java.time.LocalDate.parse(value).toString();}catch(java.time.format.DateTimeParseException ignored){return "Undated snapshot; verify date";}
+    }
+    private static String dashboardEvaluationDate(JsonNode node){
+        try{return OffsetDateTime.parse(node.asText()).withOffsetSameInstant(java.time.ZoneOffset.UTC).format(java.time.format.DateTimeFormatter.ofPattern("dd MMM uuuu, HH:mm 'UTC'",Locale.ENGLISH));}
+        catch(java.time.format.DateTimeParseException ignored){return "Not recorded / unverified";}
+    }
     private static String clinicalSummaryText(String value,int limit){if(value.length()<=limit)return value;int end=value.lastIndexOf(" ",limit);return value.substring(0,end>0?end:limit)+"... Full explanation in evidence section.";}
     private static String clinicalDashboardStatus(JsonNode module){
         if(module==null||module.isMissingNode())return "Data required";
@@ -661,7 +705,7 @@ public class CkdAssessmentReportService {
             boolean classifier = "hyperkalemia".equals(prediction.modelKey());
             row(details, "Predicted result", out.path("prediction").isNumber()
                     ? out.path("prediction").asText() + " " + out.path("unit").asText() + " (PREDICTED)"
-                    : out.path("probability").isNumber() ? pct(out.path("probability").doubleValue()) + " research risk score (NOT CLINICALLY CALIBRATED)"
+                    : out.path("probability").isNumber() ? String.format(java.util.Locale.ROOT,"%.4f",out.path("probability").doubleValue()) + " research score (0-1; NOT CLINICALLY CALIBRATED)"
                     : "Unavailable - no research output calculated");
             var interval = out.path("interval");
             row(details, "Uncertainty / calibration", interval.isObject() ? interval.path("low").asText() + " to " + interval.path("high").asText()
@@ -914,6 +958,7 @@ public class CkdAssessmentReportService {
     private static void cell(PdfPTable t,Object v,boolean bold){PdfPCell c=new PdfPCell(new Phrase(valueOr(v,"-"),font(8,bold?Font.BOLD:Font.NORMAL,Color.DARK_GRAY)));c.setPadding(5);c.setBorderColor(new Color(215,220,223));t.addCell(c);}
     private static void summaryCell(PdfPTable t,String label,String value,Color color){PdfPCell c=new PdfPCell();c.setPadding(9);c.setBackgroundColor(new Color(248,250,250));c.setBorderColor(color);Paragraph a=new Paragraph(label,font(7,Font.BOLD,Color.GRAY));Paragraph b=new Paragraph(value,font(15,Font.BOLD,color));c.addElement(a);c.addElement(b);t.addCell(c);}
     private static Font font(int size,int style,Color color){return new Font(Font.HELVETICA,size,style,color);}
+    private static String modelScore(Object value){return value instanceof Number n?String.format(Locale.ROOT,"%.4f (0-1; calibration unverified)",n.doubleValue()):"Not available";}
     private static String pct(Object v){if(v instanceof Number n)return String.format(Locale.ROOT,"%.1f%%",n.doubleValue()*100);return "N/A";}
     private static String pretty(Object v){return Objects.toString(v,"N/A").replace('_',' ');}
     private static String valueOr(Object v,String fallback){String s=Objects.toString(v,"").trim();return s.isEmpty()?fallback:s;}

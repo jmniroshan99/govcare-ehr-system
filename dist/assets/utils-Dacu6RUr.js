@@ -1,1 +1,0 @@
-import{B as e,V as t}from"./vendor-BeHkcnVL.js";function n(...n){return e(t(n))}export{n as t};

@@ -11,11 +11,13 @@ export type OutlookEvidence = {
 };
 export type OutlookModel = {name:string;version:string;method:string;outcome:string;population:string;calibration:string;externalValidation:string;localValidation:string;deploymentStatus:string;reference:string;calculatorReference:string;uncertainty:string;inputPolicy:string;thresholdReference:string;horizonsYears:number[];confidenceInterval:null};
 export type OutlookMilestone={year:number;title:string};
+export type LearnedOutlookReadiness={status:string;probability:null;curve:null;method?:string;endpoint?:string;horizonYears?:number;validationStatus?:string;missing_fields?:string[];reasons:string[];dataset_sha256?:string};
 export type OutlookReadiness = {
   status:"AVAILABLE"|"NOT_APPLICABLE"|"INSUFFICIENT_DATA"|"SOURCE_REVIEW_REQUIRED"|"CLINICAL_CONTEXT_REQUIRED";
   assessedAt:string;model:OutlookModel;evidence:OutlookEvidence;twoYearRisk:number|null;fiveYearRisk:number|null;
   riskCategory:string|null;missingInputs:string[];reasons:string[];interpretation:string;eligibility:string;
   completeness:{available:number;required:number;percent:number;meaning:string};canCalculateAfterConfirmation:boolean;limitations:string[];
+  resultType?:"PUBLISHED_EQUATION_ESTIMATE"|"INSUFFICIENT_EVIDENCE";learnedModel?:LearnedOutlookReadiness;
 };
 export type OutlookAssessment=OutlookReadiness & {
   id:string;patientId:string;hospitalId:string;evidenceFingerprint:string;reviewState:string;reviewVersion:number;

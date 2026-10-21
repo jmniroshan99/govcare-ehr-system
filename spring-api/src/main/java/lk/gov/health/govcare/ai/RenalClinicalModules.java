@@ -102,6 +102,8 @@ public final class RenalClinicalModules {
             ArrayNode sources=((ObjectNode)result.get(key)).putArray("sources");
             for(var row:rows)sources.addObject().put("id",row.id().toString()).put("observedAt",row.observedAt().toString()).put("sourceNote",row.sourceNote());
         }
+        for(String key:ORDER)((ObjectNode)result.get(key)).putNull("directionalPercent");
+        composite.putNull("scorePercent");
         RenalDataReadiness.attach(result,rows,registry,now);
         return result;
     }
@@ -186,12 +188,13 @@ public final class RenalClinicalModules {
                     values.put(entry.getKey(),SriLankanRenalIntelligenceService.convert(entry.getKey(),entry.getValue(),o.units().get(entry.getKey())));units.put(entry.getKey(),UNITS.get(entry.getKey()));
                 }catch(Exception invalid){issues.add("INVALID_VALUE_OR_UNIT_"+entry.getKey().toUpperCase());}
             }
-            if(values.containsKey("urea_pre")&&values.containsKey("urea_post")) {
-                double pre=values.get("urea_pre"),post=values.get("urea_post");
-                if(o.maintenanceHemodialysisVerified()&&Objects.equals(o.units().get("urea_pre"),o.units().get("urea_post"))&&pre>0&&post>=0&&post<=pre) {values.put("urr",100*(pre-post)/pre);units.put("urr","%");}
-                else issues.add("PAIRED_UREA_INVALID_FOR_URR");
+            if(values.containsKey("urea_pre")||values.containsKey("urea_post")) {
+                var pair=MAPPER.createObjectNode();pair.set("measurements",MAPPER.valueToTree(values));pair.set("units",MAPPER.valueToTree(units));pair.set("sampling_context",MAPPER.valueToTree(o.samplingContext()));pair.put("source_note",o.sourceNote());
+                var calculated=UreaReductionRatio.evaluate(o.samplingContext()==null?null:Objects.toString(o.samplingContext().get("patientId"),null),pair);
+                if(calculated.path("value").isNumber()){values.put("urr",calculated.path("value").asDouble());units.put("urr","%");}
+                else issues.add("PAIRED_UREA_SOURCE_OR_TIMING_UNVERIFIED");
             }
-            flags.addAll(issues);result.add(new SriLankanRenalIntelligenceService.ObservationView(o.id(),o.observedAt(),o.maintenanceHemodialysisVerified(),values,units,o.sourceNote(),issues));
+            flags.addAll(issues);result.add(new SriLankanRenalIntelligenceService.ObservationView(o.id(),o.observedAt(),o.maintenanceHemodialysisVerified(),values,units,o.sourceNote(),issues,o.samplingContext()));
         }
         if(!result.isEmpty()&&ChronoUnit.DAYS.between(result.get(result.size()-1).observedAt(),now)>62)flags.add("STALE_LATEST_OBSERVATION_OVER_62_DAYS");
         return result;

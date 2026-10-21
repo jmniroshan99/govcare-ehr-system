@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "current_benchmark_run": "cdss-20261020-final",
+  "registry_manifest": "cdss-20261020-final.json",
+  "new_benchmark_artifacts_automatically_served": false,
+  "serving_location": "../artifacts/",
+  "serialization_repair_run": "../runs/cdss-20261020-serving-repair/",
+  "learned_five_year_status": "INSUFFICIENT_LONG_TERM_OUTCOME_DATA",
+  "clinical_validation": "NOT_COMPLETED",
+  "dataset_permission_status": "UNVERIFIED",
+  "latest_research_benchmark_run": "cdss-20261020-clinical-review",
+  "latest_research_registry_manifest": "cdss-20261020-clinical-review.json"
+}

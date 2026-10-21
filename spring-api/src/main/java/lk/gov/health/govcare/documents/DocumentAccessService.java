@@ -331,7 +331,7 @@ public class DocumentAccessService {
                        pd.prescription_id::text as "prescriptionId",pd.laboratory_request_id::text as "laboratoryRequestId",
                        pd.radiology_request_id::text as "radiologyRequestId",pd.admission_id::text as "admissionId",
                        pd.source_department_id::text as "sourceDepartmentId",d.name as "sourceDepartmentName",
-                       pd.document_type as "documentType",pd.title,pd.description,pd.file_name as "fileName",
+                       pd.document_type as "documentType",pd.document_classification as "documentClassification",pd.title,pd.description,pd.file_name as "fileName",
                        pd.original_file_name as "originalFileName",pd.mime_type as "mimeType",
                        pd.file_size_bytes as "fileSizeBytes",pd.storage_key as "storageKey",
                        pd.sha256_checksum as "sha256Checksum",pd.document_status as "documentStatus",

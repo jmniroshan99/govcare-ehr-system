@@ -67,7 +67,7 @@ public class PatientDocumentController {
 
     @GetMapping("/{documentId}/content")
     @PreAuthorize("hasAuthority('DOCUMENT_VIEW')")
-    public ResponseEntity<Resource> content(
+    public ResponseEntity<?> content(
             @PathVariable UUID patientId,
             @PathVariable UUID documentId,
             @RequestParam(defaultValue = "false") boolean download,
@@ -80,6 +80,15 @@ public class PatientDocumentController {
         ContentDisposition disposition = download
                 ? ContentDisposition.attachment().filename(filename).build()
                 : ContentDisposition.inline().filename(filename).build();
+        if (MediaType.APPLICATION_PDF_VALUE.equalsIgnoreCase(mime)) {
+            // Return a complete bounded PDF with no-store semantics; security and
+            // configured CORS checks still run before the document lookup.
+            byte[] bytes;
+            try (var input = content.resource().getInputStream()) { bytes = input.readAllBytes(); }
+            return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF).contentLength(bytes.length)
+                    .cacheControl(org.springframework.http.CacheControl.noStore())
+                    .header(HttpHeaders.CONTENT_DISPOSITION, disposition.toString()).body(bytes);
+        }
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(mime))
                 .header(HttpHeaders.CONTENT_DISPOSITION, disposition.toString())

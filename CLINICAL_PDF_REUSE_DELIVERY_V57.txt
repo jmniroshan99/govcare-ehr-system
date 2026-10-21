@@ -1,0 +1,101 @@
+GovCare EHR — Reusable Clinical PDF Import and Review (V57)
+Delivered: 21 October 2026
+
+AUTOMATIC READING FOLLOW-UP
+Newly selected or dropped local PDFs now start extraction immediately. Selecting an authorized EHR report also starts a read. The queue uses current state when asynchronous results arrive, so new files and earlier previews are retained. Reading progress is visible and an immediate busy guard prevents duplicate starts. Only newly added sources are read; explicit re-read remains available. Applying values and saving clinical reports still require confirmation.
+Actual browser verification covered file selection, appending files, drag/drop, saved EHR selection, re-reading and all ten generated PDFs without a Read-button click. Clinical counts and existing manual form values remained unchanged. The targeted Node suite passed 34 tests. Evidence: verification/pdf-auto-read/browser.json, node-tests.log, vite-build.log, desktop.png and mobile.png.
+
+RESULT
+Reading a report is repeatable and independent of saving source documents or running an assessment. Existing reports are reused by hospital + patient + SHA-256. Reading, re-reading, clearing a selection, or comparing sources does not insert clinical observations, FHIR Observations, or predictions.
+
+ROOT CAUSES
+1. The old checksum check returned a blocking conflict before extraction; one duplicate aborted a multi-file request.
+2. The extraction endpoint saved the attachment, report, clinical observations and final FHIR Observations during a read operation.
+3. The form selected a dated/latest/last candidate automatically, hiding competing results and overwriting values without field approval.
+4. Repeated manual edits could lose MANUAL_OVERRIDE provenance. Missing inputs and unreported history needed clearer completion guidance.
+5. Label/unit handling missed spaced eGFR units, “Estimated GFR”, abbreviated hemoglobin and conversions. A filename was not a reliable description of its actual contents.
+6. Installed Chrome returned failed or empty binary PDF fetches; clean Chromium and requests carrying an Origin header succeeded. The bounded, authenticated JSON preview avoids that failing browser path. Browser configuration and CORS permissions were not relaxed.
+7. Draft summaries did not include form data, but the page never fetched draft details for restoration. Initial autosave also risked replacing a saved draft with the calculated age alone.
+
+IMPLEMENTATION
+Backend:
+- ClinicalPdfImportService separates preview, saved-source extraction, protected file preview and explicit source saving.
+- ClinicalPdfExtractionController keeps the existing extract routes and adds authorized saved-source listing, explicit save and protected preview routes.
+- ClinicalPdfExtractionService normalizes supported units, preserves original text/value/unit, recognizes the supplied labels, rejects qualified numbers as exact measurements, and reports unsupported measurements and OCR requirements.
+- Patient identity is compared with stored patient number, NIC and/or name where printed. A mismatch suppresses candidates and blocks source save, even if the confirmation checkbox is selected. An image-only or unidentified PDF remains unverified and requires explicit identity confirmation before saving its source.
+- Save uses a transaction, a PostgreSQL advisory lock scoped to hospital/patient/hash, and the existing unique checksum index. Concurrent identical saves return the same stored identifiers.
+- ClinicalPersistenceService stores source metadata without generating laboratory observations.
+- V49__clinical_pdf_reviewed_sources.sql adds extraction metadata, replaces_report_id and revision_reason. The existing version field records reviewed corrections. A new correction requires a reason and retains the original source and values.
+- CkdPredictionService requires approval metadata for imported inputs, validates referenced reports against the selected patient/tenant, and rejects invalid input ranges. Model coefficients, artifacts and the 17-feature model contract remain unchanged.
+- Saved PDF preview uses a 15 MB bounded authenticated JSON response with no-store headers. The frontend verifies the association and PDF signature and opens a local Blob URL; bearer tokens never appear in viewer URLs. Existing download routes remain available.
+- General saved PDF responses carry no-store semantics. Configured CORS, document permissions and patient authorization remain enforced.
+
+Frontend:
+- ClinicalPdfImportWorkspace provides drag/drop, browsing, a removable queue, searchable saved-report checkboxes, per-file status, duplicate reuse, re-read, preview, open and explicit save/revision actions.
+- Up to ten reports are queued, with a 15 MB per-file limit. Local PDFs are read independently with at most three requests in flight, avoiding the server's aggregate multipart limit. One failed file leaves the other results available.
+- The comparison view displays current, original and normalized values, source files, report dates and verification status. Competing values need explicit source selection and field approval. The bulk approval action only selects unambiguous empty fields.
+- Applying values requires identity confirmation. Reading alone never changes the form. Clearing a selection preserves saved records and form values.
+- Manual overrides retain their original source, value, unit, text and references across further edits and re-reading. Unknown history stays missing; it is not converted to No.
+- All missing required model inputs are listed with focus actions. Incomplete or invalid data cannot call the assessment endpoint.
+- Partial drafts retain values, provenance and the optional manually entered measurement time. Draft details are loaded for restoration. Autosave starts after an edit rather than overwriting an existing draft on initial load.
+- Desktop uses a comparison table; mobile uses readable cards. Styling uses existing GovCare theme tokens.
+
+PROVENANCE AND FHIR
+- Saving source evidence creates a preliminary DocumentReference and linked Provenance, with a replacement relationship for reviewed corrections. It does not create laboratory Observations or a RiskAssessment.
+- Explicit approved assessment execution retains the existing assessment/RiskAssessment workflow. It stores reviewed input snapshots and original-value metadata. Explicit manual/calculated entries follow existing observation persistence rules.
+- A report date is distinct from a specimen collection time. The supplied 28/09/2026 dates are preserved as report dates. No upload time or fabricated midnight is used as a clinical observation time.
+- Imported values remain unverified. No clinical verification is inferred from successful parsing, duplicate detection, identity confirmation or model execution. Existing historical records are retained.
+
+ACTUAL SUPPLIED PDF RESULTS
+01_full_ckd_text_report.pdf: 7 supported measurements.
+02_partial_ckd_text_report.pdf: 3 supported measurements.
+03_unit_conversion_and_unrecognized_report.pdf: 3 supported measurements; creatinine 124 umol/L normalizes to approximately 1.403 mg/dL. CRP and ALT remain unsupported.
+04_image_only_scanned_ckd_report.pdf: OCR_REQUIRED; no invented values.
+05_no_ckd_values_report.pdf: hemoglobin 13.8 g/dL is supported despite the filename. Platelets and ALT remain unsupported.
+Total: 14 per-report measurements, with explicit conflicts in creatinine, eGFR, HbA1c and ACR. None of these reports supplies all 17 model inputs.
+
+VERIFICATION
+- Full Spring regression suite: 309 tests, 0 failures, 0 errors, 5 opt-in JDBC tests skipped (304 passed).
+- Final focused PDF/FHIR/CORS tests after the last parser change: 10 passed.
+- Node review/workspace/clinical-feature/export/renal/evidence/outlook contracts: 56 passed.
+- TypeScript and production Vite build: passed.
+- Real HTTP + native PostgreSQL: five original PDFs saved once; three simultaneous first saves returned one report and attachment. Three repeated five-file imports reused stable references and added no reports, observations, FHIR Observations or predictions.
+- Same filename with different PDF contents retained separate content identities. A malformed file did not discard the valid result. Patient mismatch save returned 422; unassigned clinician access returned 403; anonymous access returned 401.
+- The real browser signed into the application, selected the isolated QA patient, read all five files three times, explicitly approved competing sources, preserved manual edits, saved a partial draft, reopened a saved PDF, and completed the unchanged 17-input assessment flow. No requests were mocked.
+- Missing fields and Unknown prevented prediction requests. Completing the reviewed form produced one explicit assessment and preserved original PDF values in assessment provenance. The resulting ten manual/calculated observations were created by that explicit assessment, not by import.
+- A corrected PDF with the same filename required a review reason, created version 2, retained version 1 and the original attachment, and recorded a preliminary FHIR replacement relationship. Three concurrent revision retries reused version 2. Cross-patient document access returned 404.
+- Final repeated reads after assessment and correction left all counts unchanged: 6 source reports, 6 attachments, 10 manual/calculated observations, 0 FHIR Observations, 6 DocumentReferences, 7 Provenance resources and 1 prediction.
+- Desktop (1440 px) and mobile (375 px) screenshots and page-width checks are included. Browser runtime errors: none in passing runs.
+- The final browser repeat also verified independent malformed-file failure and restored a partial draft after reload, including MANUAL_OVERRIDE provenance. Waiting past the autosave debounce did not replace the saved draft on initial load.
+
+EVIDENCE
+verification/pdf-reuse-v57/live-api.json
+verification/pdf-reuse-v57/live-revision.json
+verification/pdf-reuse-v57/final-live-verification.json
+verification/pdf-reuse-v57/browser.json
+verification/pdf-reuse-v57/browser-repeat.json
+verification/pdf-reuse-v57/extraction-fixtures.json
+verification/pdf-reuse-v57/java-tests.log
+verification/pdf-reuse-v57/pdf-tests.log
+verification/pdf-reuse-v57/node-tests.log
+verification/pdf-reuse-v57/vite-build.log
+verification/pdf-reuse-v57/screenshots/pdf-import-1440.png
+verification/pdf-reuse-v57/screenshots/pdf-import-375.png
+verification/pdf-reuse-v57/screenshots/pdf-review-1440.png
+verification/pdf-reuse-v57/screenshots/pdf-review-375.png
+verification/pdf-reuse-v57/screenshots/ckd-assessment-success.png
+
+QA ISOLATION AND REPRODUCTION
+All writes used a new, clearly labelled SYNTHETIC SOFTWARE QA facility with dedicated synthetic patients and test accounts. No existing account password or role was changed and no existing clinical records were edited or deleted. The provided PDFs identify TEST-PAT-001 / TEST PATIENT and must not be associated with an unrelated real patient.
+The local QA credential/session file is outside the project under the user's .codex/tmp directory and is excluded from delivery. A fresh QA run can set GOVCARE_PDF_QA_SESSION to a new path outside the project, then run scripts/pdf-reuse-qa-db.mjs --provision, the live verifier, browser verifier and revision verifier. The initial-save verifier expects a fresh QA facility. Browser verification requires Playwright and a compatible installed browser or its headless shell. Existing V44+ verification evidence and the V56 delivery are retained.
+
+KNOWN LIMITATIONS
+- No OCR engine is configured. Image-only PDFs need OCR or manual entry; they never produce fabricated measurements.
+- Extraction uses supported label/unit patterns rather than general medical document understanding. Unsupported or ambiguous results require review. The legacy parser confidence score is heuristic, not calibrated clinical certainty.
+- Protected preview uses base64 JSON and therefore has encoding overhead; it is capped at 15 MB.
+- Historical extracted records are preserved rather than retroactively reclassified or deleted.
+- Existing clinical verification, model eligibility and clinician review remain separate from extraction approval.
+
+RUN AND PACKAGE
+The persistent local stack is available at http://127.0.0.1:5300; Spring uses 4002 and renal ML uses 8001. For a future restart, run start-renal-fullstack-windows.bat and keep its launcher running.
+output/GovCare_EHR_Clinical_PDF_Reuse_V57.zip contains the complete current project source, existing model artifacts, production frontend and verification evidence. Installed dependencies, virtual environments, target output, credentials, private environment files, runtime storage and logs are excluded. The adjacent manifest and SHA-256 file support integrity checks. Packaging verifies ZIP CRCs and every included file hash.

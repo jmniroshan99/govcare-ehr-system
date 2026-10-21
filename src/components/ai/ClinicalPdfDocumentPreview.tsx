@@ -1,0 +1,12 @@
+import {useEffect,useState} from 'react';
+import {Button} from '../ui/button';
+import {apiRequest} from '../../services/apiClient';
+import {previewClinicalPdf} from '../../services/aiCdssService';
+type Page={patientId:string;documentId:string;page:number;totalPages:number;contentType:string;imageBase64:string};
+/** Bounded protected page rendering works without a browser PDF plugin. Original PDF remains available. */
+export function ClinicalPdfDocumentPreview({patientId,documentId,title='Original clinical PDF source'}:{patientId:string;documentId:string;title?:string}){
+ const [page,setPage]=useState(1),[rendered,setRendered]=useState<Page|null>(null),[url,setUrl]=useState(''),[error,setError]=useState('');
+ useEffect(()=>{const controller=new AbortController();let owned='';previewClinicalPdf(patientId,documentId,controller.signal).then(file=>{if(!controller.signal.aborted){owned=URL.createObjectURL(file.blob);setUrl(owned);}}).catch(()=>{});return()=>{controller.abort();if(owned)URL.revokeObjectURL(owned);};},[patientId,documentId]);
+ useEffect(()=>{const controller=new AbortController();setRendered(null);setError('');apiRequest<Page>(`/api/ai-cdss/pdf/patients/${encodeURIComponent(patientId)}/documents/${encodeURIComponent(documentId)}/preview-page?page=${page}`,{signal:controller.signal}).then(data=>{if(controller.signal.aborted)return;if(data.patientId!==patientId||data.documentId!==documentId||data.contentType!=='image/png')throw new Error('PDF page association could not be verified.');setRendered(data);}).catch(error=>{if(!controller.signal.aborted)setError(error instanceof Error?error.message:'The PDF page could not be displayed. Open the original PDF.');});return()=>controller.abort();},[patientId,documentId,page]);
+ return <figure className="pdf-review-source-preview" aria-label={title}>{error?<p role="alert">{error}</p>:rendered?<><img src={`data:image/png;base64,${rendered.imageBase64}`} alt={`${title} - page ${page}`} onError={()=>setError('This page could not be displayed. Open the original PDF.')}/><nav aria-label={`${title} pages`}><Button variant="outline" disabled={page<=1} onClick={()=>setPage(value=>value-1)}>Previous page</Button><span>Page {page} of {rendered.totalPages}</span><Button variant="outline" disabled={page>=rendered.totalPages} onClick={()=>setPage(value=>value+1)}>Next page</Button></nav></>:<p role="status">Opening protected PDF page...</p>}{url&&<a href={url} target="_blank" rel="noreferrer">Open original PDF</a>}</figure>;
+}

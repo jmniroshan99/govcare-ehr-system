@@ -43,6 +43,7 @@
     "test:predictive": "node scripts/test-predictive-domain.mjs && node --test scripts/predictive-access.test.cjs && node scripts/verify-predictive-migration.mjs",
     "test:predictive:browser": "node scripts/verify-predictive-browser.mjs",
     "test:ckd-workspace": "node --test scripts/ckd-workspace.test.cjs",
+    "test:ckd:route:browser": "node scripts/verify-ckd-route-browser.mjs",
     "test:disease-probabilities": "node --test scripts/disease-probabilities.test.cjs && node scripts/test-disease-probability-domain.mjs && node scripts/verify-disease-probability-migration.mjs",
     "renal:configure": "node scripts/configure-renal-local.cjs",
     "renal:ml": "node scripts/run-renal-ml.cjs",

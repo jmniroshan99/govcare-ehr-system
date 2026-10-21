@@ -2,12 +2,13 @@ import type { AppUser } from "../types/ehr";
 import { canAccessPath } from "./roleAccess";
 import { patientUuidPattern } from "../utils/patientNavigation";
 
-export type CkdWorkspaceView = "assessment" | "intelligence" | "outlook";
+export type CkdWorkspaceView = "assessment" | "intelligence" | "outlook" | "history" | "review" | "reports";
 export function canUsePredictiveWorkspace(profile: AppUser | null | undefined) {
   return canAccessPath(profile, "/ai-cdss/ckd") && canAccessPath(profile, "/ai-cdss/ckd/predictive-intelligence");
 }
 export function resolveCkdWorkspaceView(requested: string | null, profile: AppUser | null | undefined): CkdWorkspaceView {
-  return (requested === "intelligence" || requested === "outlook") && canUsePredictiveWorkspace(profile) ? requested : "assessment";
+  if(requested==='reports'&&canAccessPath(profile,'/ai-cdss/ckd'))return 'reports';
+  return (requested === "intelligence" || requested === "outlook" || requested === "history" || requested === "review") && canUsePredictiveWorkspace(profile) ? requested : "assessment";
 }
 /** Preserve authorized deep-link resolution while consolidating the old route. */
 export function integratedCkdHref(search: string) {

@@ -1,0 +1,97 @@
+{
+  "schema_version": "CDSS-SURVIVAL-1",
+  "status": "INSUFFICIENT_LONG_TERM_OUTCOME_DATA",
+  "missing_fields": [
+    "age",
+    "censoring_reason",
+    "ckd_confirmed",
+    "clinically_stable",
+    "death_date",
+    "egfr",
+    "event_source_id",
+    "followup_end_date",
+    "index_date",
+    "kidney_failure_ascertainment_complete",
+    "kidney_failure_date",
+    "kidney_failure_event",
+    "kidney_failure_type",
+    "maintenance_dialysis_at_index",
+    "mortality_ascertainment_complete",
+    "predictors_observed_at",
+    "prior_krt",
+    "sex",
+    "urine_acr_mg_g"
+  ],
+  "reasons": [
+    "No genuine adjudicated first-KRT and competing-death/follow-up contract in this file.",
+    "Laboratory observation span is not verified outcome ascertainment. Serum albumin is not urine ACR.",
+    "Historical source cohort is maintenance dialysis, ineligible for first-future-KRT initiation."
+  ],
+  "dataset_sha256": "683e3ce49330922c91581e3f49896c611af0bc2da52abf1f9faea9567aff3da9",
+  "clinical_validation": "NOT_COMPLETED",
+  "candidates": {
+    "cox_elastic_net": {
+      "status": "BLOCKED_MISSING_ENDPOINT",
+      "registered": true,
+      "trained": false,
+      "evaluated": false,
+      "served": false,
+      "reason": "No genuine adjudicated first-KRT and competing-death/follow-up contract in this file.; Laboratory observation span is not verified outcome ascertainment. Serum albumin is not urine ACR.; Historical source cohort is maintenance dialysis, ineligible for first-future-KRT initiation.",
+      "module": "training/algorithms/survival/cox_elastic_net.py"
+    },
+    "weibull_aft": {
+      "status": "BLOCKED_MISSING_ENDPOINT",
+      "registered": true,
+      "trained": false,
+      "evaluated": false,
+      "served": false,
+      "reason": "No genuine adjudicated first-KRT and competing-death/follow-up contract in this file.; Laboratory observation span is not verified outcome ascertainment. Serum albumin is not urine ACR.; Historical source cohort is maintenance dialysis, ineligible for first-future-KRT initiation.",
+      "module": "training/algorithms/survival/weibull_aft.py"
+    },
+    "random_survival_forest": {
+      "status": "BLOCKED_MISSING_ENDPOINT",
+      "registered": true,
+      "trained": false,
+      "evaluated": false,
+      "served": false,
+      "reason": "No genuine adjudicated first-KRT and competing-death/follow-up contract in this file.; Laboratory observation span is not verified outcome ascertainment. Serum albumin is not urine ACR.; Historical source cohort is maintenance dialysis, ineligible for first-future-KRT initiation.",
+      "module": "training/algorithms/survival/random_survival_forest.py"
+    },
+    "extra_survival_trees": {
+      "status": "BLOCKED_MISSING_ENDPOINT",
+      "registered": true,
+      "trained": false,
+      "evaluated": false,
+      "served": false,
+      "reason": "No genuine adjudicated first-KRT and competing-death/follow-up contract in this file.; Laboratory observation span is not verified outcome ascertainment. Serum albumin is not urine ACR.; Historical source cohort is maintenance dialysis, ineligible for first-future-KRT initiation.",
+      "module": "training/algorithms/survival/extra_survival_trees.py"
+    },
+    "gradient_boosting_survival": {
+      "status": "BLOCKED_MISSING_ENDPOINT",
+      "registered": true,
+      "trained": false,
+      "evaluated": false,
+      "served": false,
+      "reason": "No genuine adjudicated first-KRT and competing-death/follow-up contract in this file.; Laboratory observation span is not verified outcome ascertainment. Serum albumin is not urine ACR.; Historical source cohort is maintenance dialysis, ineligible for first-future-KRT initiation.",
+      "module": "training/algorithms/survival/gradient_boosting_survival.py"
+    },
+    "xgboost_aft": {
+      "status": "BLOCKED_MISSING_ENDPOINT",
+      "registered": true,
+      "trained": false,
+      "evaluated": false,
+      "served": false,
+      "reason": "No genuine adjudicated first-KRT and competing-death/follow-up contract in this file.; Laboratory observation span is not verified outcome ascertainment. Serum albumin is not urine ACR.; Historical source cohort is maintenance dialysis, ineligible for first-future-KRT initiation.",
+      "module": "training/algorithms/survival/xgboost_aft.py"
+    },
+    "logistic_hazard": {
+      "status": "BLOCKED_MISSING_ENDPOINT",
+      "registered": true,
+      "trained": false,
+      "evaluated": false,
+      "served": false,
+      "reason": "No genuine adjudicated first-KRT and competing-death/follow-up contract in this file.; Laboratory observation span is not verified outcome ascertainment. Serum albumin is not urine ACR.; Historical source cohort is maintenance dialysis, ineligible for first-future-KRT initiation.",
+      "module": "training/algorithms/survival/logistic_hazard.py"
+    }
+  }
+}

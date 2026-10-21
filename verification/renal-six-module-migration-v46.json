@@ -1,8 +1,0 @@
-{
-  "status": "passed",
-  "checks": 14,
-  "migrationCount": 42,
-  "lastMigration": "V43__renal_six_module_snapshots.sql",
-  "engine": "PGlite PostgreSQL WASM; not native Windows PostgreSQL",
-  "scope": "Disposable operational fixtures; persistence, tenant FK, null-score contract, idempotency uniqueness, review version and immutability"
-}

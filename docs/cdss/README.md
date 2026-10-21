@@ -1,0 +1,23 @@
+# GovCare CDSS enhancement handover
+
+Latest implementation: [clinical rules, saved UI/PDF/FHIR consistency and eight-family benchmark](../clinical-intelligence/README.md). Earlier benchmark details and retained live-browser limitations below describe the preceding enhancement. Current browser and isolated native evidence are documented in the new handover.
+
+Read [the directory guide](DIRECTORY_GUIDE.md), [dataset audit](../../ml-training/reports/cdss/DATASET_AUDIT.md), [algorithm catalog](ALGORITHM_CATALOG.md), [five-year readiness](FIVE_YEAR_MODEL_READINESS.md), then [reproduction commands](REPRODUCIBILITY.md) and [verification evidence](../../verification/cdss-enhancement/VERIFICATION_REPORT.md).
+
+The implementation adds a reproducible seven-family benchmark for next-observed Hb, URR and hyperkalemia; seven real survival adapters behind explicit endpoint/event/follow-up gates; versioned research artifacts and manifests; a current-file audit; clearer learned-model readiness in outlook/snapshots/PDF; strict inference artifact compatibility; and fixes for stale patient presentation and a collapsed observation chart. React → Spring → Django service boundaries, scope checks, immutable history and the inactive adapter scaffold are retained.
+
+Open the enhanced workflow in the existing application at `http://127.0.0.1:5300/ai-cdss/ckd?view=outlook`. Select an authorized patient; its UUID is added as `patientId`. Tab changes, the CKD assessment action, browser Back/Forward and refresh use the same route state. Patient links are resolved through the existing authorized-patient API, and changing the linked patient immediately hides the previous clinical panels. Learned five-year model readiness appears in **Evidence & interpretation** beside the published equation. The base `/ai-cdss/ckd` route continues to open the assessment view.
+
+The actual application route and shell were checked with isolated browser storage and intercepted synthetic API responses at desktop/mobile sizes; see `verification/cdss-enhancement/route/browser-report.json`. With the frontend running, reproduce with `npm run test:ckd:route:browser` (set `GOVCARE_PLAYWRIGHT_MODULE` and `GOVCARE_CHROMIUM_EXECUTABLE` when Playwright/Chrome are outside the default installation). These route checks do not establish live clinical API or PDF export success.
+
+Actual current data: 386 observations, 42 patients, January–December 2024, maximum observation span 335 days. The CSV checksum is `683e3ce49330922c91581e3f49896c611af0bc2da52abf1f9faea9567aff3da9` and its bytes were preserved. Derived data are stored separately with transformation records. Possible upstream interpolation before the historical split cannot be excluded.
+
+**Trained/evaluated:** all 21 short-term candidates, using the preserved 24/9/9 patient split and patient-grouped tuning; the previously examined test cohort is reused. Read the catalog and `runs/cdss-20261020-final/COMPARISON.md` for measured results and baseline decisions.
+
+**Served:** Hb persistence, legacy-specification URR XGBoost, original hyperkalemia logistic regression, and eligible published KFRE at two/five years. The unreadable original Hb/URR research pickles were explicitly rebuilt through the existing offline workflow; URR passed its original validation gate and Hb persistence remains served. Original artifacts and repair decisions are retained in `runs/cdss-20261020-serving-repair/`. New seven-family benchmark artifacts remain staged. Clinical validation is not completed and dataset permission is unverified. Short-term targets are the immediate next observation within 14–62 days; 30 days is only a display anchor.
+
+**Five-year learned outcome:** INSUFFICIENT_LONG_TERM_OUTCOME_DATA. No clinical five-year survival model was fitted or evaluated; no unavailable probability is represented as zero. The future workflow requires an eligible nondialysis cohort, adjudicated first maintenance-KRT dates, competing deaths, verified follow-up/censoring and sufficient horizon support. Synthetic software fitting does not constitute clinical training or validation.
+
+No files were moved. Existing entry points and the `artifacts/` serving convention remain compatible. See the directory guide and final changed-file inventory in `verification/cdss-enhancement/`.
+
+Verification limitation: native API/database/inference/PDF checks and browser software-fixture checks passed. The complete live browser PDF export remains unverified after CORS rejection, navigation timeouts and loopback-port restrictions. See the verification report for exact passed checks and retained failure evidence.

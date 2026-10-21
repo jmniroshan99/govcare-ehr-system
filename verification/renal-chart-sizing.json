@@ -1,9 +1,0 @@
-{
-  "check": "Checkpoint chart DOM/CSS sizing regression",
-  "status": "passed",
-  "originalSvgWidth": 0,
-  "correctedSvgWidth": 1148,
-  "correctedSvgHeight": 260,
-  "browserVersion": "133.0.6943.0",
-  "clinicalValidationSubjects": 0
-}

@@ -11,6 +11,7 @@ export type RenalObservation = {
   measurements: Partial<Record<RenalMeasurementKey | "urr", number>>;
   units: Partial<Record<RenalMeasurementKey | "urr", string>>;
   source_note: string;
+  sampling_context?: Record<string, string | boolean>;
 };
 export type RenalPredictionOutput = {
   status: string;
@@ -34,6 +35,7 @@ export type RenalPredictionOutput = {
   horizon_definition?: string;
   data_quality: { flags: string[]; missing_fields: string[] };
   explanation: {
+    contribution_unit?: string | null;
     method: "SHAP" | "BASELINE";
     top_factors: Array<{ feature: string; value: number | string | null; contribution: number | null; direction: string }>;
     trends: string[];
@@ -74,6 +76,7 @@ export type RenalDeteriorationComposite = {
   components: RenalCompositeComponent[];
 };
 export type RenalIntelligence = {
+  renalTimeline?: RenalTimeline;
   patientId: string;
   hospitalId: string;
   currentRenalStatus: { stage: string | null; label: string; basis: string; dialysisStatus?:string|null;dialysisVerifiedAt?:string|null;dialysisEvidence?:string|null;dialysisEvidenceId?:string|null };
@@ -83,6 +86,17 @@ export type RenalIntelligence = {
   canReview: boolean;
   historyTruncated?: boolean;
 };
+export type RenalTimelineSource = {
+  metric: string; value: number | null; unit: string; observedAt: string | null;
+  source: string; sourceId: string; sourceVerified: boolean; sampleContext?: string; entrySource?: string;
+  included: boolean; exclusionReason: string; originalValue?: number | null; originalUnit?: string;
+  sourceNote?: string; assessmentId?: string | null; qualityFlags?: string[];
+};
+export type RenalTimeline = {
+  version: string; evaluatedAt: string; historyTruncated: boolean; sourceCount: number;
+  verifiedDatedCount: number; firstObservedAt: string | null; latestObservedAt: string | null;
+  status: string; sourcePolicy: string; sources: RenalTimelineSource[]; series: Record<string, RenalTimelineSource[]>;
+};
 export type RenalObservationInput = {
   requestId: string;
   observedAt: string;
@@ -91,6 +105,7 @@ export type RenalObservationInput = {
   units: Partial<Record<RenalMeasurementKey, string>>;
   sourceNote: string;
   sourceVerified: true;
+  samplingContext?: { sessionId:string; preCollectedAt:string; postCollectedAt:string; regimen?:string };
 };
 export type RenalDialysisVerificationInput={requestId:string;status:"MAINTENANCE_HD"|"NOT_ON_MAINTENANCE_HD"|"UNCONFIRMED";verifiedAt:string;sourceNote:string;sourceVerified:true};
 export const verifyRenalDialysisStatus=(patientId:string,input:RenalDialysisVerificationInput,signal?:AbortSignal)=>apiRequest<{id:string;saved:boolean}>(`/api/ai-cdss/ckd/patients/${encodeURIComponent(patientId)}/renal-intelligence/dialysis-status`,{method:"POST",signal,body:JSON.stringify(input)});
@@ -131,6 +146,7 @@ export type RenalModuleKey = typeof renalModuleOrder[number];
 export type RenalModuleStatus = "AVAILABLE" | "PARTIALLY_CALCULATED" | "INSUFFICIENT_DATA" | "NOT_INSTALLED" | "NOT_APPLICABLE" | "BLOCKED_BY_SAFETY_GATE" | "RESEARCH_MODEL" | "NOT_CLINICALLY_VALIDATED" | "ERROR";
 export type RenalDataAction = { type: "ADD_CLINICAL_HISTORY" | "ADD_LAB_RESULT" | "VERIFY_DIALYSIS_STATUS" | "VIEW_HISTORY" | "OPEN_CLINICAL_RECORD" | "VIEW_MODEL_STATUS" | "RUN_MODEL" | "RETRY_MODEL" | "REVIEW_MODULE"; label: string; focusKey: string | null };
 export type RenalRequirement = {
+  recorded?: boolean;
   key: string; groupKey: string; label: string; required: boolean; minimumCount: number; availableCount: number;
   state: "AVAILABLE" | "MISSING" | "MISSING_HISTORY" | "INVALID" | "STALE" | "NOT_REQUIRED" | "UNVERIFIED";
   satisfied: boolean; additionalCount: number; detail: string; action: RenalDataAction["type"]; focusKey: string | null;
@@ -172,6 +188,18 @@ export type RenalClinicalModule = {
 };
 export type ClinicalMappedFeature={key:string;label:string;value:number|null;unit:string;available:boolean;state:string;observedAt:string|null;source:string;sourceId:string;assessmentId:string|null;recordedAt:string|null;qualityFlags:string[];originalUnit?:string};
 export type ClinicalMappedAssessment={title:string;method:string;ruleVersion:string;status:"CALCULATED"|"PARTIALLY_CALCULATED"|"INSUFFICIENT_DATA";
+  coverage?:{outputType:string;recordedCount:number;requiredCount:number;percent:number;label:string;meaning:string;requiredInputs:RenalRequirement[]};
+  evidenceQuality?:{status:string;warnings:string[];evidence:ClinicalMappedFeature[]};
+  clinicalSignal?:{outputType:string;code:string;label:string;severity:string;reviewPriority:string;abnormal:boolean;currentRelevance?:string;eventProbability:null};
+  prediction?:{outputType:string;status:string;ready:boolean;value:number|null;eventProbability:number|null;researchScore:number|null;reason:string;outcome:string;horizon:string;unit:string;clinicalValidation:string;explanationMethod:string;baselineExplanation:string;model?:{method?:string;model?:string;modelVersion?:string;algorithm?:string};
+    attribution?:{method?:string;contribution_unit?:string|null;top_factors?:Array<{feature:string;value:number|null;contribution:number|null;imputed?:boolean;direction:string}>;limitations?:string[]};
+    dataQuality?:{imputed_features?:string[];missing_fields?:string[];flags?:string[]};uncertainty?:{low:number;high:number;level:number;method:string}|null;artifactRevision?:string;trainingRunId?:string;evaluatedAt?:string};
+  explanation?:{method:string;ruleId:string;version:string;statements:string[];evidence:ClinicalMappedFeature[];limitations:string[];snapshotId?:string};
+  review?:{status:string;priority:string;note:string;version?:number};
+  rule?:{id:string;version:string;thresholdPolicy:string;sources:string[];localApproval:string};
+  supportingInvestigations?:Array<{key:string;available:boolean;measurement:ClinicalMappedFeature|null}>;
+  bloodPressurePair?:{verified:boolean;value:string|null;reason:string;systolic:ClinicalMappedFeature;diastolic:ClinicalMappedFeature};
+  prognosticClassification?:{status:string;category:string|null;gCategory?:string;aCategory?:string;eventProbability:null;limitation?:string};
   resultTitle:string;message:string;riskLevel:string|null;currentValue:number|null;unit:string|null;currentAt:string|null;
   explanations:string[];recommendations:string[];featuresUsed:ClinicalMappedFeature[];requirements:RenalRequirement[];
   dataReadiness:{percent:number;availableCount:number;requiredCount:number;missingCount:number;policy:string};
@@ -179,6 +207,8 @@ export type ClinicalMappedAssessment={title:string;method:string;ruleVersion:str
     absoluteChange:number|null;percentChange:number|null;intervalDays:number|null;unit?:string;declineRatePerDay?:number;declineRateUnit?:string;points?:ClinicalMappedFeature[]};
   longitudinalMessage?:string;dialysisMessage?:string;thresholdPolicy?:string;creatinineChangePercent?:number|null;acuteReviewSignal?:boolean;formula?:string};
 export type RenalPredictiveIntelligence = RenalIntelligence & Record<RenalModuleKey, RenalClinicalModule> & {
+  clinicalRulesVersion?:string;
+  patientReviewSummary?:Array<{module:string;finding:string;priority:string;evidenceQuality:string;sourceSnapshot:string}>;
   clinicalFeatureData?:{normalizationVersion:string;mappingVersion:string;latestAssessmentId:string|null;assessmentCount:number;historyTruncated:boolean;
     current:Record<string,ClinicalMappedFeature>;history:Record<string,ClinicalMappedFeature[]>;excludedData:ClinicalMappedFeature[];assessmentSources:Array<{id:string;assessmentId:string;recordedAt:string;observationDate:string|null}>};
   akiRisk?:ClinicalMappedAssessment;

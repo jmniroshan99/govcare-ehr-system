@@ -1,3 +1,7 @@
+# GovCare CDSS research enhancement
+
+Start with [the CDSS handover](docs/cdss/README.md) for the dataset audit, seven-family benchmark, algorithm documentation, five-year readiness and reproduction commands. The source dataset is preserved; learned five-year training is blocked by absent outcome/follow-up data, while eligible published KFRE remains available. [Verification evidence](verification/cdss-enhancement/VERIFICATION_REPORT.md) distinguishes passed checks from the remaining live-browser PDF export limitation.
+
 # GovCare V55 - established evidence and synthetic research cases
 
 The CKD intelligence dashboard now has source-confirmed dated-pair entry, verified diabetes context, useful historical trends when a separate snapshot is undated, and an optional Super Admin workflow that creates two new labeled synthetic patients. Monitoring coverage is **% available** in the UI and PDF, with prediction eligibility kept separate.

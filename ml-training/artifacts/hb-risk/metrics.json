@@ -2,13 +2,13 @@
   "Ridge": {
     "validation": {
       "MAE": 1.1282747747617572,
-      "RMSE": 1.3560554627685528,
-      "R2": 0.3666103100407505,
+      "RMSE": 1.356055462768553,
+      "R2": 0.3666103100407504,
       "MedianAbsoluteError": 0.9969090754515841
     },
     "test": {
       "MAE": 0.9450125081545595,
-      "RMSE": 1.2342579245552143,
+      "RMSE": 1.234257924555214,
       "R2": 0.579093942648407,
       "MedianAbsoluteError": 0.7766266945268345
     }
@@ -29,16 +29,16 @@
   },
   "XGBoost": {
     "validation": {
-      "MAE": 1.0431643883387247,
-      "RMSE": 1.2807568745509772,
-      "R2": 0.4349986623543314,
-      "MedianAbsoluteError": 1.0120828628540037
+      "MAE": 1.0478633721669515,
+      "RMSE": 1.2852826221223892,
+      "R2": 0.4309985724862806,
+      "MedianAbsoluteError": 0.9939858436584474
     },
     "test": {
-      "MAE": 0.91007538807543,
-      "RMSE": 1.1492473677220132,
-      "R2": 0.6350777342758371,
-      "MedianAbsoluteError": 0.6754026412963867
+      "MAE": 0.9219611155835884,
+      "RMSE": 1.1593718328751104,
+      "R2": 0.6286197390367596,
+      "MedianAbsoluteError": 0.7243425369262688
     }
   },
   "LightGBM": {
@@ -104,7 +104,7 @@
       {
         "MAE": 1.0003143851830707,
         "RMSE": 1.1757802967457434,
-        "R2": 0.4946521025278784,
+        "R2": 0.4946521025278783,
         "MedianAbsoluteError": 0.9183950529789016
       },
       {
@@ -142,22 +142,22 @@
     ],
     "XGBoost": [
       {
-        "MAE": 0.8612652570009234,
-        "RMSE": 1.0375691552567643,
-        "R2": 0.6064751047490694,
-        "MedianAbsoluteError": 0.8372583389282227
+        "MAE": 0.8763134479522706,
+        "RMSE": 1.048087158143309,
+        "R2": 0.5984562169497751,
+        "MedianAbsoluteError": 0.8345137596130376
       },
       {
-        "MAE": 1.0211442644633941,
-        "RMSE": 1.3349120707514242,
-        "R2": 0.5117502993976785,
-        "MedianAbsoluteError": 0.9275350570678711
+        "MAE": 1.014025536794511,
+        "RMSE": 1.3155704678496696,
+        "R2": 0.5257963450452858,
+        "MedianAbsoluteError": 0.8243219375610344
       },
       {
-        "MAE": 0.8102585656302315,
-        "RMSE": 1.0786808430533787,
-        "R2": 0.6688627577576052,
-        "MedianAbsoluteError": 0.601765441894532
+        "MAE": 0.8158253472948831,
+        "RMSE": 1.0754509374031818,
+        "R2": 0.6708428444272727,
+        "MedianAbsoluteError": 0.6015201568603512
       }
     ],
     "LightGBM": [
@@ -188,37 +188,6 @@
     "RMSE": 1.1163911115393435,
     "R2": 0.6556452584008614,
     "MedianAbsoluteError": 0.7000000000000011
-  },
-  "selected_candidate_test_cluster_bootstrap": {
-    "method": "Patient-cluster bootstrap, 500 resamples, exploratory small-cohort CI",
-    "patients": 9,
-    "MAE_95CI": [
-      0.6989764477901396,
-      1.155845172173017
-    ],
-    "baseline_minus_model_MAE_95CI": [
-      -0.12014716879914414,
-      0.054683036597536545
-    ]
-  },
-  "temporal": {
-    "cutoff": "2024-09-01",
-    "strategy": "Same-cohort temporal, training target dates <=cutoff; test feature dates >=cutoff, no future training outcomes",
-    "train_rows": 234,
-    "test_rows": 107,
-    "patient_overlap_expected": true,
-    "model": {
-      "MAE": 0.9010608655270017,
-      "RMSE": 1.197448080940898,
-      "R2": 0.5091239815424924,
-      "MedianAbsoluteError": 0.6509181976318352
-    },
-    "persistence": {
-      "MAE": 0.9481308411214954,
-      "RMSE": 1.2379229665161064,
-      "R2": 0.47537899968005537,
-      "MedianAbsoluteError": 0.7000000000000011
-    }
   },
   "exploratory_classification": {
     "LogisticRegression": {
@@ -327,20 +296,20 @@
     },
     "XGBoost": {
       "validation": {
-        "Accuracy": 0.6388888888888888,
-        "BalancedAccuracy": 0.5681818181818181,
-        "Precision": 0.65,
+        "Accuracy": 0.6666666666666666,
+        "BalancedAccuracy": 0.6038961038961039,
+        "Precision": 0.6724137931034483,
         "Recall": 0.8863636363636364,
         "Sensitivity": 0.8863636363636364,
-        "Specificity": 0.25,
-        "F1": 0.75,
-        "ROC_AUC": 0.6793831168831168,
-        "PR_AUC_average_precision": 0.7382547884280463,
-        "BrierScore": 0.21812230348587036,
+        "Specificity": 0.32142857142857145,
+        "F1": 0.7647058823529411,
+        "ROC_AUC": 0.6793831168831169,
+        "PR_AUC_average_precision": 0.733221796518235,
+        "BrierScore": 0.21650336682796478,
         "ConfusionMatrix": [
           [
-            7,
-            21
+            9,
+            19
           ],
           [
             5,
@@ -352,24 +321,24 @@
         "threshold": 0.5
       },
       "test": {
-        "Accuracy": 0.6582278481012658,
-        "BalancedAccuracy": 0.5395500725689405,
-        "Precision": 0.6911764705882353,
-        "Recall": 0.8867924528301887,
-        "Sensitivity": 0.8867924528301887,
+        "Accuracy": 0.6455696202531646,
+        "BalancedAccuracy": 0.5301161103047896,
+        "Precision": 0.6865671641791045,
+        "Recall": 0.8679245283018868,
+        "Sensitivity": 0.8679245283018868,
         "Specificity": 0.19230769230769232,
-        "F1": 0.7768595041322314,
+        "F1": 0.7666666666666667,
         "ROC_AUC": 0.5936139332365747,
-        "PR_AUC_average_precision": 0.7494690839723619,
-        "BrierScore": 0.2226133495569229,
+        "PR_AUC_average_precision": 0.7356882023377127,
+        "BrierScore": 0.2204708456993103,
         "ConfusionMatrix": [
           [
             5,
             21
           ],
           [
-            6,
-            47
+            7,
+            46
           ]
         ],
         "PositiveEvents": 53,
@@ -429,60 +398,20 @@
         "threshold": 0.5
       }
     },
-    "TrainingPrevalence": {
-      "validation": {
-        "Accuracy": 0.6111111111111112,
-        "BalancedAccuracy": 0.5,
-        "Precision": 0.6111111111111112,
-        "Recall": 1.0,
-        "Sensitivity": 1.0,
-        "Specificity": 0.0,
-        "F1": 0.7586206896551724,
-        "ROC_AUC": 0.5,
-        "PR_AUC_average_precision": 0.6111111111111112,
-        "BrierScore": 0.23765466297322252,
-        "ConfusionMatrix": [
-          [
-            0,
-            28
-          ],
-          [
-            0,
-            44
-          ]
-        ],
-        "PositiveEvents": 44,
-        "NegativeEvents": 28,
-        "threshold": 0.5
-      },
-      "test": {
-        "Accuracy": 0.6708860759493671,
-        "BalancedAccuracy": 0.5,
-        "Precision": 0.6708860759493671,
-        "Recall": 1.0,
-        "Sensitivity": 1.0,
-        "Specificity": 0.0,
-        "F1": 0.803030303030303,
-        "ROC_AUC": 0.5,
-        "PR_AUC_average_precision": 0.6708860759493671,
-        "BrierScore": 0.22444124969318696,
-        "ConfusionMatrix": [
-          [
-            0,
-            26
-          ],
-          [
-            0,
-            53
-          ]
-        ],
-        "PositiveEvents": 53,
-        "NegativeEvents": 26,
-        "threshold": 0.5
-      }
-    },
     "selected_by_validation_brier": "RandomForest",
-    "definition": "Next Hb outside 10\u201312 g/dL (source notebook protocol)",
-    "deployment_status": "NOT_SERVED: protocol approval and calibration/external validation absent; numerical regression only"
+    "deployment_status": "NOT_SERVED; original protocol labels are not validated disease probabilities",
+    "definition": "Next Hb outside 10\u201312 g/dL"
+  },
+  "selected_candidate_test_cluster_bootstrap": {
+    "method": "Patient-cluster bootstrap, 500 resamples, exploratory small-cohort CI",
+    "patients": 9,
+    "MAE_95CI": [
+      0.7144296960875893,
+      1.1700371715188023
+    ],
+    "baseline_minus_model_MAE_95CI": [
+      -0.13729166618305247,
+      0.05436635372965212
+    ]
   }
 }

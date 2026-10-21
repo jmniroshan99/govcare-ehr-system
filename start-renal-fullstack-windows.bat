@@ -30,6 +30,8 @@ if not exist "node_modules\vite\package.json" (
   echo ERROR: Frontend dependencies are incomplete. Run npm ci in this folder.
   goto failed
 )
+rem Match run-renal-ml.cjs: prefer the compatible environment unless overridden.
+if not defined GOVCARE_RENAL_PYTHON if exist "%~dp0.venv-cdss312\Scripts\python.exe" set "GOVCARE_RENAL_PYTHON=%~dp0.venv-cdss312\Scripts\python.exe"
 if not defined GOVCARE_RENAL_PYTHON set "GOVCARE_RENAL_PYTHON=%~dp0ML_Server\.venv\Scripts\python.exe"
 if not exist "%GOVCARE_RENAL_PYTHON%" (
   echo ERROR: The renal Python environment is missing. Run setup-renal-ml-windows.bat first.
@@ -55,6 +57,7 @@ if errorlevel 1 (
 )
 
 echo Starting services. The first Maven build may take several minutes.
+echo Renal Python: "%GOVCARE_RENAL_PYTHON%"
 echo Open the Frontend URL printed below in your browser, usually http://127.0.0.1:5300.
 echo Press Ctrl+C to stop the services.
 echo.

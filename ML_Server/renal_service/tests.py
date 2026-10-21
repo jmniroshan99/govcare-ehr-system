@@ -10,6 +10,8 @@ from unittest.mock import patch
 import jwt
 from django.test import SimpleTestCase,override_settings
 from .inference import predict,InvalidInput,parse_history,registry
+from .artifact_contract import validate_metadata
+from .inference import load_artifact,feature_names
 
 SECRET='operational-test-key-only-0000000000000000000000000000000'
 
@@ -60,6 +62,20 @@ class AuthAndInferenceTests(SimpleTestCase):
         r=self.client.get('/api/ml/models/',HTTP_AUTHORIZATION='Bearer '+token());self.assertEqual(r.status_code,200)
         d=r.json();self.assertEqual(len(d['models']),4)
         self.assertTrue(all(x['clinical_validation']=='NOT_COMPLETED' for x in d['models']))
+
+    def test_long_term_readiness_is_authenticated_and_never_returns_zero_risk(self):
+        url='/api/ml/outlook/readiness/'
+        self.assertEqual(self.client.get(url).status_code,401)
+        response=self.client.get(url,HTTP_AUTHORIZATION='Bearer '+token())
+        self.assertEqual(response.status_code,200)
+        value=response.json();self.assertEqual(value['status'],'INSUFFICIENT_LONG_TERM_OUTCOME_DATA')
+        self.assertIsNone(value['probability']);self.assertIsNone(value['curve']);self.assertEqual(len(value['candidates']),7)
+
+    def test_artifact_contract_rejects_wrong_order_unit_and_version_before_unpickling(self):
+        meta,_=load_artifact('hb')
+        for key,value in [('feature_order',list(reversed(feature_names()))),('unit','mg/dL'),('model_version','99')]:
+            altered=copy.deepcopy(meta);altered[key]=value
+            with self.assertRaises(RuntimeError):validate_metadata(altered,'hb',feature_names())
     def test_hb_persistence_and_urr_model_inference(self):
         hb=self.post();self.assertEqual(hb.status_code,200)
         out=hb.json();self.assertEqual(out['status'],'AVAILABLE');self.assertEqual(out['method'],'PERSISTENCE_BASELINE')
@@ -136,6 +152,16 @@ class AuthAndInferenceTests(SimpleTestCase):
         self.assertEqual(contract['minimumCurrentPredictors'],5)
         self.assertTrue(set(contract['predictors']).issubset(set(output['feature_names'])))
         self.assertIn('potassium_pre',output['required_measurements'])
+
+    def test_severe_low_or_high_potassium_withholds_all_research_numbers(self):
+        for potassium in (2.0,6.5):
+            for model in ('hb','urr','hyperkalemia'):
+                h=history();h['history'][-1]['measurements']['potassium_pre']=potassium
+                output=self.post(model,h).json()
+                self.assertEqual(output['status'],'INSUFFICIENT_DATA')
+                self.assertIsNone(output['prediction']);self.assertIsNone(output['probability'])
+                self.assertIsNone(output['event_probability'])
+                self.assertIn('Recorded severe low/high potassium',' '.join(output['explanation']['limitations']))
 
     def test_persistence_forecast_needs_current_hb_not_a_previous_hb_trend(self):
         h=history();del h['history'][0]['measurements']['hb']

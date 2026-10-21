@@ -1,0 +1,224 @@
+GovCare EHR - Clinical PDF testing workflow V59
+Delivery date: 2026-10-21
+
+IMPLEMENTED BEHAVIOR
+The existing React/Spring/PostgreSQL/FHIR application now provides actual PDF
+upload -> extraction -> explicit review -> verified patient observations ->
+CKD readiness, with no model or authentication replacement.
+
+Use the existing three-step CKD workspace:
+1. Select an authorized synthetic testing patient and add one or more PDFs.
+   Actual valid content is stored immediately, including scans, undated reports,
+   incomplete panels and reports without recognizable measurements.
+2. Review each uploaded source. Correct values and units; select results;
+   supply actual collection dates. Missing parameters can be transcribed from
+   the source. Enter a review note and explicitly confirm patient association.
+   Choose Confirm & Save Verified Observations to persist reviewed results.
+3. Confirmed supported measurements populate the assessment. Complete the
+   remaining required inputs. The server validates readiness before Run.
+
+ROOT CAUSES AND REPAIR
+- The earlier workflow conflated patient identity/extraction completeness with
+  permission to associate a test document. Mismatched printed identities cleared
+  all measurements even for synthetic demonstrations. A stored synthetic-patient
+  policy now permits reviewed test association without changing strict matching
+  for other patients.
+- Previous preview/autofill only changed the assessment draft; it did not create
+  a linked, dated, verified clinical observation. The new verification service
+  invokes existing verified-measurement persistence and explicitly links the
+  result to the source document and FHIR DocumentReference.
+- Filename and client MIME were insufficient upload checks. Actual PDF signature,
+  PDFBox parsing, encryption/resource limits and active-content checks now decide
+  PDF acceptance; generic MIME and unusual filenames are supported.
+- Extraction covered mostly CKD numeric inputs, leaving CBC and other chemistry
+  unsupported. Explicit analyte mappings and typed unit conversions now recognize
+  the requested CBC/renal/electrolyte inputs without reinterpreting generic glucose
+  as fasting, blood urea as BUN, or serum albumin as urine ACR.
+- Clinical ingest previously could duplicate an attachment uploaded through the
+  general patient-document screen. Scoped checksum lookup now reuses it.
+- Readiness could rely on a browser review flag. New uploaded sources require
+  matching confirmed database evidence; setting sourceVerified in a request does
+  not make an unconfirmed PDF observation ready.
+
+TEST-PATIENT IDENTITY POLICY
+Eligibility is determined on the server from BOTH stored patient risk flags:
+  SYNTHETIC_RESEARCH_DEMONSTRATION
+  NOT_A_REAL_PATIENT
+The patient must still pass ClinicalPatientAccess and hospital authorization.
+Names containing TEST, URLs, filenames and client-supplied booleans do not enable
+this exception. Existing research demonstration records use these flags. Do not
+mark a real person synthetic to bypass identity matching.
+
+Eligible documents and verified observations are marked TEST_DOCUMENT. Printed
+identifiers remain unverified source information; they are not copied into the
+selected patient's demographics. Missing/mismatched identity needs explicit
+review. Other patients retain strict mismatch blocking. A test-classified source
+cannot be reused as real-patient clinical evidence if its designation changes.
+
+FILES AND API CHANGES
+Frontend:
+  src/components/ai/ClinicalPdfImportWorkspace.tsx
+  src/components/ai/ClinicalPdfObservationReview.tsx (new)
+  src/components/ai/clinical-pdf-import.css
+  src/lib/clinicalPdfReview.ts
+  src/pages/CKDAICDSS.tsx
+  src/services/aiCdssService.ts
+  src/types/document.ts
+
+Spring services, in spring-api/src/main/java/lk/gov/health/govcare/:
+  ai/ClinicalPdfImportService.java
+  ai/ClinicalPdfVerificationService.java (new)
+  ai/ClinicalPdfWorkflowController.java (new)
+  ai/ClinicalTestPatientPolicy.java (new)
+  ai/ClinicalPdfExtractionService.java
+  ai/ClinicalFeatureNormalizer.java
+  ai/ClinicalPersistenceService.java
+  ai/PredictiveIntelligenceService.java
+  ai/CkdPredictionService.java
+  documents/ClinicalPdfFileValidation.java (new)
+  documents/DocumentStorageService.java
+  documents/PatientDocumentService.java
+  documents/DocumentAccessService.java
+Existing optional ClinicalPdfOcrService remains in use.
+
+Additive authenticated endpoints:
+  GET  /api/ai-cdss/pdf/patients/{patient}/context
+  POST /api/ai-cdss/pdf/patients/{patient}/upload (multipart file)
+  POST /api/ai-cdss/pdf/patients/{patient}/reports/{report}/verify
+Existing preview, saved-source, document-access and prediction APIs remain.
+
+DATABASE / FHIR
+Flyway V50__clinical_pdf_upload_and_verification.sql adds document classification,
+workflow states, observation source metadata and append-only review records.
+It was applied successfully to the local PostgreSQL database.
+
+Workflow states: UPLOADED, PENDING_EXTRACTION, EXTRACTION_COMPLETED,
+PARTIAL_EXTRACTION, MANUAL_REVIEW_REQUIRED, CLINICAL_DATA_VERIFIED,
+EXTRACTION_FAILED. Upload and extraction remain distinct response fields.
+Extraction completeness does not imply that all model inputs exist.
+
+Observations retain patient/hospital/report/document association, original
+extraction, original units, normalized values, reviewed values/units, actual
+collection time, review note and classification. Conflicting corrections to the
+same report/analyte/time supersede earlier observations and mark corresponding
+FHIR resources entered-in-error. Original records are retained.
+
+Source documents use FHIR R4 DocumentReference and Provenance. Confirmed
+measurements use existing FHIR Observation persistence with final status,
+patient reference, collection time, valueQuantity, derivedFrom document linkage
+and TEST_DOCUMENT classification tags. Clinician review and audit entries remain.
+No assay-specific LOINC codes are invented.
+
+NORMALIZATION / MAPPING
+Supported additions include PCV, RBC, WBC, platelets, blood urea, sodium, calcium,
+serum albumin, generic glucose and pre/post-HD urea alongside existing CKD inputs.
+Examples: creatinine umol/L /88.4 -> mg/dL; Hb g/L /10 -> g/dL;
+ACR mg/mmol *8.84 -> mg/g; albumin g/dL *10 -> g/L;
+urea mg/dL /6.006 -> mmol/L; PCV L/L *100 -> %;
+WBC/platelets cells/uL /1000 -> 10^9/L; calcium mg/dL *.2495 -> mmol/L.
+Unknown/ambiguous units do not become verified values. Unsupported lines remain
+available in extraction source details. Historical/competing results require review.
+
+Reference checks (authoritative conversion tables / analyte definition):
+https://backend.mayocliniclabs.com/order-tests/si-unit-conversion.html
+https://www.niddk.nih.gov/health-information/professionals/clinical-tools-patient-management/kidney-disease/identify-manage-patients/evaluate-ckd/assess-urine-albumin
+Clinical parameter mappings are explicit engineering rules; local clinical
+governance review remains necessary before production adoption.
+
+INTEGRATION AND TEST RESULTS
+All writes used isolated synthetic QA records in a dedicated QA hospital.
+An additional unmarked synthetic control exercised strict real-patient policy.
+No real patient's designation or observations were changed.
+
+All 20 requested scenarios were exercised through tests/live verification:
+1,2,9,10,19: Same mismatched report accepted independently for marked patients
+A/B; original identity retained; separate document/report/observation UUIDs;
+unmarked control rejected with 422; cross-patient review rejected with 404.
+3: CBC-only source extracts Hb/PCV/RBC/WBC/platelets and saves reviewed values.
+4: Creatinine-only source accepted without fabricating other inputs.
+5: Undated source accepted; missing collection date blocks confirmation.
+6: Valid unsupported source retained, with no recognized values.
+7: Multi-page source extracts available measurements across both pages.
+8: Image-only source retained as OCR_REQUIRED, with manual-entry review.
+11: Repeat upload/review reuses sources and avoids duplicate verified observations;
+general patient-document upload also reuses the same attachment in clinical ingest.
+12: Fake PDFs and actual PDF JavaScript rejected; actual PDFs with generic MIME
+and non-.pdf filenames accepted.
+13,14: Browser correction, explicit dates/selection/note/confirmation persist
+verified records in PostgreSQL and populate CKD assessment fields.
+15: Actual saved FHIR resources checked for final status, patient association,
+derivedFrom and classification tags.
+16,20: Unconfirmed database evidence fails readiness even if a client claims it
+verified; partial data has exact missing requirements and no automatic prediction;
+complete reviewed data produces an actual existing CKD model response.
+17: Existing report generated and protected download verified (19 pages);
+extracted text includes reviewed input values and source report attribution.
+18: Unassigned clinician access rejected (403); confirmation audit logs verified.
+
+Additional tests: Individual pre/post urea observations do not imply a dialysis
+pair. Explicit same-session review uses the existing renal service; measured
+URR is 65% for pre 20 / post 7 mmol/L. Eligibility remains separate from this
+calculation. A second patient's existing monitoring modules expose confirmed,
+dated Hb 10.9 g/dL, creatinine 3.4 mg/dL and potassium 5.2 mmol/L.
+Long review notes retain full source metadata while respecting existing note limits.
+An actual image-only source was also manually verified through the real API:
+Hb 10.8 g/dL persisted with manualAddition provenance. Future collection dates
+and ambiguous units were rejected; repeated confirmation created no duplicates.
+
+Automated results:
+- Full Maven suite: 333 tests, zero failures/errors, five opt-in JDBC tests skipped.
+  Native live PostgreSQL checks were run separately and passed.
+- Focused Node contract/review suite: 51 passed, zero failures.
+- TypeScript project build: passed.
+- Vite production build: passed.
+- Spring Boot executable package: BUILD SUCCESS.
+- Actual Chromium browser verification: passed, no runtime errors; desktop,
+  tablet, mobile and dark-mode checks; no page horizontal overflow.
+- Live Spring/PostgreSQL/FHIR/model/report tests: passed.
+- Attachment reuse / long review-note live regression: passed.
+- Manual scan verification / invalid dates and units live regression: passed.
+
+Evidence: verification/pdf-workflow-v59/
+  live-verification.json, browser.json, attachment-reuse.json,
+  manual-scan-verification.json,
+  patient-b-confirmed-modules.json, confirmed-modules.json,
+  java-tests.log, node-tests.log, typescript.log, vite-build.log,
+  backend-package.log, verified-ckd-report.pdf, report-text-verification.txt.
+Screenshots: screenshots/desktop-upload.png, desktop-review.png,
+desktop-measurements.png, desktop-readiness.png, tablet-review.png,
+mobile-review.png, mobile-measurements.png, mobile-dark-review.png,
+scan-manual-review.png.
+Reproducible scripts: scripts/verify-pdf-workflow-live.mjs,
+verify-pdf-testing-browser.mjs, verify-pdf-attachment-reuse.mjs.
+Manual scan regression: scripts/verify-pdf-manual-scan.mjs.
+The broad live scenario script assumes a fresh isolated QA baseline; it is not
+a production seeding utility. Private QA sessions/credentials are excluded.
+
+LIMITATIONS / CONFIGURATION
+- OCR is optional and disabled locally. Set GOVCARE_PDF_OCR_ENABLED=true and
+  GOVCARE_PDF_OCR_EXECUTABLE to an installed local Tesseract binary, plus language
+  data. Scans return OCR_REQUIRED when unavailable; no successful extraction is
+  claimed. Low-confidence results require source review. An installed OCR engine
+  was not exercised in the live local run; fallback and parser behavior were tested.
+- Automatic recognition uses explicit text patterns. Complex tables, uncommon
+  layouts and ambiguous dates may need manual review; no universal parser is claimed.
+- Upload is synchronous and bounded (clinical importer: 15 MB, 200 PDF pages;
+  OCR: at most ten pages, per-page timeout and total processing deadline).
+- Active PDF content is rejected; this is structural validation, not a replacement
+  for an institution's malware scanner. No external OCR service receives documents.
+- Existing clinical monitoring may preserve newer undated or conflicting historical
+  sources for review rather than overwrite them with an uploaded older measurement.
+  PDF upload does not override chronology, chronicity or model eligibility rules.
+- Research scores retain the existing validation/calibration limitations. No model
+  probabilities, history flags, measurement dates or missing values are fabricated.
+- The design-tool sign-in service was unavailable; the review interface uses the
+  current GovCare component library, layout and theme tokens.
+
+COMPLETE SOURCE DELIVERY
+output/GovCare_EHR_Testing_PDF_Workflow_V59.zip
+Includes current project source, model artifacts, built frontend and verification
+evidence. Excludes installed dependencies/environments, private credentials,
+patient file storage, logs and temporary build state. Package CRC and every file's
+SHA-256 are verified; sidecar manifest/checksum provided. Existing unrelated
+workspace changes are preserved. Run the existing Windows full-stack launcher;
+Flyway applies the new migration on startup in a configured environment.

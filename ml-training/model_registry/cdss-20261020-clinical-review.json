@@ -1,0 +1,1340 @@
+{
+  "schema_version": 1,
+  "run_id": "cdss-20261020-clinical-review",
+  "dataset_sha256": "683e3ce49330922c91581e3f49896c611af0bc2da52abf1f9faea9567aff3da9",
+  "test_set_is_new": false,
+  "new_candidates": {
+    "hb": {
+      "regularized_linear": {
+        "training_status": "TRAINED_RESEARCH_ONLY",
+        "evaluated": true,
+        "served": false,
+        "passed_validation_gate": false,
+        "parameters": {
+          "alpha": 100
+        },
+        "test": {
+          "MAE": 0.9450125081545595,
+          "RMSE": 1.234257924555214,
+          "R2": 0.579093942648407,
+          "MedianAbsoluteError": 0.7766266945268345
+        },
+        "validation": {
+          "MAE": 1.1282747747617572,
+          "RMSE": 1.356055462768553,
+          "R2": 0.3666103100407504,
+          "MedianAbsoluteError": 0.9969090754515841
+        }
+      },
+      "random_forest": {
+        "training_status": "TRAINED_RESEARCH_ONLY",
+        "evaluated": true,
+        "served": false,
+        "passed_validation_gate": false,
+        "parameters": {
+          "n_estimators": 100,
+          "max_depth": 4,
+          "max_features": 0.6,
+          "min_samples_leaf": 10
+        },
+        "test": {
+          "MAE": 0.9123320209025719,
+          "RMSE": 1.1549011933972602,
+          "R2": 0.6314783665517021,
+          "MedianAbsoluteError": 0.7438814025635647
+        },
+        "validation": {
+          "MAE": 1.0608203013534632,
+          "RMSE": 1.293837237478321,
+          "R2": 0.4233990186266171,
+          "MedianAbsoluteError": 0.9367622225454753
+        }
+      },
+      "extra_trees": {
+        "training_status": "TRAINED_RESEARCH_ONLY",
+        "evaluated": true,
+        "served": false,
+        "passed_validation_gate": false,
+        "parameters": {
+          "n_estimators": 100,
+          "max_depth": 4,
+          "max_features": 0.6,
+          "min_samples_leaf": 5
+        },
+        "test": {
+          "MAE": 0.9351038468049774,
+          "RMSE": 1.1684476865951625,
+          "R2": 0.6227824644872298,
+          "MedianAbsoluteError": 0.8035328365426828
+        },
+        "validation": {
+          "MAE": 1.0137835680269645,
+          "RMSE": 1.2463560573152017,
+          "R2": 0.4649426403360549,
+          "MedianAbsoluteError": 0.8945043303958107
+        }
+      },
+      "hist_gradient_boosting": {
+        "training_status": "TRAINED_RESEARCH_ONLY",
+        "evaluated": true,
+        "served": false,
+        "passed_validation_gate": false,
+        "parameters": {
+          "max_iter": 80,
+          "max_leaf_nodes": 7,
+          "learning_rate": 0.05,
+          "l2_regularization": 10,
+          "min_samples_leaf": 10
+        },
+        "test": {
+          "MAE": 0.915998480897616,
+          "RMSE": 1.1487525051136165,
+          "R2": 0.6353919355685449,
+          "MedianAbsoluteError": 0.8029292271787192
+        },
+        "validation": {
+          "MAE": 1.0814823549588573,
+          "RMSE": 1.316607620647176,
+          "R2": 0.4029251012062517,
+          "MedianAbsoluteError": 0.9910844907695573
+        }
+      },
+      "xgboost": {
+        "training_status": "TRAINED_RESEARCH_ONLY",
+        "evaluated": true,
+        "served": false,
+        "passed_validation_gate": false,
+        "parameters": {
+          "n_estimators": 80,
+          "max_depth": 2,
+          "learning_rate": 0.05,
+          "reg_lambda": 10,
+          "subsample": 0.8,
+          "colsample_bytree": 0.7,
+          "min_child_weight": 5
+        },
+        "test": {
+          "MAE": 0.942727924298636,
+          "RMSE": 1.1745956350241145,
+          "R2": 0.6188024572515742,
+          "MedianAbsoluteError": 0.7424064636230465
+        },
+        "validation": {
+          "MAE": 1.056378314230177,
+          "RMSE": 1.2899158960541155,
+          "R2": 0.42688882842936793,
+          "MedianAbsoluteError": 0.9819375991821291
+        }
+      },
+      "support_vector": {
+        "training_status": "TRAINED_RESEARCH_ONLY",
+        "evaluated": true,
+        "served": false,
+        "passed_validation_gate": false,
+        "parameters": {
+          "kernel": "rbf",
+          "gamma": "scale",
+          "C": 1
+        },
+        "test": {
+          "MAE": 1.180500810028979,
+          "RMSE": 1.4433300207482662,
+          "R2": 0.4244214284820764,
+          "MedianAbsoluteError": 1.1830018865267036
+        },
+        "validation": {
+          "MAE": 1.304449933798401,
+          "RMSE": 1.5860256508487607,
+          "R2": 0.1335639805016322,
+          "MedianAbsoluteError": 1.1247870740000518
+        }
+      },
+      "nearest_neighbors": {
+        "training_status": "TRAINED_RESEARCH_ONLY",
+        "evaluated": true,
+        "served": false,
+        "passed_validation_gate": false,
+        "parameters": {
+          "weights": "distance",
+          "n_neighbors": 15
+        },
+        "test": {
+          "MAE": 1.3499984171971717,
+          "RMSE": 1.622310290753836,
+          "R2": 0.27282125986929195,
+          "MedianAbsoluteError": 1.377408282069709
+        },
+        "validation": {
+          "MAE": 1.3462413672718863,
+          "RMSE": 1.6542785559101694,
+          "R2": 0.05738713045532151,
+          "MedianAbsoluteError": 1.1305967365918121
+        }
+      },
+      "decision_tree": {
+        "training_status": "TRAINED_RESEARCH_ONLY",
+        "evaluated": true,
+        "served": false,
+        "passed_validation_gate": false,
+        "parameters": {
+          "max_depth": 4,
+          "min_samples_leaf": 10
+        },
+        "test": {
+          "MAE": 1.0161060318022341,
+          "RMSE": 1.2532200507738533,
+          "R2": 0.5660616865904895,
+          "MedianAbsoluteError": 0.838888888888885
+        },
+        "validation": {
+          "MAE": 1.194030645280645,
+          "RMSE": 1.44558535883183,
+          "R2": 0.2802137160331073,
+          "MedianAbsoluteError": 1.0968253968253938
+        }
+      }
+    },
+    "urr": {
+      "regularized_linear": {
+        "training_status": "TRAINED_RESEARCH_ONLY",
+        "evaluated": true,
+        "served": false,
+        "passed_validation_gate": false,
+        "parameters": {
+          "alpha": 100
+        },
+        "test": {
+          "MAE": 11.308911802089268,
+          "RMSE": 14.490521032419176,
+          "R2": -0.024523209556874592,
+          "MedianAbsoluteError": 8.34648491134034
+        },
+        "validation": {
+          "MAE": 9.906067188159327,
+          "RMSE": 13.41893498819211,
+          "R2": 0.0010566494029895512,
+          "MedianAbsoluteError": 7.571109841925093
+        }
+      },
+      "random_forest": {
+        "training_status": "TRAINED_RESEARCH_ONLY",
+        "evaluated": true,
+        "served": false,
+        "passed_validation_gate": true,
+        "parameters": {
+          "n_estimators": 100,
+          "max_depth": 4,
+          "max_features": 0.6,
+          "min_samples_leaf": 5
+        },
+        "test": {
+          "MAE": 10.428270381496361,
+          "RMSE": 13.791300017583184,
+          "R2": 0.0719653094653413,
+          "MedianAbsoluteError": 8.204924209246471
+        },
+        "validation": {
+          "MAE": 9.419566536021412,
+          "RMSE": 12.756857738167271,
+          "R2": 0.09719867564432794,
+          "MedianAbsoluteError": 7.0141318403643105
+        }
+      },
+      "extra_trees": {
+        "training_status": "TRAINED_RESEARCH_ONLY",
+        "evaluated": true,
+        "served": false,
+        "passed_validation_gate": true,
+        "parameters": {
+          "n_estimators": 100,
+          "max_depth": 4,
+          "max_features": 0.6,
+          "min_samples_leaf": 5
+        },
+        "test": {
+          "MAE": 10.867355212980302,
+          "RMSE": 13.957395144625135,
+          "R2": 0.04947718401691381,
+          "MedianAbsoluteError": 9.265724807028988
+        },
+        "validation": {
+          "MAE": 9.321649232523981,
+          "RMSE": 12.872464960166901,
+          "R2": 0.08076151281436428,
+          "MedianAbsoluteError": 6.930051741198689
+        }
+      },
+      "hist_gradient_boosting": {
+        "training_status": "TRAINED_RESEARCH_ONLY",
+        "evaluated": true,
+        "served": false,
+        "passed_validation_gate": false,
+        "parameters": {
+          "max_iter": 80,
+          "max_leaf_nodes": 7,
+          "learning_rate": 0.05,
+          "l2_regularization": 10,
+          "min_samples_leaf": 20
+        },
+        "test": {
+          "MAE": 11.385031020338454,
+          "RMSE": 14.521771831978315,
+          "R2": -0.02894702483671807,
+          "MedianAbsoluteError": 10.344076060968277
+        },
+        "validation": {
+          "MAE": 9.985621680829869,
+          "RMSE": 13.381878461997285,
+          "R2": 0.006566216078372489,
+          "MedianAbsoluteError": 7.765341244802347
+        }
+      },
+      "xgboost": {
+        "training_status": "TRAINED_RESEARCH_ONLY",
+        "evaluated": true,
+        "served": false,
+        "passed_validation_gate": true,
+        "parameters": {
+          "n_estimators": 80,
+          "max_depth": 2,
+          "learning_rate": 0.05,
+          "reg_lambda": 10,
+          "subsample": 0.8,
+          "colsample_bytree": 0.7,
+          "min_child_weight": 10
+        },
+        "test": {
+          "MAE": 11.09564902948674,
+          "RMSE": 14.413851780929095,
+          "R2": -0.013710399557399278,
+          "MedianAbsoluteError": 8.367518752971023
+        },
+        "validation": {
+          "MAE": 9.213276849672102,
+          "RMSE": 12.688004615409609,
+          "R2": 0.10691783069561922,
+          "MedianAbsoluteError": 6.9560918211847635
+        }
+      },
+      "support_vector": {
+        "training_status": "TRAINED_RESEARCH_ONLY",
+        "evaluated": true,
+        "served": false,
+        "passed_validation_gate": true,
+        "parameters": {
+          "kernel": "rbf",
+          "gamma": "scale",
+          "C": 1
+        },
+        "test": {
+          "MAE": 10.734352610784475,
+          "RMSE": 14.085804938181568,
+          "R2": 0.03190687027201777,
+          "MedianAbsoluteError": 8.181940717326412
+        },
+        "validation": {
+          "MAE": 9.321484998192679,
+          "RMSE": 13.314038408661071,
+          "R2": 0.016613201791344623,
+          "MedianAbsoluteError": 6.500725855099375
+        }
+      },
+      "nearest_neighbors": {
+        "training_status": "TRAINED_RESEARCH_ONLY",
+        "evaluated": true,
+        "served": false,
+        "passed_validation_gate": false,
+        "parameters": {
+          "weights": "distance",
+          "n_neighbors": 15
+        },
+        "test": {
+          "MAE": 11.492753635612738,
+          "RMSE": 14.503309245599093,
+          "R2": -0.026332337401114403,
+          "MedianAbsoluteError": 8.889178501040298
+        },
+        "validation": {
+          "MAE": 9.702792737565074,
+          "RMSE": 13.397980610322543,
+          "R2": 0.004174019456432476,
+          "MedianAbsoluteError": 7.476464808620314
+        }
+      },
+      "decision_tree": {
+        "training_status": "TRAINED_RESEARCH_ONLY",
+        "evaluated": true,
+        "served": false,
+        "passed_validation_gate": false,
+        "parameters": {
+          "max_depth": 4,
+          "min_samples_leaf": 10
+        },
+        "test": {
+          "MAE": 11.389186994972244,
+          "RMSE": 14.26391952080055,
+          "R2": 0.00726905935443678,
+          "MedianAbsoluteError": 9.76088187394322
+        },
+        "validation": {
+          "MAE": 13.033719153393573,
+          "RMSE": 16.5656063348916,
+          "R2": -0.5223672613891404,
+          "MedianAbsoluteError": 10.13698679165405
+        }
+      }
+    },
+    "hyperkalemia": {
+      "regularized_linear": {
+        "training_status": "TRAINED_RESEARCH_ONLY",
+        "evaluated": true,
+        "served": false,
+        "passed_validation_gate": true,
+        "parameters": {
+          "C": 0.01
+        },
+        "test": {
+          "Accuracy": 0.7974683544303798,
+          "BalancedAccuracy": 0.5385572139303483,
+          "Precision": 0.25,
+          "Recall": 0.16666666666666666,
+          "Sensitivity": 0.16666666666666666,
+          "Specificity": 0.9104477611940298,
+          "F1": 0.2,
+          "ROC_AUC": 0.664179104477612,
+          "PR_AUC_average_precision": 0.2426835577770969,
+          "BrierScore": 0.15351733236622808,
+          "ConfusionMatrix": [
+            [
+              61,
+              6
+            ],
+            [
+              10,
+              2
+            ]
+          ],
+          "PositiveEvents": 12,
+          "NegativeEvents": 67,
+          "threshold": 0.5,
+          "Prevalence": 0.1518987341772152,
+          "calibration": {
+            "method": "five quantile bins; descriptive, small sample",
+            "mean_predicted": [
+              0.046746665946358845,
+              0.13084972072225337,
+              0.24194816680642617,
+              0.3323992634568556,
+              0.5346250598246761
+            ],
+            "fraction_positive": [
+              0.0,
+              0.125,
+              0.26666666666666666,
+              0.0625,
+              0.3125
+            ]
+          }
+        },
+        "validation": {
+          "Accuracy": 0.7083333333333334,
+          "BalancedAccuracy": 0.5354545454545454,
+          "Precision": 0.6666666666666666,
+          "Recall": 0.09090909090909091,
+          "Sensitivity": 0.09090909090909091,
+          "Specificity": 0.98,
+          "F1": 0.16,
+          "ROC_AUC": 0.7872727272727272,
+          "PR_AUC_average_precision": 0.5802148868555856,
+          "BrierScore": 0.18192723992799278,
+          "ConfusionMatrix": [
+            [
+              49,
+              1
+            ],
+            [
+              20,
+              2
+            ]
+          ],
+          "PositiveEvents": 22,
+          "NegativeEvents": 50,
+          "threshold": 0.5,
+          "Prevalence": 0.3055555555555556,
+          "calibration": {
+            "method": "five quantile bins; descriptive, small sample",
+            "mean_predicted": [
+              0.06396475302043929,
+              0.13715072419059365,
+              0.2021777342919246,
+              0.28415485800760676,
+              0.4170982532503004
+            ],
+            "fraction_positive": [
+              0.0,
+              0.14285714285714285,
+              0.35714285714285715,
+              0.5,
+              0.5333333333333333
+            ]
+          }
+        }
+      },
+      "random_forest": {
+        "training_status": "TRAINED_RESEARCH_ONLY",
+        "evaluated": true,
+        "served": false,
+        "passed_validation_gate": true,
+        "parameters": {
+          "n_estimators": 100,
+          "max_depth": 4,
+          "max_features": 0.6,
+          "min_samples_leaf": 10
+        },
+        "test": {
+          "Accuracy": 0.7468354430379747,
+          "BalancedAccuracy": 0.44029850746268656,
+          "Precision": 0.0,
+          "Recall": 0.0,
+          "Sensitivity": 0.0,
+          "Specificity": 0.8805970149253731,
+          "F1": 0.0,
+          "ROC_AUC": 0.5845771144278608,
+          "PR_AUC_average_precision": 0.1777449497078653,
+          "BrierScore": 0.16177804424328732,
+          "ConfusionMatrix": [
+            [
+              59,
+              8
+            ],
+            [
+              12,
+              0
+            ]
+          ],
+          "PositiveEvents": 12,
+          "NegativeEvents": 67,
+          "threshold": 0.5,
+          "Prevalence": 0.1518987341772152,
+          "calibration": {
+            "method": "five quantile bins; descriptive, small sample",
+            "mean_predicted": [
+              0.07299741320330462,
+              0.1542694781185407,
+              0.28570851065266756,
+              0.3844684817018196,
+              0.5064791137721703
+            ],
+            "fraction_positive": [
+              0.0,
+              0.1875,
+              0.3333333333333333,
+              0.0625,
+              0.1875
+            ]
+          }
+        },
+        "validation": {
+          "Accuracy": 0.6805555555555556,
+          "BalancedAccuracy": 0.5154545454545454,
+          "Precision": 0.4,
+          "Recall": 0.09090909090909091,
+          "Sensitivity": 0.09090909090909091,
+          "Specificity": 0.94,
+          "F1": 0.14814814814814814,
+          "ROC_AUC": 0.76,
+          "PR_AUC_average_precision": 0.5443227863571876,
+          "BrierScore": 0.17725153296583362,
+          "ConfusionMatrix": [
+            [
+              47,
+              3
+            ],
+            [
+              20,
+              2
+            ]
+          ],
+          "PositiveEvents": 22,
+          "NegativeEvents": 50,
+          "threshold": 0.5,
+          "Prevalence": 0.3055555555555556,
+          "calibration": {
+            "method": "five quantile bins; descriptive, small sample",
+            "mean_predicted": [
+              0.07937229529424347,
+              0.14013937833758713,
+              0.22901350962062964,
+              0.3736492245919151,
+              0.48615367993986724
+            ],
+            "fraction_positive": [
+              0.0,
+              0.21428571428571427,
+              0.21428571428571427,
+              0.5714285714285714,
+              0.5333333333333333
+            ]
+          }
+        }
+      },
+      "extra_trees": {
+        "training_status": "TRAINED_RESEARCH_ONLY",
+        "evaluated": true,
+        "served": false,
+        "passed_validation_gate": true,
+        "parameters": {
+          "n_estimators": 100,
+          "max_depth": 4,
+          "max_features": 0.6,
+          "min_samples_leaf": 10
+        },
+        "test": {
+          "Accuracy": 0.810126582278481,
+          "BalancedAccuracy": 0.47761194029850745,
+          "Precision": 0.0,
+          "Recall": 0.0,
+          "Sensitivity": 0.0,
+          "Specificity": 0.9552238805970149,
+          "F1": 0.0,
+          "ROC_AUC": 0.5870646766169154,
+          "PR_AUC_average_precision": 0.1799404016782417,
+          "BrierScore": 0.14948175825167104,
+          "ConfusionMatrix": [
+            [
+              64,
+              3
+            ],
+            [
+              12,
+              0
+            ]
+          ],
+          "PositiveEvents": 12,
+          "NegativeEvents": 67,
+          "threshold": 0.5,
+          "Prevalence": 0.1518987341772152,
+          "calibration": {
+            "method": "five quantile bins; descriptive, small sample",
+            "mean_predicted": [
+              0.06444049487639468,
+              0.15867910230394958,
+              0.28571776209021843,
+              0.3561907329329637,
+              0.4529576841225352
+            ],
+            "fraction_positive": [
+              0.0,
+              0.1875,
+              0.26666666666666666,
+              0.25,
+              0.0625
+            ]
+          }
+        },
+        "validation": {
+          "Accuracy": 0.6805555555555556,
+          "BalancedAccuracy": 0.5027272727272727,
+          "Precision": 0.3333333333333333,
+          "Recall": 0.045454545454545456,
+          "Sensitivity": 0.045454545454545456,
+          "Specificity": 0.96,
+          "F1": 0.08,
+          "ROC_AUC": 0.7527272727272727,
+          "PR_AUC_average_precision": 0.5042640332065371,
+          "BrierScore": 0.1841557703712301,
+          "ConfusionMatrix": [
+            [
+              48,
+              2
+            ],
+            [
+              21,
+              1
+            ]
+          ],
+          "PositiveEvents": 22,
+          "NegativeEvents": 50,
+          "threshold": 0.5,
+          "Prevalence": 0.3055555555555556,
+          "calibration": {
+            "method": "five quantile bins; descriptive, small sample",
+            "mean_predicted": [
+              0.09690646108100615,
+              0.17378596333185262,
+              0.2552666622108367,
+              0.3542774212540284,
+              0.44462029989615964
+            ],
+            "fraction_positive": [
+              0.0,
+              0.14285714285714285,
+              0.42857142857142855,
+              0.42857142857142855,
+              0.5333333333333333
+            ]
+          }
+        }
+      },
+      "hist_gradient_boosting": {
+        "training_status": "TRAINED_RESEARCH_ONLY",
+        "evaluated": true,
+        "served": false,
+        "passed_validation_gate": false,
+        "parameters": {
+          "max_iter": 80,
+          "max_leaf_nodes": 7,
+          "learning_rate": 0.05,
+          "l2_regularization": 10,
+          "min_samples_leaf": 20
+        },
+        "test": {
+          "Accuracy": 0.8227848101265823,
+          "BalancedAccuracy": 0.5192786069651741,
+          "Precision": 0.25,
+          "Recall": 0.08333333333333333,
+          "Sensitivity": 0.08333333333333333,
+          "Specificity": 0.9552238805970149,
+          "F1": 0.125,
+          "ROC_AUC": 0.664179104477612,
+          "PR_AUC_average_precision": 0.3049269329679583,
+          "BrierScore": 0.14072956758959157,
+          "ConfusionMatrix": [
+            [
+              64,
+              3
+            ],
+            [
+              11,
+              1
+            ]
+          ],
+          "PositiveEvents": 12,
+          "NegativeEvents": 67,
+          "threshold": 0.5,
+          "Prevalence": 0.1518987341772152,
+          "calibration": {
+            "method": "five quantile bins; descriptive, small sample",
+            "mean_predicted": [
+              0.07211143849110588,
+              0.1406589811030634,
+              0.22512695487667797,
+              0.3327982147981408,
+              0.4752752934032118
+            ],
+            "fraction_positive": [
+              0.0,
+              0.125,
+              0.26666666666666666,
+              0.0625,
+              0.3125
+            ]
+          }
+        },
+        "validation": {
+          "Accuracy": 0.6666666666666666,
+          "BalancedAccuracy": 0.4927272727272727,
+          "Precision": 0.25,
+          "Recall": 0.045454545454545456,
+          "Sensitivity": 0.045454545454545456,
+          "Specificity": 0.94,
+          "F1": 0.07692307692307693,
+          "ROC_AUC": 0.6663636363636364,
+          "PR_AUC_average_precision": 0.38760032431242697,
+          "BrierScore": 0.22128874572130985,
+          "ConfusionMatrix": [
+            [
+              47,
+              3
+            ],
+            [
+              21,
+              1
+            ]
+          ],
+          "PositiveEvents": 22,
+          "NegativeEvents": 50,
+          "threshold": 0.5,
+          "Prevalence": 0.3055555555555556,
+          "calibration": {
+            "method": "five quantile bins; descriptive, small sample",
+            "mean_predicted": [
+              0.07302965761314437,
+              0.12114355639252462,
+              0.16744940479548803,
+              0.3013438616226266,
+              0.48756850522249634
+            ],
+            "fraction_positive": [
+              0.06666666666666667,
+              0.14285714285714285,
+              0.5,
+              0.5,
+              0.3333333333333333
+            ]
+          }
+        }
+      },
+      "xgboost": {
+        "training_status": "TRAINED_RESEARCH_ONLY",
+        "evaluated": true,
+        "served": false,
+        "passed_validation_gate": true,
+        "parameters": {
+          "n_estimators": 80,
+          "max_depth": 2,
+          "learning_rate": 0.05,
+          "reg_lambda": 10,
+          "subsample": 0.8,
+          "colsample_bytree": 0.7,
+          "min_child_weight": 5
+        },
+        "test": {
+          "Accuracy": 0.8227848101265823,
+          "BalancedAccuracy": 0.48507462686567165,
+          "Precision": 0.0,
+          "Recall": 0.0,
+          "Sensitivity": 0.0,
+          "Specificity": 0.9701492537313433,
+          "F1": 0.0,
+          "ROC_AUC": 0.6144278606965174,
+          "PR_AUC_average_precision": 0.20716663250299044,
+          "BrierScore": 0.14492976665496826,
+          "ConfusionMatrix": [
+            [
+              65,
+              2
+            ],
+            [
+              12,
+              0
+            ]
+          ],
+          "PositiveEvents": 12,
+          "NegativeEvents": 67,
+          "threshold": 0.5,
+          "Prevalence": 0.1518987341772152,
+          "calibration": {
+            "method": "five quantile bins; descriptive, small sample",
+            "mean_predicted": [
+              0.07653622259385884,
+              0.1461706473492086,
+              0.2613394359747569,
+              0.34423479065299034,
+              0.44200450740754604
+            ],
+            "fraction_positive": [
+              0.0,
+              0.1875,
+              0.26666666666666666,
+              0.0625,
+              0.25
+            ]
+          }
+        },
+        "validation": {
+          "Accuracy": 0.6805555555555556,
+          "BalancedAccuracy": 0.49,
+          "Precision": 0.0,
+          "Recall": 0.0,
+          "Sensitivity": 0.0,
+          "Specificity": 0.98,
+          "F1": 0.0,
+          "ROC_AUC": 0.689090909090909,
+          "PR_AUC_average_precision": 0.4122215036335469,
+          "BrierScore": 0.20211704075336456,
+          "ConfusionMatrix": [
+            [
+              49,
+              1
+            ],
+            [
+              22,
+              0
+            ]
+          ],
+          "PositiveEvents": 22,
+          "NegativeEvents": 50,
+          "threshold": 0.5,
+          "Prevalence": 0.3055555555555556,
+          "calibration": {
+            "method": "five quantile bins; descriptive, small sample",
+            "mean_predicted": [
+              0.08944551795721054,
+              0.13471137040427753,
+              0.21175881900957652,
+              0.29672987120492117,
+              0.40696346163749697
+            ],
+            "fraction_positive": [
+              0.0,
+              0.21428571428571427,
+              0.42857142857142855,
+              0.5714285714285714,
+              0.3333333333333333
+            ]
+          }
+        }
+      },
+      "support_vector": {
+        "training_status": "TRAINED_RESEARCH_ONLY",
+        "evaluated": true,
+        "served": false,
+        "passed_validation_gate": false,
+        "parameters": {
+          "kernel": "rbf",
+          "gamma": "scale",
+          "C": 0.1
+        },
+        "test": {
+          "Accuracy": 0.8227848101265823,
+          "BalancedAccuracy": 0.48507462686567165,
+          "Precision": 0.0,
+          "Recall": 0.0,
+          "Sensitivity": 0.0,
+          "Specificity": 0.9701492537313433,
+          "F1": 0.0,
+          "ROC_AUC": 0.582089552238806,
+          "PR_AUC_average_precision": 0.18624087532529826,
+          "BrierScore": 0.14566893419183682,
+          "ConfusionMatrix": [
+            [
+              65,
+              2
+            ],
+            [
+              12,
+              0
+            ]
+          ],
+          "PositiveEvents": 12,
+          "NegativeEvents": 67,
+          "threshold": 0.5,
+          "Prevalence": 0.1518987341772152,
+          "calibration": {
+            "method": "five quantile bins; descriptive, small sample",
+            "mean_predicted": [
+              0.12153939633927098,
+              0.1765997890703396,
+              0.24603088913742502,
+              0.3027571673830252,
+              0.42203178572374955
+            ],
+            "fraction_positive": [
+              0.0,
+              0.1875,
+              0.26666666666666666,
+              0.125,
+              0.1875
+            ]
+          }
+        },
+        "validation": {
+          "Accuracy": 0.6666666666666666,
+          "BalancedAccuracy": 0.48,
+          "Precision": 0.0,
+          "Recall": 0.0,
+          "Sensitivity": 0.0,
+          "Specificity": 0.96,
+          "F1": 0.0,
+          "ROC_AUC": 0.6309090909090909,
+          "PR_AUC_average_precision": 0.3872762618611678,
+          "BrierScore": 0.21508929768366677,
+          "ConfusionMatrix": [
+            [
+              48,
+              2
+            ],
+            [
+              22,
+              0
+            ]
+          ],
+          "PositiveEvents": 22,
+          "NegativeEvents": 50,
+          "threshold": 0.5,
+          "Prevalence": 0.3055555555555556,
+          "calibration": {
+            "method": "five quantile bins; descriptive, small sample",
+            "mean_predicted": [
+              0.12750547506741003,
+              0.1767626634723647,
+              0.22157946237930756,
+              0.2703753698665712,
+              0.3958516338433426
+            ],
+            "fraction_positive": [
+              0.13333333333333333,
+              0.2857142857142857,
+              0.2857142857142857,
+              0.5,
+              0.3333333333333333
+            ]
+          }
+        }
+      },
+      "nearest_neighbors": {
+        "training_status": "TRAINED_RESEARCH_ONLY",
+        "evaluated": true,
+        "served": false,
+        "passed_validation_gate": true,
+        "parameters": {
+          "weights": "distance",
+          "n_neighbors": 15
+        },
+        "test": {
+          "Accuracy": 0.810126582278481,
+          "BalancedAccuracy": 0.47761194029850745,
+          "Precision": 0.0,
+          "Recall": 0.0,
+          "Sensitivity": 0.0,
+          "Specificity": 0.9552238805970149,
+          "F1": 0.0,
+          "ROC_AUC": 0.582089552238806,
+          "PR_AUC_average_precision": 0.18339334199872312,
+          "BrierScore": 0.15715335859286134,
+          "ConfusionMatrix": [
+            [
+              64,
+              3
+            ],
+            [
+              12,
+              0
+            ]
+          ],
+          "PositiveEvents": 12,
+          "NegativeEvents": 67,
+          "threshold": 0.5,
+          "Prevalence": 0.1518987341772152,
+          "calibration": {
+            "method": "five quantile bins; descriptive, small sample",
+            "mean_predicted": [
+              0.01937827476588362,
+              0.1058947303654986,
+              0.23985709491161672,
+              0.3763970197274507,
+              0.4841671569426674
+            ],
+            "fraction_positive": [
+              0.0625,
+              0.125,
+              0.13333333333333333,
+              0.3125,
+              0.125
+            ]
+          }
+        },
+        "validation": {
+          "Accuracy": 0.6944444444444444,
+          "BalancedAccuracy": 0.5254545454545454,
+          "Precision": 0.5,
+          "Recall": 0.09090909090909091,
+          "Sensitivity": 0.09090909090909091,
+          "Specificity": 0.96,
+          "F1": 0.15384615384615385,
+          "ROC_AUC": 0.6768181818181819,
+          "PR_AUC_average_precision": 0.43551092468927655,
+          "BrierScore": 0.20443681851011855,
+          "ConfusionMatrix": [
+            [
+              48,
+              2
+            ],
+            [
+              20,
+              2
+            ]
+          ],
+          "PositiveEvents": 22,
+          "NegativeEvents": 50,
+          "threshold": 0.5,
+          "Prevalence": 0.3055555555555556,
+          "calibration": {
+            "method": "five quantile bins; descriptive, small sample",
+            "mean_predicted": [
+              0.0291663061407331,
+              0.10897593766833912,
+              0.20572747388362997,
+              0.31107043312911975,
+              0.46694205964930025
+            ],
+            "fraction_positive": [
+              0.13333333333333333,
+              0.14285714285714285,
+              0.42857142857142855,
+              0.35714285714285715,
+              0.4666666666666667
+            ]
+          }
+        }
+      },
+      "decision_tree": {
+        "training_status": "TRAINED_RESEARCH_ONLY",
+        "evaluated": true,
+        "served": false,
+        "passed_validation_gate": false,
+        "parameters": {
+          "max_depth": 4,
+          "min_samples_leaf": 10
+        },
+        "test": {
+          "Accuracy": 0.6962025316455697,
+          "BalancedAccuracy": 0.5472636815920398,
+          "Precision": 0.2,
+          "Recall": 0.3333333333333333,
+          "Sensitivity": 0.3333333333333333,
+          "Specificity": 0.7611940298507462,
+          "F1": 0.25,
+          "ROC_AUC": 0.5777363184079602,
+          "PR_AUC_average_precision": 0.19423887585500774,
+          "BrierScore": 0.2639736804366884,
+          "ConfusionMatrix": [
+            [
+              51,
+              16
+            ],
+            [
+              8,
+              4
+            ]
+          ],
+          "PositiveEvents": 12,
+          "NegativeEvents": 67,
+          "threshold": 0.5,
+          "Prevalence": 0.1518987341772152,
+          "calibration": {
+            "method": "five quantile bins; descriptive, small sample",
+            "mean_predicted": [
+              0.010752688172043008,
+              0.125,
+              0.25819327731092434,
+              0.6149732620320856,
+              1.0
+            ],
+            "fraction_positive": [
+              0.1111111111111111,
+              0.0,
+              0.17647058823529413,
+              0.35294117647058826,
+              0.0
+            ]
+          }
+        },
+        "validation": {
+          "Accuracy": 0.6666666666666666,
+          "BalancedAccuracy": 0.5436363636363636,
+          "Precision": 0.4166666666666667,
+          "Recall": 0.22727272727272727,
+          "Sensitivity": 0.22727272727272727,
+          "Specificity": 0.86,
+          "F1": 0.29411764705882354,
+          "ROC_AUC": 0.7113636363636364,
+          "PR_AUC_average_precision": 0.4427934810287752,
+          "BrierScore": 0.2475086737308222,
+          "ConfusionMatrix": [
+            [
+              43,
+              7
+            ],
+            [
+              17,
+              5
+            ]
+          ],
+          "PositiveEvents": 22,
+          "NegativeEvents": 50,
+          "threshold": 0.5,
+          "Prevalence": 0.3055555555555556,
+          "calibration": {
+            "method": "five quantile bins; descriptive, small sample",
+            "mean_predicted": [
+              0.010752688172043006,
+              0.19754464285714288,
+              0.3835227272727273,
+              0.8863636363636364
+            ],
+            "fraction_positive": [
+              0.08823529411764706,
+              0.625,
+              0.4,
+              0.4166666666666667
+            ]
+          }
+        }
+      }
+    }
+  },
+  "survival": {
+    "status": "INSUFFICIENT_LONG_TERM_OUTCOME_DATA",
+    "ready": false,
+    "missing_fields": [
+      "age",
+      "censoring_reason",
+      "ckd_confirmed",
+      "clinically_stable",
+      "death_date",
+      "egfr",
+      "event_source_id",
+      "followup_end_date",
+      "index_date",
+      "kidney_failure_ascertainment_complete",
+      "kidney_failure_date",
+      "kidney_failure_event",
+      "kidney_failure_type",
+      "maintenance_dialysis_at_index",
+      "mortality_ascertainment_complete",
+      "predictors_observed_at",
+      "prior_krt",
+      "sex",
+      "urine_acr_mg_g"
+    ],
+    "reasons": [
+      "No genuine adjudicated first-KRT and competing-death/follow-up contract in this file.",
+      "Laboratory observation span is not verified outcome ascertainment. Serum albumin is not urine ACR.",
+      "Historical source cohort is maintenance dialysis, ineligible for first-future-KRT initiation."
+    ],
+    "endpoint": "First initiation of maintenance kidney replacement therapy (chronic dialysis or kidney transplant), clinically adjudicated; exclude temporary acute dialysis",
+    "estimand": "cif",
+    "five_year_metrics": null,
+    "policy": {
+      "seed": 42,
+      "horizons_days": [
+        730.5,
+        1826.25
+      ],
+      "estimand": "cif",
+      "minimum_patients": 100,
+      "minimum_training_kidney_events": 30,
+      "minimum_training_death_events_for_cif": 15,
+      "minimum_partition_kidney_events": 5,
+      "minimum_at_risk_per_partition_at_horizon": 10,
+      "minimum_censoring_survival_at_horizon": 0.1,
+      "logistic_hazard": {
+        "neural": false,
+        "maximum_bins": 8,
+        "minimum_training_events_per_bin": 5
+      },
+      "neural_complexity_gate": {
+        "minimum_training_patients": 1000,
+        "minimum_training_events": 200
+      },
+      "selection": "Validation IPCW Brier at five years; must beat development Aalen-Johansen baseline by >=5% for CIF (Kaplan-Meier for net)",
+      "policy_note": "Conservative research engineering gates, not universal sample-size criteria or evidence of clinical validation. Formal sample-size planning and external evaluation still required."
+    },
+    "evidence": {
+      "observations": 386,
+      "endpoint_fields_present": false
+    },
+    "candidate_status": "BLOCKED_MISSING_ENDPOINT",
+    "dataset_sha256": "683e3ce49330922c91581e3f49896c611af0bc2da52abf1f9faea9567aff3da9",
+    "schema_version": "CDSS-SURVIVAL-1",
+    "clinical_validation": "NOT_COMPLETED",
+    "candidates": {
+      "cox_elastic_net": {
+        "status": "BLOCKED_MISSING_ENDPOINT",
+        "registered": true,
+        "trained": false,
+        "evaluated": false,
+        "served": false,
+        "reason": "No genuine adjudicated first-KRT and competing-death/follow-up contract in this file.; Laboratory observation span is not verified outcome ascertainment. Serum albumin is not urine ACR.; Historical source cohort is maintenance dialysis, ineligible for first-future-KRT initiation.",
+        "module": "training/algorithms/survival/cox_elastic_net.py"
+      },
+      "weibull_aft": {
+        "status": "BLOCKED_MISSING_ENDPOINT",
+        "registered": true,
+        "trained": false,
+        "evaluated": false,
+        "served": false,
+        "reason": "No genuine adjudicated first-KRT and competing-death/follow-up contract in this file.; Laboratory observation span is not verified outcome ascertainment. Serum albumin is not urine ACR.; Historical source cohort is maintenance dialysis, ineligible for first-future-KRT initiation.",
+        "module": "training/algorithms/survival/weibull_aft.py"
+      },
+      "random_survival_forest": {
+        "status": "BLOCKED_MISSING_ENDPOINT",
+        "registered": true,
+        "trained": false,
+        "evaluated": false,
+        "served": false,
+        "reason": "No genuine adjudicated first-KRT and competing-death/follow-up contract in this file.; Laboratory observation span is not verified outcome ascertainment. Serum albumin is not urine ACR.; Historical source cohort is maintenance dialysis, ineligible for first-future-KRT initiation.",
+        "module": "training/algorithms/survival/random_survival_forest.py"
+      },
+      "extra_survival_trees": {
+        "status": "BLOCKED_MISSING_ENDPOINT",
+        "registered": true,
+        "trained": false,
+        "evaluated": false,
+        "served": false,
+        "reason": "No genuine adjudicated first-KRT and competing-death/follow-up contract in this file.; Laboratory observation span is not verified outcome ascertainment. Serum albumin is not urine ACR.; Historical source cohort is maintenance dialysis, ineligible for first-future-KRT initiation.",
+        "module": "training/algorithms/survival/extra_survival_trees.py"
+      },
+      "gradient_boosting_survival": {
+        "status": "BLOCKED_MISSING_ENDPOINT",
+        "registered": true,
+        "trained": false,
+        "evaluated": false,
+        "served": false,
+        "reason": "No genuine adjudicated first-KRT and competing-death/follow-up contract in this file.; Laboratory observation span is not verified outcome ascertainment. Serum albumin is not urine ACR.; Historical source cohort is maintenance dialysis, ineligible for first-future-KRT initiation.",
+        "module": "training/algorithms/survival/gradient_boosting_survival.py"
+      },
+      "xgboost_aft": {
+        "status": "BLOCKED_MISSING_ENDPOINT",
+        "registered": true,
+        "trained": false,
+        "evaluated": false,
+        "served": false,
+        "reason": "No genuine adjudicated first-KRT and competing-death/follow-up contract in this file.; Laboratory observation span is not verified outcome ascertainment. Serum albumin is not urine ACR.; Historical source cohort is maintenance dialysis, ineligible for first-future-KRT initiation.",
+        "module": "training/algorithms/survival/xgboost_aft.py"
+      },
+      "logistic_hazard": {
+        "status": "BLOCKED_MISSING_ENDPOINT",
+        "registered": true,
+        "trained": false,
+        "evaluated": false,
+        "served": false,
+        "reason": "No genuine adjudicated first-KRT and competing-death/follow-up contract in this file.; Laboratory observation span is not verified outcome ascertainment. Serum albumin is not urine ACR.; Historical source cohort is maintenance dialysis, ineligible for first-future-KRT initiation.",
+        "module": "training/algorithms/survival/logistic_hazard.py"
+      }
+    }
+  },
+  "deployed": {
+    "hb": {
+      "actual_method": "LAST_OBSERVATION_CARRIED_FORWARD",
+      "served_method": "PERSISTENCE_BASELINE",
+      "model_version": "1.0.0",
+      "metadata_path": "ml-training\\artifacts\\hb-risk\\metadata.json",
+      "artifact_sha256": "c9c949b57f55a60f58a35c60e4573c7c0600e5d81f350bb1b8665bdee048b091",
+      "artifact_revision": "RENAL-PACKAGED-20261020T085820Z-SERIALIZATION-REPAIR",
+      "research_serving_status": "BASELINE_SELECTED",
+      "approval_scope": "Existing packaged research serving only; not clinical approval",
+      "clinical_validation": "NOT_COMPLETED",
+      "new_benchmark_artifact": false
+    },
+    "urr": {
+      "actual_method": "XGBoost",
+      "served_method": "RESEARCH_MODEL",
+      "model_version": "1.0.0",
+      "metadata_path": "ml-training\\artifacts\\urr-risk\\metadata.json",
+      "artifact_sha256": "a1ace23df2a9ad062b1d5b5bb46610d5bb7874d2aa8aa938f6e15ee66b4703a9",
+      "artifact_revision": "RENAL-PACKAGED-20261020T085820Z-SERIALIZATION-REPAIR",
+      "research_serving_status": "RESEARCH_SERVING_APPROVED",
+      "approval_scope": "Existing packaged research serving only; not clinical approval",
+      "clinical_validation": "NOT_COMPLETED",
+      "new_benchmark_artifact": false
+    },
+    "hyperkalemia": {
+      "actual_method": "LogisticRegression",
+      "served_method": "RESEARCH_MODEL",
+      "model_version": "1.0.0",
+      "metadata_path": "ml-training\\artifacts\\hyperkalemia-risk\\metadata.json",
+      "artifact_sha256": "9a561de7f66e3418ee6397e531306e4a63f86a929fff651b6f30d18594c5481b",
+      "artifact_revision": null,
+      "research_serving_status": "RESEARCH_SERVING_APPROVED",
+      "approval_scope": "Existing packaged research serving only; not clinical approval",
+      "clinical_validation": "NOT_COMPLETED",
+      "new_benchmark_artifact": false
+    }
+  },
+  "promotion": "No new candidate promoted; previous serving artifacts and gates retained.",
+  "comparison": "../runs/cdss-20261020-clinical-review/COMPARISON.md",
+  "full_metrics": "../runs/cdss-20261020-clinical-review/summary.json"
+}

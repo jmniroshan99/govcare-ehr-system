@@ -119,6 +119,7 @@ public class PatientDocumentService {
         UUID id = UUID.randomUUID();
         insertDocument(actor, id, patientId, type, title, description, documentStatus, visibilityLevel, stored,
                 encounterId, consultationId, prescriptionId, laboratoryRequestId, radiologyRequestId, admissionId);
+        if("application/pdf".equals(stored.mimeType())&&lk.gov.health.govcare.ai.ClinicalTestPatientPolicy.synthetic(sql,actor,patientId))sql.update("update patient_documents set document_classification='TEST_DOCUMENT' where id=:id and hospital_id=:h and patient_id=:p",Map.of("id",id,"h",actor.hospitalId(),"p",patientId));
         Map<String, Object> document = access.requireDocument(actor, patientId, id);
         audit.record(actor, document, "DOCUMENT_UPLOADED", "SUCCESS");
         return safeDocument(document);

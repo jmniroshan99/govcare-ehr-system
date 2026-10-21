@@ -59,6 +59,12 @@ govcare:
     max-bytes: ${DOCUMENT_MAX_BYTES:26214400}
   pdf:
     hospital-logo: ${HOSPITAL_LOGO:}
+    ocr:
+      enabled: ${GOVCARE_PDF_OCR_ENABLED:false}
+      executable: ${GOVCARE_PDF_OCR_EXECUTABLE:tesseract}
+      language: ${GOVCARE_PDF_OCR_LANGUAGE:eng}
+      timeout-seconds: ${GOVCARE_PDF_OCR_TIMEOUT_SECONDS:15}
+      max-pages: ${GOVCARE_PDF_OCR_MAX_PAGES:10}
   renal-ml:
     base-url: ${GOVCARE_RENAL_ML_URL:http://127.0.0.1:8001}
     jwt-secret: ${GOVCARE_RENAL_JWT_SECRET:}

@@ -1,0 +1,15 @@
+{
+  "schema_version": "CDSS-SHORT-1",
+  "seed": 42,
+  "population": "Maintenance hemodialysis monitoring; source attribution not independently verified",
+  "tasks": {"hb": {"kind": "regression", "source": "hb", "unit": "g/dL"}, "urr": {"kind": "regression", "source": "urr", "unit": "%"}, "hyperkalemia": {"kind": "classification", "source": "potassium_pre", "threshold_mmol_l": 5.5, "unit": "probability"}},
+  "target": "Immediate next observed outcome, inclusive 14–62 days; +30 days is a display anchor only",
+  "historical_split": "reports/patient_split_manifest.json",
+  "test_set_is_new": false,
+  "tuning": {"splitter": "GroupKFold", "folds": 3, "training_partition_only": true},
+  "svc_calibration": "Sigmoid; three patient-grouped folds inside each fitting partition, including preprocessing",
+  "classification_threshold": 0.5,
+  "selection": {"regression": "Validation MAE; >=5% better than persistence and below both training constants", "classification": "Validation Brier; >=5% better than training-prevalence and ROC AUC >=0.5"},
+  "bootstrap": {"unit": "patient", "iterations": 200, "seed": 314159},
+  "promotion": "Offline research selection only; existing serving artifacts are unchanged"
+}

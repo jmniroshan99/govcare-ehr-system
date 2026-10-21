@@ -1,0 +1,534 @@
+{
+  "filename": "C:\\Users\\JM PC\\Desktop\\GovCare_EHR_Modern_Clinical_Intelligence\\ml-training\\data\\deidentified_monthly.csv",
+  "sha256": "683e3ce49330922c91581e3f49896c611af0bc2da52abf1f9faea9567aff3da9",
+  "observations": 386,
+  "unique_patients": 42,
+  "observation_date_min": "2024-01-01 00:00:00",
+  "observation_date_max": "2024-12-01 00:00:00",
+  "observations_per_patient": {
+    "count": 42.0,
+    "mean": 9.19047619047619,
+    "std": 3.6641845679768603,
+    "min": 1.0,
+    "25%": 7.0,
+    "50%": 11.0,
+    "75%": 12.0,
+    "max": 12.0
+  },
+  "patient_followup_days": {
+    "count": 42.0,
+    "mean": 256.0238095238095,
+    "std": 112.15722590060317,
+    "min": 0.0,
+    "25%": 183.0,
+    "50%": 335.0,
+    "75%": 335.0,
+    "max": 335.0
+  },
+  "per_patient": [
+    {
+      "patient_id": "LK_098d64a68cf96cd21ca4e868",
+      "observations": 12,
+      "first": "2024-01-01 00:00:00",
+      "last": "2024-12-01 00:00:00",
+      "followup_days": 335.0
+    },
+    {
+      "patient_id": "LK_104774fa98f585ce091df9a5",
+      "observations": 10,
+      "first": "2024-03-01 00:00:00",
+      "last": "2024-12-01 00:00:00",
+      "followup_days": 275.0
+    },
+    {
+      "patient_id": "LK_1aaacdf6593b819aee3b6794",
+      "observations": 12,
+      "first": "2024-01-01 00:00:00",
+      "last": "2024-12-01 00:00:00",
+      "followup_days": 335.0
+    },
+    {
+      "patient_id": "LK_2c16a579c9c797860c2b4a87",
+      "observations": 11,
+      "first": "2024-02-01 00:00:00",
+      "last": "2024-12-01 00:00:00",
+      "followup_days": 304.0
+    },
+    {
+      "patient_id": "LK_36f257b8b2ebb7ceaa3dcba7",
+      "observations": 12,
+      "first": "2024-01-01 00:00:00",
+      "last": "2024-12-01 00:00:00",
+      "followup_days": 335.0
+    },
+    {
+      "patient_id": "LK_3d84ab2d798306092ebbea4a",
+      "observations": 5,
+      "first": "2024-05-01 00:00:00",
+      "last": "2024-10-01 00:00:00",
+      "followup_days": 153.0
+    },
+    {
+      "patient_id": "LK_44fa1fdd0e02d2f3838138f6",
+      "observations": 4,
+      "first": "2024-09-01 00:00:00",
+      "last": "2024-12-01 00:00:00",
+      "followup_days": 91.0
+    },
+    {
+      "patient_id": "LK_5a71ad97988315a7e8b0ba5a",
+      "observations": 11,
+      "first": "2024-02-01 00:00:00",
+      "last": "2024-12-01 00:00:00",
+      "followup_days": 304.0
+    },
+    {
+      "patient_id": "LK_62f67cfefae276256ed25caf",
+      "observations": 12,
+      "first": "2024-01-01 00:00:00",
+      "last": "2024-12-01 00:00:00",
+      "followup_days": 335.0
+    },
+    {
+      "patient_id": "LK_6536a807876dd5d1866c193a",
+      "observations": 3,
+      "first": "2024-10-01 00:00:00",
+      "last": "2024-12-01 00:00:00",
+      "followup_days": 61.0
+    },
+    {
+      "patient_id": "LK_66bf12dbf67bc2699e8a171e",
+      "observations": 12,
+      "first": "2024-01-01 00:00:00",
+      "last": "2024-12-01 00:00:00",
+      "followup_days": 335.0
+    },
+    {
+      "patient_id": "LK_6773c474f4108bd7eab416c7",
+      "observations": 12,
+      "first": "2024-01-01 00:00:00",
+      "last": "2024-12-01 00:00:00",
+      "followup_days": 335.0
+    },
+    {
+      "patient_id": "LK_6ba8658c1055379f11826064",
+      "observations": 2,
+      "first": "2024-11-01 00:00:00",
+      "last": "2024-12-01 00:00:00",
+      "followup_days": 30.0
+    },
+    {
+      "patient_id": "LK_6bcd65d451164cf4766fcd12",
+      "observations": 10,
+      "first": "2024-01-01 00:00:00",
+      "last": "2024-12-01 00:00:00",
+      "followup_days": 335.0
+    },
+    {
+      "patient_id": "LK_6bf7fe65a872c2d77518db49",
+      "observations": 9,
+      "first": "2024-04-01 00:00:00",
+      "last": "2024-12-01 00:00:00",
+      "followup_days": 244.0
+    },
+    {
+      "patient_id": "LK_80de34836c2906ab38d16353",
+      "observations": 9,
+      "first": "2024-03-01 00:00:00",
+      "last": "2024-11-01 00:00:00",
+      "followup_days": 245.0
+    },
+    {
+      "patient_id": "LK_84be0fb96ca0bfa326af787f",
+      "observations": 12,
+      "first": "2024-01-01 00:00:00",
+      "last": "2024-12-01 00:00:00",
+      "followup_days": 335.0
+    },
+    {
+      "patient_id": "LK_87c4f5d01bed7f04b3333bd1",
+      "observations": 6,
+      "first": "2024-06-01 00:00:00",
+      "last": "2024-11-01 00:00:00",
+      "followup_days": 153.0
+    },
+    {
+      "patient_id": "LK_98b4cc32e64203eed9087ad1",
+      "observations": 1,
+      "first": "2024-12-01 00:00:00",
+      "last": "2024-12-01 00:00:00",
+      "followup_days": 0.0
+    },
+    {
+      "patient_id": "LK_98bfc5d0688f7913531eae63",
+      "observations": 2,
+      "first": "2024-11-01 00:00:00",
+      "last": "2024-12-01 00:00:00",
+      "followup_days": 30.0
+    },
+    {
+      "patient_id": "LK_9eb068b59c0ade779c5c13c2",
+      "observations": 2,
+      "first": "2024-10-01 00:00:00",
+      "last": "2024-12-01 00:00:00",
+      "followup_days": 61.0
+    },
+    {
+      "patient_id": "LK_a0c4cbc32a678a43b16e9c23",
+      "observations": 12,
+      "first": "2024-01-01 00:00:00",
+      "last": "2024-12-01 00:00:00",
+      "followup_days": 335.0
+    },
+    {
+      "patient_id": "LK_a1e5d63182c9570f479d2537",
+      "observations": 2,
+      "first": "2024-11-01 00:00:00",
+      "last": "2024-12-01 00:00:00",
+      "followup_days": 30.0
+    },
+    {
+      "patient_id": "LK_aebbcacfe288a833a8104a1d",
+      "observations": 12,
+      "first": "2024-01-01 00:00:00",
+      "last": "2024-12-01 00:00:00",
+      "followup_days": 335.0
+    },
+    {
+      "patient_id": "LK_b502fde52fe15c000018f66a",
+      "observations": 11,
+      "first": "2024-01-01 00:00:00",
+      "last": "2024-12-01 00:00:00",
+      "followup_days": 335.0
+    },
+    {
+      "patient_id": "LK_b7d14c5182ae80f1da13e3e2",
+      "observations": 7,
+      "first": "2024-06-01 00:00:00",
+      "last": "2024-12-01 00:00:00",
+      "followup_days": 183.0
+    },
+    {
+      "patient_id": "LK_c29bc88e16f169e4f94008a2",
+      "observations": 10,
+      "first": "2024-01-01 00:00:00",
+      "last": "2024-12-01 00:00:00",
+      "followup_days": 335.0
+    },
+    {
+      "patient_id": "LK_c874fb06b4ab7612ff4c3798",
+      "observations": 12,
+      "first": "2024-01-01 00:00:00",
+      "last": "2024-12-01 00:00:00",
+      "followup_days": 335.0
+    },
+    {
+      "patient_id": "LK_c92a7ec6ff141cea04e03551",
+      "observations": 12,
+      "first": "2024-01-01 00:00:00",
+      "last": "2024-12-01 00:00:00",
+      "followup_days": 335.0
+    },
+    {
+      "patient_id": "LK_cabf4c7dac7d17f4107499b6",
+      "observations": 12,
+      "first": "2024-01-01 00:00:00",
+      "last": "2024-12-01 00:00:00",
+      "followup_days": 335.0
+    },
+    {
+      "patient_id": "LK_cb3c81531587fa2213a8705b",
+      "observations": 12,
+      "first": "2024-01-01 00:00:00",
+      "last": "2024-12-01 00:00:00",
+      "followup_days": 335.0
+    },
+    {
+      "patient_id": "LK_db64a00e123e4e772433673e",
+      "observations": 9,
+      "first": "2024-04-01 00:00:00",
+      "last": "2024-12-01 00:00:00",
+      "followup_days": 244.0
+    },
+    {
+      "patient_id": "LK_db64d8304096b82dbd677a4f",
+      "observations": 6,
+      "first": "2024-07-01 00:00:00",
+      "last": "2024-12-01 00:00:00",
+      "followup_days": 153.0
+    },
+    {
+      "patient_id": "LK_ee36e9b1c75a746c83f7df73",
+      "observations": 7,
+      "first": "2024-06-01 00:00:00",
+      "last": "2024-12-01 00:00:00",
+      "followup_days": 183.0
+    },
+    {
+      "patient_id": "LK_ee5298674fec45b2cdc90efb",
+      "observations": 12,
+      "first": "2024-01-01 00:00:00",
+      "last": "2024-12-01 00:00:00",
+      "followup_days": 335.0
+    },
+    {
+      "patient_id": "LK_f397479577fc49c1a4362f8e",
+      "observations": 11,
+      "first": "2024-01-01 00:00:00",
+      "last": "2024-12-01 00:00:00",
+      "followup_days": 335.0
+    },
+    {
+      "patient_id": "LK_f63d368b0799ee11f5f203f4",
+      "observations": 11,
+      "first": "2024-01-01 00:00:00",
+      "last": "2024-12-01 00:00:00",
+      "followup_days": 335.0
+    },
+    {
+      "patient_id": "LK_f716878fcdb21e4434f3ee4c",
+      "observations": 12,
+      "first": "2024-01-01 00:00:00",
+      "last": "2024-12-01 00:00:00",
+      "followup_days": 335.0
+    },
+    {
+      "patient_id": "LK_f7a6483b71e189ee6885b0df",
+      "observations": 12,
+      "first": "2024-01-01 00:00:00",
+      "last": "2024-12-01 00:00:00",
+      "followup_days": 335.0
+    },
+    {
+      "patient_id": "LK_fbf7c31050d66a518088063e",
+      "observations": 12,
+      "first": "2024-01-01 00:00:00",
+      "last": "2024-12-01 00:00:00",
+      "followup_days": 335.0
+    },
+    {
+      "patient_id": "LK_fccb49e31d1fb4bb9fa13324",
+      "observations": 12,
+      "first": "2024-01-01 00:00:00",
+      "last": "2024-12-01 00:00:00",
+      "followup_days": 335.0
+    },
+    {
+      "patient_id": "LK_fea3e1cd664dcfc8adf442be",
+      "observations": 11,
+      "first": "2024-02-01 00:00:00",
+      "last": "2024-12-01 00:00:00",
+      "followup_days": 304.0
+    }
+  ],
+  "columns": {
+    "patient_id": {
+      "meaning": "Pseudonymous patient grouping key",
+      "unit": "identifier",
+      "missing": 0,
+      "predictor": false
+    },
+    "source_row": {
+      "meaning": "Historical workbook row reference; excluded predictor",
+      "unit": "row number",
+      "missing": 0,
+      "predictor": false
+    },
+    "observed_at": {
+      "meaning": "Recorded monthly observation date; may be month anchor",
+      "unit": "ISO date",
+      "missing": 0,
+      "predictor": false
+    },
+    "hb": {
+      "meaning": "Hemoglobin",
+      "unit": "g/dL",
+      "missing": 1,
+      "predictor": true
+    },
+    "albumin": {
+      "meaning": "Serum albumin; NOT urine ACR",
+      "unit": "g/L",
+      "missing": 0,
+      "predictor": true
+    },
+    "calcium": {
+      "meaning": "Serum calcium",
+      "unit": "mmol/L",
+      "missing": 0,
+      "predictor": true
+    },
+    "sodium": {
+      "meaning": "Pre-HD serum sodium",
+      "unit": "mmol/L",
+      "missing": 0,
+      "predictor": true
+    },
+    "potassium_pre": {
+      "meaning": "Pre-HD serum potassium",
+      "unit": "mmol/L",
+      "missing": 0,
+      "predictor": true
+    },
+    "potassium_post": {
+      "meaning": "Post-HD serum potassium",
+      "unit": "mmol/L",
+      "missing": 0,
+      "predictor": true
+    },
+    "creatinine_pre": {
+      "meaning": "Pre-HD serum creatinine",
+      "unit": "umol/L",
+      "missing": 0,
+      "predictor": true
+    },
+    "creatinine_post": {
+      "meaning": "Post-HD serum creatinine",
+      "unit": "umol/L",
+      "missing": 1,
+      "predictor": true
+    },
+    "urea_pre": {
+      "meaning": "Pre-HD blood urea; absolute predictor excluded",
+      "unit": "UNVERIFIED_SOURCE_UNIT",
+      "missing": 0,
+      "predictor": false
+    },
+    "urea_post": {
+      "meaning": "Post-HD blood urea; absolute predictor excluded",
+      "unit": "UNVERIFIED_SOURCE_UNIT",
+      "missing": 0,
+      "predictor": false
+    },
+    "uric_acid_source": {
+      "meaning": "Source UA; excluded due unit uncertainty",
+      "unit": "UNVERIFIED (source says mg/dL)",
+      "missing": 0,
+      "predictor": false
+    },
+    "urr_source": {
+      "meaning": "Historical supplied URR; excluded predictor",
+      "unit": "%",
+      "missing": 0,
+      "predictor": false
+    },
+    "urr": {
+      "meaning": "URR recomputed from paired urea; assumes matched pre/post units",
+      "unit": "%",
+      "missing": 2,
+      "predictor": true
+    }
+  },
+  "exact_duplicate_rows": 0,
+  "duplicate_patient_date_rows": 0,
+  "conflicting_patient_dates": 0,
+  "outcomes": {
+    "hb": {
+      "eligible_observations": 341,
+      "patients": 41,
+      "actual_interval_days": {
+        "count": 341.0,
+        "mean": 31.09090909090909,
+        "std": 4.381170209706205,
+        "min": 29.0,
+        "25%": 30.0,
+        "50%": 31.0,
+        "75%": 31.0,
+        "max": 62.0
+      },
+      "interval_counts": {
+        "29": 23,
+        "30": 133,
+        "31": 178,
+        "60": 2,
+        "61": 3,
+        "62": 2
+      },
+      "definition": "Immediate next observation 14\u201362 days; no skipping absent/invalid immediate targets",
+      "positive_labels": null
+    },
+    "urr": {
+      "eligible_observations": 340,
+      "patients": 41,
+      "actual_interval_days": {
+        "count": 340.0,
+        "mean": 31.094117647058823,
+        "std": 4.387226106148659,
+        "min": 29.0,
+        "25%": 30.0,
+        "50%": 31.0,
+        "75%": 31.0,
+        "max": 62.0
+      },
+      "interval_counts": {
+        "29": 23,
+        "30": 132,
+        "31": 178,
+        "60": 2,
+        "61": 3,
+        "62": 2
+      },
+      "definition": "Immediate next observation 14\u201362 days; no skipping absent/invalid immediate targets",
+      "positive_labels": null
+    },
+    "hyperkalemia": {
+      "eligible_observations": 343,
+      "patients": 41,
+      "actual_interval_days": {
+        "count": 343.0,
+        "mean": 31.08746355685131,
+        "std": 4.368740666328562,
+        "min": 29.0,
+        "25%": 30.0,
+        "50%": 31.0,
+        "75%": 31.0,
+        "max": 62.0
+      },
+      "interval_counts": {
+        "29": 23,
+        "30": 134,
+        "31": 179,
+        "60": 2,
+        "61": 3,
+        "62": 2
+      },
+      "definition": "Immediate next observation 14\u201362 days; no skipping absent/invalid immediate targets",
+      "positive_labels": 74
+    }
+  },
+  "long_term_fields": {
+    "index_date": false,
+    "kidney_failure_event": false,
+    "kidney_failure_date": false,
+    "death_date": false,
+    "followup_end_date": false,
+    "censoring_reason": false,
+    "maintenance_dialysis_at_index": false
+  },
+  "long_term_status": "INSUFFICIENT_LONG_TERM_OUTCOME_DATA",
+  "population": "Maintenance hemodialysis per historical source audit; individual dialysis status is absent from this CSV",
+  "provenance": "Historical audit attributes data to user-supplied e19 renal-care repository/Teaching Hospital Peradeniya. Not independently verified.",
+  "dataset_permission_status": "UNVERIFIED",
+  "clinical_validation": "NOT_COMPLETED",
+  "preprocessing": [
+    "Historical code removes exact duplicates, converts invalid numerics to missing, recomputes URR and pseudonymizes patients.",
+    "Original raw precleaning files absent; historical bidirectional interpolation cannot be ruled out.",
+    "New features use only current and previous measurements; imputation/scaling fitted within training partitions.",
+    "No demographic joining, inferred ACR, synthetic event labels, interpolation or new cleaning of source CSV."
+  ],
+  "units": {
+    "hb": "g/dL",
+    "albumin": "g/L",
+    "calcium": "mmol/L",
+    "sodium": "mmol/L",
+    "potassium_pre": "mmol/L",
+    "potassium_post": "mmol/L",
+    "creatinine_pre": "umol/L",
+    "creatinine_post": "umol/L",
+    "urea_pre": "mmol/L",
+    "urea_post": "mmol/L",
+    "dry_weight": "kg",
+    "urr": "%"
+  },
+  "unit_caution": "Canonical serving urea units do not verify source urea units."
+}

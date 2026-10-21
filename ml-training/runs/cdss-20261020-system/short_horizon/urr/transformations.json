@@ -1,0 +1,98 @@
+{
+  "source_sha256": "683e3ce49330922c91581e3f49896c611af0bc2da52abf1f9faea9567aff3da9",
+  "derived_sha256": "9024b31110548d19d7165f8341c742f3b488d4816c5087d96943421ea007f331",
+  "source_unchanged": true,
+  "feature_builder": "preprocessing.longitudinal_features.feature_frame",
+  "target": "Immediate next observed outcome, inclusive 14\u201362 days; +30 days is a display anchor only",
+  "no_interpolation": true,
+  "fitting": "Training-only median/scaling in every fold",
+  "folds": [
+    {
+      "training_patients": [
+        "LK_1aaacdf6593b819aee3b6794",
+        "LK_2c16a579c9c797860c2b4a87",
+        "LK_44fa1fdd0e02d2f3838138f6",
+        "LK_6bf7fe65a872c2d77518db49",
+        "LK_87c4f5d01bed7f04b3333bd1",
+        "LK_9eb068b59c0ade779c5c13c2",
+        "LK_a0c4cbc32a678a43b16e9c23",
+        "LK_c874fb06b4ab7612ff4c3798",
+        "LK_c92a7ec6ff141cea04e03551",
+        "LK_db64d8304096b82dbd677a4f",
+        "LK_f397479577fc49c1a4362f8e",
+        "LK_f63d368b0799ee11f5f203f4",
+        "LK_f716878fcdb21e4434f3ee4c",
+        "LK_f7a6483b71e189ee6885b0df",
+        "LK_fea3e1cd664dcfc8adf442be"
+      ],
+      "held_out_patients": [
+        "LK_098d64a68cf96cd21ca4e868",
+        "LK_104774fa98f585ce091df9a5",
+        "LK_3d84ab2d798306092ebbea4a",
+        "LK_a1e5d63182c9570f479d2537",
+        "LK_aebbcacfe288a833a8104a1d",
+        "LK_ee36e9b1c75a746c83f7df73",
+        "LK_ee5298674fec45b2cdc90efb",
+        "LK_fccb49e31d1fb4bb9fa13324"
+      ]
+    },
+    {
+      "training_patients": [
+        "LK_098d64a68cf96cd21ca4e868",
+        "LK_104774fa98f585ce091df9a5",
+        "LK_1aaacdf6593b819aee3b6794",
+        "LK_3d84ab2d798306092ebbea4a",
+        "LK_44fa1fdd0e02d2f3838138f6",
+        "LK_6bf7fe65a872c2d77518db49",
+        "LK_a1e5d63182c9570f479d2537",
+        "LK_aebbcacfe288a833a8104a1d",
+        "LK_c874fb06b4ab7612ff4c3798",
+        "LK_ee36e9b1c75a746c83f7df73",
+        "LK_ee5298674fec45b2cdc90efb",
+        "LK_f397479577fc49c1a4362f8e",
+        "LK_f63d368b0799ee11f5f203f4",
+        "LK_f716878fcdb21e4434f3ee4c",
+        "LK_fccb49e31d1fb4bb9fa13324"
+      ],
+      "held_out_patients": [
+        "LK_2c16a579c9c797860c2b4a87",
+        "LK_87c4f5d01bed7f04b3333bd1",
+        "LK_9eb068b59c0ade779c5c13c2",
+        "LK_a0c4cbc32a678a43b16e9c23",
+        "LK_c92a7ec6ff141cea04e03551",
+        "LK_db64d8304096b82dbd677a4f",
+        "LK_f7a6483b71e189ee6885b0df",
+        "LK_fea3e1cd664dcfc8adf442be"
+      ]
+    },
+    {
+      "training_patients": [
+        "LK_098d64a68cf96cd21ca4e868",
+        "LK_104774fa98f585ce091df9a5",
+        "LK_2c16a579c9c797860c2b4a87",
+        "LK_3d84ab2d798306092ebbea4a",
+        "LK_87c4f5d01bed7f04b3333bd1",
+        "LK_9eb068b59c0ade779c5c13c2",
+        "LK_a0c4cbc32a678a43b16e9c23",
+        "LK_a1e5d63182c9570f479d2537",
+        "LK_aebbcacfe288a833a8104a1d",
+        "LK_c92a7ec6ff141cea04e03551",
+        "LK_db64d8304096b82dbd677a4f",
+        "LK_ee36e9b1c75a746c83f7df73",
+        "LK_ee5298674fec45b2cdc90efb",
+        "LK_f7a6483b71e189ee6885b0df",
+        "LK_fccb49e31d1fb4bb9fa13324",
+        "LK_fea3e1cd664dcfc8adf442be"
+      ],
+      "held_out_patients": [
+        "LK_1aaacdf6593b819aee3b6794",
+        "LK_44fa1fdd0e02d2f3838138f6",
+        "LK_6bf7fe65a872c2d77518db49",
+        "LK_c874fb06b4ab7612ff4c3798",
+        "LK_f397479577fc49c1a4362f8e",
+        "LK_f63d368b0799ee11f5f203f4",
+        "LK_f716878fcdb21e4434f3ee4c"
+      ]
+    }
+  ]
+}

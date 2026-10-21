@@ -1,0 +1,129 @@
+{
+  "registered": true,
+  "training_status": "TRAINED_RESEARCH_ONLY",
+  "evaluated": true,
+  "served": false,
+  "parameters": {
+    "max_iter": 80,
+    "max_leaf_nodes": 7,
+    "learning_rate": 0.05,
+    "l2_regularization": 10,
+    "min_samples_leaf": 10
+  },
+  "tuning": [
+    {
+      "parameters": {
+        "max_iter": 80,
+        "max_leaf_nodes": 7,
+        "learning_rate": 0.05,
+        "l2_regularization": 10,
+        "min_samples_leaf": 10
+      },
+      "fold_scores": [
+        9.655732724378373,
+        10.986888726069292,
+        12.349106994794624
+      ],
+      "mean": 10.997242815080762
+    },
+    {
+      "parameters": {
+        "max_iter": 80,
+        "max_leaf_nodes": 7,
+        "learning_rate": 0.05,
+        "l2_regularization": 10,
+        "min_samples_leaf": 20
+      },
+      "fold_scores": [
+        9.853493846709561,
+        10.733183789054415,
+        12.52234006006935
+      ],
+      "mean": 11.036339231944444
+    }
+  ],
+  "validation": {
+    "MAE": 9.657344143520849,
+    "RMSE": 12.967731992197647,
+    "R2": 0.06710489305506961,
+    "MedianAbsoluteError": 7.9662840700200235
+  },
+  "test": {
+    "MAE": 11.316597131502961,
+    "RMSE": 14.664769505748795,
+    "R2": -0.04931113342048232,
+    "MedianAbsoluteError": 9.362208136310585
+  },
+  "patient_uncertainty": {
+    "unit": "patient",
+    "iterations": 200,
+    "patients": 9,
+    "seed": 314159,
+    "MAE_percentile_95": [
+      8.619337535728619,
+      14.251314540697727
+    ],
+    "candidate_minus_baseline_95": [
+      -3.0321273090043497,
+      1.9302198412959912
+    ],
+    "limitation": "Exploratory interval; only a small reused test cohort; no model-selection correction."
+  },
+  "passed_validation_gate": false,
+  "patient_test_metrics": {
+    "LK_36f257b8b2ebb7ceaa3dcba7": {
+      "MAE": 12.58209104875997,
+      "RMSE": 14.889252070163092,
+      "R2": -3.0086365478624018,
+      "MedianAbsoluteError": 11.857667575721386
+    },
+    "LK_62f67cfefae276256ed25caf": {
+      "MAE": 5.026559580639489,
+      "RMSE": 9.280366558422806,
+      "R2": 0.09268583405293973,
+      "MedianAbsoluteError": 1.5838316380529136
+    },
+    "LK_6bcd65d451164cf4766fcd12": {
+      "MAE": 9.187230206323537,
+      "RMSE": 10.952002480932023,
+      "R2": -0.263369033134091,
+      "MedianAbsoluteError": 8.245832575462433
+    },
+    "LK_98bfc5d0688f7913531eae63": {
+      "MAE": 24.50189309838575,
+      "RMSE": 24.50189309838575,
+      "R2": null,
+      "MedianAbsoluteError": 24.50189309838575
+    },
+    "LK_b7d14c5182ae80f1da13e3e2": {
+      "MAE": 17.992868621684032,
+      "RMSE": 20.50200995903356,
+      "R2": -0.32932889540610666,
+      "MedianAbsoluteError": 22.628138744386106
+    },
+    "LK_c29bc88e16f169e4f94008a2": {
+      "MAE": 16.4210389458422,
+      "RMSE": 19.693996162245085,
+      "R2": -0.4015444009095579,
+      "MedianAbsoluteError": 19.503733219187723
+    },
+    "LK_cabf4c7dac7d17f4107499b6": {
+      "MAE": 12.692618427576646,
+      "RMSE": 15.45495717623386,
+      "R2": -1.5309769110036253,
+      "MedianAbsoluteError": 10.592652378671886
+    },
+    "LK_cb3c81531587fa2213a8705b": {
+      "MAE": 12.933897988208228,
+      "RMSE": 15.195672248744849,
+      "R2": -0.6619443852537652,
+      "MedianAbsoluteError": 12.962727096886951
+    },
+    "LK_fbf7c31050d66a518088063e": {
+      "MAE": 5.8798217181861965,
+      "RMSE": 8.859618194994779,
+      "R2": -0.12182459793085099,
+      "MedianAbsoluteError": 3.951487972825433
+    }
+  }
+}

@@ -21,7 +21,7 @@ class RenalReadinessTest {
             default -> "mmol/L";
         }));
         return new SriLankanRenalIntelligenceService.ObservationView(UUID.randomUUID(), NOW.minus(days,ChronoUnit.DAYS),
-                hd, values, units, "OPERATIONAL QA ONLY; not a clinical subject", List.of());
+                hd, values, units, "OPERATIONAL QA ONLY; not a clinical subject", List.of(),Map.of("patientId","SYNTHETIC-PATIENT","sessionId","SYNTH-"+days,"sourceVerified",true,"preCollectedAt",NOW.minus(days,ChronoUnit.DAYS).minusSeconds(14400).toString(),"postCollectedAt",NOW.minus(days,ChronoUnit.DAYS).toString()));
     }
     static SriLankanRenalIntelligenceService.Overview data(List<SriLankanRenalIntelligenceService.ObservationView> rows) {
         return new SriLankanRenalIntelligenceService.Overview(UUID.randomUUID(), UUID.randomUUID(),

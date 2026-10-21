@@ -1,0 +1,9 @@
+{
+  "regularized_linear": {"regression": [{"alpha": 10}, {"alpha": 100}], "classification": [{"C": 0.01}, {"C": 0.1}]},
+  "random_forest": {"shared": {"n_estimators": 100, "max_depth": 4, "max_features": 0.6}, "search": [{"min_samples_leaf": 5}, {"min_samples_leaf": 10}]},
+  "extra_trees": {"shared": {"n_estimators": 100, "max_depth": 4, "max_features": 0.6}, "search": [{"min_samples_leaf": 5}, {"min_samples_leaf": 10}]},
+  "hist_gradient_boosting": {"shared": {"max_iter": 80, "max_leaf_nodes": 7, "learning_rate": 0.05, "l2_regularization": 10}, "search": [{"min_samples_leaf": 10}, {"min_samples_leaf": 20}]},
+  "xgboost": {"shared": {"n_estimators": 80, "max_depth": 2, "learning_rate": 0.05, "reg_lambda": 10, "subsample": 0.8, "colsample_bytree": 0.7}, "search": [{"min_child_weight": 5}, {"min_child_weight": 10}]},
+  "support_vector": {"shared": {"kernel": "rbf", "gamma": "scale"}, "search": [{"C": 0.1}, {"C": 1}]},
+  "nearest_neighbors": {"shared": {"weights": "distance"}, "search": [{"n_neighbors": 5}, {"n_neighbors": 15}]}
+}

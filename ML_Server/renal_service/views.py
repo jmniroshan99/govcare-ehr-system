@@ -4,6 +4,7 @@ import os
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .inference import KEYS,InvalidInput,predict as infer,registry
+from .outlook.readiness import current_readiness
 
 logger=logging.getLogger(__name__)
 
@@ -17,6 +18,10 @@ def health(request):
 def models(request):
     if request.method!='GET': return JsonResponse({'error':'METHOD_NOT_ALLOWED'},status=405)
     return JsonResponse({'models':registry(),'clinical_validation':'NOT_COMPLETED'})
+
+def outlook_readiness(request):
+    if request.method!='GET':return JsonResponse({'error':'METHOD_NOT_ALLOWED'},status=405)
+    return JsonResponse(current_readiness(),json_dumps_params={'allow_nan':False})
 
 @csrf_exempt
 def predict(request,model_key):

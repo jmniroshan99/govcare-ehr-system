@@ -1,0 +1,34 @@
+{
+  "task": "hyperkalemia",
+  "dataset_sha256": "683e3ce49330922c91581e3f49896c611af0bc2da52abf1f9faea9567aff3da9",
+  "split_manifest_sha256": "8a867629dc57900a200c75dcb2346c5b61eafccbeb54f862f8233ca9b9f017d8",
+  "run_id": "cdss-20261020-system",
+  "schema_version": "CDSS-BASELINE-1",
+  "output_unit": "probability",
+  "target": "Immediate next observed outcome, inclusive 14\u201362 days; +30 days is a display anchor only",
+  "selection": {
+    "selected_method": "random_forest",
+    "best_candidate": "random_forest",
+    "gate_passed": true,
+    "improvement": 0.2002855118408341,
+    "selection_uses_test": false,
+    "criterion": "Validation Brier; >=5% better than training-prevalence and ROC AUC >=0.5",
+    "frozen_before_test": true,
+    "status": "TRAINED_RESEARCH_ONLY",
+    "served": false,
+    "deployment_reason": "Staged benchmark only; existing approved serving location is retained."
+  },
+  "served": false,
+  "methods": {
+    "training_prevalence": 0.20833333333333334,
+    "majority_class": 0
+  },
+  "limitations": [
+    "Previously examined patient test cohort reused; not a new independent test set.",
+    "Original precleaning measurements unavailable; upstream interpolation leakage cannot be excluded.",
+    "Dataset secondary-use permission UNVERIFIED; clinical validation NOT_COMPLETED.",
+    "Small single-source maintenance-hemodialysis cohort; no general-population CKD inference."
+  ],
+  "clinical_validation": "NOT_COMPLETED",
+  "dataset_permission_status": "UNVERIFIED"
+}

@@ -42,6 +42,7 @@ export interface PatientDocument {
   fileName: string;
   originalFileName?: string;
   mimeType: string;
+  documentClassification?: "CLINICAL_DOCUMENT" | "TEST_DOCUMENT";
   fileSizeBytes: number;
   sha256Checksum?: string;
   documentStatus: PatientDocumentStatus;

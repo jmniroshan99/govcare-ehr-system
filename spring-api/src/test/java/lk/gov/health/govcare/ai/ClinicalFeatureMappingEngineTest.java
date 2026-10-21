@@ -20,7 +20,7 @@ class ClinicalFeatureMappingEngineTest {
         return ClinicalFeatureMappingEngine.apply(RenalClinicalModules.assemble(data,List.of(),NOW),new ClinicalPredictionFeatureService.FeatureData(data.patientId(),data.hospitalId(),snapshots,List.of(),false),NOW);
     }
     @Test void potassiumBoundaryBandsAreInclusiveAndNoResearchProbabilityIsInvented(){
-        double[] values={4.99,5,5.5,5.5001};String[] levels={"Normal","Monitor","Monitor","High"};for(int i=0;i<values.length;i++){
+        double[] values={4.99,5,5.5,5.5001};String[] levels={"Not classified as low/high","Not classified as low/high","Mild","Mild"};for(int i=0;i<values.length;i++){
             var out=mapped(List.of(normalized(Map.of("SerumElectrolytesPotassium",values[i]),null,NOW)));
             assertEquals(levels[i],out.path("hyperkalemia").path("clinicalAssessment").path("riskLevel").asText());assertTrue(out.path("hyperkalemia").path("researchRiskScore").isNull());
             assertEquals(100,out.path("hyperkalemia").path("readiness").path("clinicalDataReadiness").path("percent").asInt());assertFalse(out.path("hyperkalemia").path("canRun").asBoolean());
@@ -29,15 +29,15 @@ class ClinicalFeatureMappingEngineTest {
     @Test void hemoglobinBoundaryBandsDoNotBecomeDiagnoses(){
         double[] values={9.99,10,12,12.001};String[] levels={"High","Monitor","Monitor","Normal"};for(int i=0;i<values.length;i++){
             var out=mapped(List.of(normalized(Map.of("HemoglobinLevels",values[i]),null,NOW)));var c=out.path("anemia").path("clinicalAssessment");
-            assertEquals(levels[i],c.path("riskLevel").asText());assertTrue(c.path("explanations").toString().contains("not universal normal ranges"));assertTrue(out.path("anemia").path("forecast").isNull());
+            assertTrue(c.path("riskLevel").isNull());assertEquals("POPULATION_CONTEXT_REQUIRED",c.path("clinicalSignal").path("code").asText());assertTrue(out.path("anemia").path("forecast").isNull());
         }
     }
     @Test void progressionUsesActualEgfrAcrAndOnlyAssignsLowWithBothLowSignalMeasurements(){
         var high=mapped(List.of(normalized(Map.of("GFR",35.0,"ACR",420.0),null,NOW)));
-        assertEquals("High",high.path("renalTrajectory").path("clinicalAssessment").path("riskLevel").asText());
-        assertEquals(2,high.path("renalTrajectory").path("readiness").path("clinicalDataReadiness").path("availableCount").asInt());assertEquals(22,high.path("renalTrajectory").path("readiness").path("clinicalDataReadiness").path("percent").asInt());
-        var low=mapped(List.of(normalized(Map.of("GFR",90.0,"ACR",20.0),null,NOW)));assertEquals("Low",low.path("renalTrajectory").path("clinicalAssessment").path("riskLevel").asText());
-        var unknown=mapped(List.of(normalized(Map.of("GFR",90.0),null,NOW)));assertTrue(unknown.path("renalTrajectory").path("clinicalAssessment").path("riskLevel").isNull());assertEquals("PARTIALLY_CALCULATED",unknown.path("renalTrajectory").path("status").asText());
+        assertTrue(high.path("renalTrajectory").path("clinicalAssessment").path("riskLevel").isNull());assertEquals("Very high",high.path("renalTrajectory").path("clinicalAssessment").path("prognosticClassification").path("category").asText());
+        assertEquals(0,high.path("renalTrajectory").path("coverage").path("recordedCount").asInt());assertEquals(4,high.path("renalTrajectory").path("coverage").path("requiredCount").asInt());
+        var low=mapped(List.of(normalized(Map.of("GFR",90.0,"ACR",20.0),null,NOW)));assertTrue(low.path("renalTrajectory").path("clinicalAssessment").path("riskLevel").isNull());
+        var unknown=mapped(List.of(normalized(Map.of("GFR",90.0),null,NOW)));assertTrue(unknown.path("renalTrajectory").path("clinicalAssessment").path("riskLevel").isNull());assertEquals("INSUFFICIENT_DATA",unknown.path("renalTrajectory").path("status").asText());
     }
     @Test void kidneyFailureIndicatorBoundaryDoesNotManufactureG5D(){
         for(double g:List.of(14.99,15.0)){var out=mapped(List.of(normalized(Map.of("GFR",g),null,NOW)));assertEquals(g<15?"High":"Below high-signal threshold",out.path("kidneyFailureStatus").path("clinicalAssessment").path("riskLevel").asText());assertNotEquals("G5D",out.path("kidneyFailureStatus").path("renalStatus").asText());}

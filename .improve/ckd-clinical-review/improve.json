@@ -1,0 +1,58 @@
+{
+  "version": 2,
+  "scope": "page",
+  "createdAt": "2026-10-20T11:10:33.694Z",
+  "runDir": "C:\\Users\\JM PC\\Desktop\\GovCare_EHR_Modern_Clinical_Intelligence\\.improve\\ckd-clinical-review",
+  "input": {
+    "kind": "image",
+    "value": "C:\\Users\\JM PC\\Desktop\\GovCare_EHR_Modern_Clinical_Intelligence\\verification\\clinical-feature-v49\\screenshots\\clinical-features-1366.png",
+    "sha256": "8b08be5138fdc5ef80d41375faeeb8498fada5b09f350ad0d83c48f95b04faa1"
+  },
+  "concept": "Keep the established GovCare clinical cards and brand. Separate recorded values, severity, dated trend, input coverage, evidence quality and future prediction. Prominent severe low-potassium verification finding. Neutral coverage tracks; concise expandable provenance and rule explanations. Do not invent probabilities, data or treatment orders. Improve this existing product interface into a production-ready version of itself, keeping its layout and section order: nothing moves to a new place, though spacing and alignment may be tightened. Work inside its existing visual language: its palette, typography voice, and image treatment stay, and everything around them is sharpened - spacing rhythm, alignment, surfaces, control affordances, ink, and type rendering. Keep the product's logo, wordmark, and brand imagery as they are. Keep only the same product: its name and wordmark, and what it is. The brief decides how much of the page's other text and control copy survives; invent no product facts, features, prices, or data. These are conservation defaults, not a freeze: the brief above outranks them, and they outrank the page as it stands.",
+  "direction": "Keep the established GovCare clinical cards and brand. Separate recorded values, severity, dated trend, input coverage, evidence quality and future prediction. Prominent severe low-potassium verification finding. Neutral coverage tracks; concise expandable provenance and rule explanations. Do not invent probabilities, data or treatment orders.",
+  "candidates": 2,
+  "retain": {
+    "include": [
+      "assets",
+      "layout",
+      "style"
+    ],
+    "exclude": [
+      "content"
+    ]
+  },
+  "retainFlag": "layout,assets,style",
+  "conversionModel": "standard",
+  "responsiveQuality": "standard",
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "fullPage": false,
+  "bootstrap": [],
+  "bootstrapSha256": [],
+  "kitIgnore": {
+    "state": "ignored",
+    "relativeOutDir": ".improve/ckd-clinical-review"
+  },
+  "planSourceConvert": false,
+  "pageLimit": 5,
+  "requestedPages": [],
+  "pageConcurrency": 3,
+  "referenceOrder": "current-first",
+  "pages": [],
+  "stages": {
+    "capture": {
+      "settledAt": "2026-10-20T11:10:33.872Z",
+      "replayCount": 0,
+      "priceCeilingUsd": 0,
+      "outcome": "settled"
+    }
+  },
+  "capture": {
+    "sourceImage": "C:\\Users\\JM PC\\Desktop\\GovCare_EHR_Modern_Clinical_Intelligence\\.improve\\ckd-clinical-review\\source.png",
+    "sha256": "80e848d4771ee8a8b627e408e83e2d5b68e98247872ae2f5c1024e4d705f7a19",
+    "width": 1366,
+    "height": 3726
+  }
+}

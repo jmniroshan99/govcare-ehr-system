@@ -1,0 +1,62 @@
+{
+  "train": {
+    "patients": [
+      "LK_098d64a68cf96cd21ca4e868",
+      "LK_104774fa98f585ce091df9a5",
+      "LK_1aaacdf6593b819aee3b6794",
+      "LK_2c16a579c9c797860c2b4a87",
+      "LK_3d84ab2d798306092ebbea4a",
+      "LK_44fa1fdd0e02d2f3838138f6",
+      "LK_6bf7fe65a872c2d77518db49",
+      "LK_87c4f5d01bed7f04b3333bd1",
+      "LK_98b4cc32e64203eed9087ad1",
+      "LK_9eb068b59c0ade779c5c13c2",
+      "LK_a0c4cbc32a678a43b16e9c23",
+      "LK_a1e5d63182c9570f479d2537",
+      "LK_aebbcacfe288a833a8104a1d",
+      "LK_c874fb06b4ab7612ff4c3798",
+      "LK_c92a7ec6ff141cea04e03551",
+      "LK_db64d8304096b82dbd677a4f",
+      "LK_ee36e9b1c75a746c83f7df73",
+      "LK_ee5298674fec45b2cdc90efb",
+      "LK_f397479577fc49c1a4362f8e",
+      "LK_f63d368b0799ee11f5f203f4",
+      "LK_f716878fcdb21e4434f3ee4c",
+      "LK_f7a6483b71e189ee6885b0df",
+      "LK_fccb49e31d1fb4bb9fa13324",
+      "LK_fea3e1cd664dcfc8adf442be"
+    ],
+    "patient_count": 24,
+    "source_rows": 216
+  },
+  "validation": {
+    "patients": [
+      "LK_5a71ad97988315a7e8b0ba5a",
+      "LK_6536a807876dd5d1866c193a",
+      "LK_66bf12dbf67bc2699e8a171e",
+      "LK_6773c474f4108bd7eab416c7",
+      "LK_6ba8658c1055379f11826064",
+      "LK_80de34836c2906ab38d16353",
+      "LK_84be0fb96ca0bfa326af787f",
+      "LK_b502fde52fe15c000018f66a",
+      "LK_db64a00e123e4e772433673e"
+    ],
+    "patient_count": 9,
+    "source_rows": 81
+  },
+  "test": {
+    "patients": [
+      "LK_36f257b8b2ebb7ceaa3dcba7",
+      "LK_62f67cfefae276256ed25caf",
+      "LK_6bcd65d451164cf4766fcd12",
+      "LK_98bfc5d0688f7913531eae63",
+      "LK_b7d14c5182ae80f1da13e3e2",
+      "LK_c29bc88e16f169e4f94008a2",
+      "LK_cabf4c7dac7d17f4107499b6",
+      "LK_cb3c81531587fa2213a8705b",
+      "LK_fbf7c31050d66a518088063e"
+    ],
+    "patient_count": 9,
+    "source_rows": 89
+  }
+}

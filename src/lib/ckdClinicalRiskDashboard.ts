@@ -4,8 +4,8 @@ import type { RenalClinicalModule, RenalModuleKey, RenalPredictiveIntelligence }
 export const primaryClinicalRiskOrder: RenalModuleKey[] = ["anemia", "hyperkalemia", "dialysisAdequacy", "renalDeterioration"];
 export const supplementaryRenalOrder: RenalModuleKey[] = ["renalTrajectory", "kidneyFailureStatus"];
 export const clinicalRiskLabels: Record<RenalModuleKey, { title: string; description: string; measure: string; action: string }> = {
-  anemia: { title: "Anemia Monitoring", description: "Monitoring anemia progression associated with CKD", measure: "Current Hb", action: "Add blood parameters" },
-  hyperkalemia: { title: "Hyperkalemia Risk Monitoring", description: "Detects potassium elevation patterns requiring attention", measure: "Current potassium", action: "Add electrolyte results" },
+  anemia: { title: "Hemoglobin Assessment", description: "Recorded hemoglobin and context-specific reference comparison", measure: "Recorded hemoglobin", action: "Review blood parameters" },
+  hyperkalemia: { title: "Potassium Assessment", description: "Review recorded low or high potassium separately from future prediction", measure: "Recorded potassium", action: "Verify electrolyte results" },
   dialysisAdequacy: { title: "Dialysis Effectiveness Monitoring", description: "Evaluates dialysis waste removal effectiveness", measure: "Measured URR", action: "Add dialysis session" },
   renalDeterioration: { title: "Renal Function Progression", description: "Combines longitudinal renal markers to identify deterioration patterns", measure: "Creatinine change", action: "View renal timeline" },
   renalTrajectory: { title: "CKD Progression / Renal Trajectory", description: "Review eGFR, ACR and recorded renal trends", measure: "Clinical trajectory", action: "Add historical laboratory data" },
@@ -13,6 +13,8 @@ export const clinicalRiskLabels: Record<RenalModuleKey, { title: string; descrip
 };
 
 export function clinicalCompleteness(module: RenalClinicalModule) {
+  const coverage=module.clinicalAssessment?.coverage;
+  if(coverage)return{percent:coverage.requiredCount?coverage.percent:null,available:coverage.recordedCount,total:coverage.requiredCount,missing:coverage.requiredCount-coverage.recordedCount};
   const declared = module.clinicalAssessment?.dataReadiness ?? module.readiness.clinicalDataReadiness;
   const requirements = module.readiness.requirements.filter(r => r.required);
   const total = declared?.requiredCount ?? requirements.length;
@@ -24,6 +26,8 @@ export function clinicalCompleteness(module: RenalClinicalModule) {
 
 export function clinicalMonitoringPresentation(module: RenalClinicalModule) {
   const c = module.clinicalAssessment, r = module.readiness;
+  if(c?.clinicalSignal){const signal=c.clinicalSignal;return{status:signal.label,risk:signal.severity,tone:signal.abnormal?"danger":c.evidenceQuality?.warnings.length?"warning":"info"};}
+  if((module.key==="renalDeterioration"||module.key==="renalTrajectory")&&c&&!c.trend?.ready)return{status:"Trend not established",risk:"Not assessed",tone:"warning"};
   const historical = Boolean(r.measurementNote) || c?.featuresUsed.some(f => f.state === "STALE" || (f.key !== "age" && !f.observedAt));
   const review = c?.acuteReviewSignal || c?.riskLevel === "High" ||
     (!c && /MULTIDOMAIN|REVIEW|DECLIN/.test(module.signal));

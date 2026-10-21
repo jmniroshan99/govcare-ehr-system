@@ -274,7 +274,9 @@ public class PredictiveIntelligenceService {
         if (request==null || request.requestId()==null || request.observedAt()==null || request.value()==null || !request.sourceVerified())
             throw ApiException.badRequest("A request UUID, verified source, measurement time and numeric result are required.");
         GovCarePrincipal scoped=access.clinicalScope(actor,patient,true);
-        String key=metric(request.metric(),null);
+        var definition=ClinicalFeatureNormalizer.definition(Objects.toString(request.metric(),""));
+        boolean renalChemistry=definition!=null;
+        String key=renalChemistry?definition.key():metric(request.metric(),null);
         if (key==null) throw ApiException.badRequest("Select a supported clinical measurement.");
         String note=request.sourceNote()==null?"":request.sourceNote().trim();
         if (note.isBlank()||note.length()>2000) throw ApiException.badRequest("Document the verified source in 1–2000 characters.");
@@ -283,7 +285,13 @@ public class PredictiveIntelligenceService {
             throw ApiException.badRequest("Enter a valid reference range in the same units as the recorded result.");
         RawObservation input=new RawObservation("new",key,request.value(),request.unit(),request.observedAt().toString(),"CLINICIAN_ENTERED",null,request.referenceLow(),request.referenceHigh(),null);
         Analysis checked=analyze(List.of(input),Instant.now(),null);
-        ClinicalIntelligenceEngine.Observation normalized=checked.trends().stream().filter(t->t.metric().equals(key)).findFirst().orElseThrow().latest();
+        ClinicalIntelligenceEngine.Observation normalized;
+        if(renalChemistry){
+            var meta=mapper.createObjectNode().put("unit",request.unit()).put("observedAt",request.observedAt().toString()).put("sourceVerified",true);
+            var value=ClinicalFeatureNormalizer.measurement(ClinicalFeatureNormalizer.definition(key),mapper.valueToTree(request.value()),meta,null,"CLINICIAN_ENTERED","new",null,Instant.now());
+            if(!value.path("available").asBoolean()||!value.path("observedAt").isTextual())throw ApiException.badRequest("A valid value, supported explicit unit and actual past collection date are required.");
+            normalized=new ClinicalIntelligenceEngine.Observation("new",key,value.path("value").asDouble(),value.path("unit").asText(),request.observedAt(),"CLINICIAN_ENTERED",null,request.referenceLow(),request.referenceHigh(),null,request.value(),request.unit());
+        }else normalized=checked.trends().stream().filter(t->t.metric().equals(key)).findFirst().orElseThrow().latest();
         if (normalized==null) throw ApiException.badRequest(checked.quality().flags().getFirst().message());
         Map<String,Object> payload=new LinkedHashMap<>();payload.put("metric",key);payload.put("value",request.value());payload.put("unit",request.unit());payload.put("observedAt",request.observedAt().toString());payload.put("referenceLow",request.referenceLow());payload.put("referenceHigh",request.referenceHigh());payload.put("sourceNote",note);
         String fingerprint=sha256(json.write(payload));
@@ -294,17 +302,17 @@ public class PredictiveIntelligenceService {
             return Map.of("id",prior.get().get("observation_id"),"saved",true);
         }
         UUID observation=UUID.randomUUID();params.put("id",observation);params.put("metric",key);params.put("label",label(key));params.put("value",request.value());params.put("unit",request.unit());
-        params.put("normalized",normalized.value());params.put("normalizedUnit",normalized.unit());params.put("time",java.sql.Timestamp.from(request.observedAt()));params.put("low",request.referenceLow());params.put("high",request.referenceHigh());params.put("fingerprint",fingerprint);params.put("note",note);
+        params.put("classification",ClinicalTestPatientPolicy.synthetic(sql,scoped,patient)?"TEST_DOCUMENT":"CLINICAL_DOCUMENT");params.put("normalized",normalized.value());params.put("normalizedUnit",normalized.unit());params.put("time",java.sql.Timestamp.from(request.observedAt()));params.put("low",request.referenceLow());params.put("high",request.referenceHigh());params.put("fingerprint",fingerprint);params.put("note",note);
         sql.update("""
-                insert into clinical_observations(id,hospital_id,patient_id,feature_key,display_name,value_numeric,unit,normalized_value,normalized_unit,reference_range_low,reference_range_high,effective_at,source_type,created_by)
-                values(:id,:h,:p,:metric,:label,:value,:unit,:normalized,:normalizedUnit,:low,:high,:time,'CLINICIAN_ENTERED',:actor)
+                insert into clinical_observations(id,hospital_id,patient_id,feature_key,display_name,value_numeric,unit,normalized_value,normalized_unit,reference_range_low,reference_range_high,effective_at,source_type,created_by,document_classification)
+                values(:id,:h,:p,:metric,:label,:value,:unit,:normalized,:normalizedUnit,:low,:high,:time,'CLINICIAN_ENTERED',:actor,:classification)
                 """,params);
         sql.update("""
                 insert into predictive_observation_entries(hospital_id,patient_id,observation_id,actor_id,request_id,input_fingerprint,source_note)
                 values(:h,:p,:id,:actor,:request,:fingerprint,:note)
                 """,params);
         Context context=new Context(scoped,Map.of(),checked,false,new LongitudinalClinicalFeatureService.MedicationContext(List.of(),List.of(),false,false,"Medication context not loaded"),null);
-        Map<String,Object> body=new LinkedHashMap<>();body.put("resourceType","Observation");body.put("id",observation.toString());body.put("status","final");body.put("code",Map.of("text",label(key)));
+        Map<String,Object> body=new LinkedHashMap<>();body.put("resourceType","Observation");body.put("meta",Map.of("tag",List.of(Map.of("system","urn:govcare:document-classification","code",params.get("classification")))));body.put("id",observation.toString());body.put("status","final");body.put("code",Map.of("text",label(key)));
         // No assay/method-specific LOINC code is invented for a transcribed source result.
         body.put("subject",Map.of("reference",ensurePatientReference(context,patient)));body.put("effectiveDateTime",request.observedAt().toString());
         body.put("valueQuantity",Map.of("value",request.value(),"unit",request.unit()));body.put("note",List.of(Map.of("text","Clinician verified source: "+note)));

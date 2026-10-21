@@ -30,12 +30,12 @@ class CkdAssessmentFeatureBridgeTest {
     }
     @Test void aSavedCkdSnapshotCalculatesMonitoringWithoutDialysisOrFakeForecasts() {
         var out=overview(savedAssessment(35.0,null));
-        assertEquals("CALCULATED",out.path("renalTrajectory").path("clinicalAssessment").path("status").asText());
-        assertEquals("High",out.path("renalTrajectory").path("clinicalAssessment").path("riskLevel").asText());
-        assertEquals("High potassium monitoring signal",out.path("hyperkalemia").path("clinicalAssessment").path("resultTitle").asText());
-        assertEquals("Anemia monitoring signal",out.path("anemia").path("clinicalAssessment").path("resultTitle").asText());
+        assertEquals("PARTIALLY_CALCULATED",out.path("renalTrajectory").path("clinicalAssessment").path("status").asText());
+        assertTrue(out.path("renalTrajectory").path("clinicalAssessment").path("riskLevel").isNull());
+        assertEquals("Mild high potassium",out.path("hyperkalemia").path("clinicalAssessment").path("resultTitle").asText());
+        assertEquals("Recorded hemoglobin; population context required",out.path("anemia").path("clinicalAssessment").path("resultTitle").asText());
         assertEquals("Baseline creatinine required for AKI trend calculation",out.path("akiRisk").path("message").asText());
-        assertEquals("Requires hemodialysis session data",out.path("dialysisAdequacy").path("clinicalAssessment").path("message").asText());
+        assertEquals("URR not calculated",out.path("dialysisAdequacy").path("clinicalAssessment").path("resultTitle").asText());
         assertTrue(out.path("hyperkalemia").path("forecast").isNull());assertTrue(out.path("anemia").path("forecast").isNull());
     }
     @Test void lowEgfrProvidesAnIndicatorWithoutInventingG5DVerification() {

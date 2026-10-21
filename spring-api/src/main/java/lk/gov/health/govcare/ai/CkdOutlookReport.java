@@ -70,6 +70,12 @@ final class CkdOutlookReport {
         } else d.add(new Paragraph("Awaiting clinician review. No follow-up milestones have been recorded.",font(9,Font.NORMAL,Color.DARK_GRAY)));
         d.add(new Paragraph("Future milestones are clinician-defined plans, not predicted clinical events.",font(8,Font.BOLD,NAVY)));
         heading(d,writer,"Limitations and provenance");
+        if(value.path("learnedModel").isObject()) {
+            var learned=value.path("learnedModel");
+            d.add(new Paragraph("Learned five-year research model: "+learned.path("status").asText()+". Probability: not estimated.",font(8,Font.BOLD,NAVY)));
+            for(JsonNode reason:learned.path("reasons"))d.add(new Paragraph(reason.asText(),font(8,Font.NORMAL,Color.DARK_GRAY)));
+            d.add(new Paragraph("Dataset audit SHA-256: "+learned.path("dataset_sha256").asText(),font(7,Font.NORMAL,Color.DARK_GRAY)));
+        }
         for(JsonNode limitation:value.path("limitations"))d.add(new Paragraph("• "+limitation.asText(),font(8,Font.NORMAL,Color.DARK_GRAY)));
         d.add(new Paragraph("Reference: "+model.path("reference").asText(),font(8,Font.NORMAL,TEAL)));
         d.add(new Paragraph("Evidence fingerprint: "+value.path("evidenceFingerprint").asText()+"\nPDF reads the stored assessment and its latest appended review; no new prediction is generated.",font(7,Font.NORMAL,Color.DARK_GRAY)));

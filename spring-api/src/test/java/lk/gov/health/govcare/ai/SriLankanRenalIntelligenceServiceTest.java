@@ -44,7 +44,7 @@ class SriLankanRenalIntelligenceServiceTest {
     private SriLankanRenalIntelligenceService.ObservationRequest observation(UUID request, boolean verified) {
         return new SriLankanRenalIntelligenceService.ObservationRequest(request, Instant.parse("2026-01-01T10:00:00Z"), true,
                 Map.of("hb", 105.0, "urea_pre", 120.0, "urea_post", 30.0),
-                Map.of("hb", "g/L", "urea_pre", "mg/dL", "urea_post", "mg/dL"), "Verified source laboratory report", verified);
+                Map.of("hb", "g/L", "urea_pre", "mg/dL", "urea_post", "mg/dL"), "Verified source laboratory report", verified, Map.of("sessionId","SYNTHETIC-HD-1","preCollectedAt","2026-01-01T06:00:00Z","postCollectedAt","2026-01-01T10:00:00Z"));
     }
     private Map<String,Object> snapshot(UUID id, String model) {
         var out = new SriLankanRenalMlClient(mapper, HttpClient.newHttpClient(), "http://127.0.0.1", "", 1)
@@ -70,7 +70,7 @@ class SriLankanRenalIntelligenceServiceTest {
         assertThrows(ApiException.class, () -> SriLankanRenalIntelligenceService.validateMeasurements(Map.of("hb", 10.0), Map.of()));
         assertThrows(ApiException.class, () -> SriLankanRenalIntelligenceService.validateMeasurements(Map.of("hb", Double.NaN), Map.of("hb", "g/dL")));
         assertThrows(ApiException.class, () -> SriLankanRenalIntelligenceService.validateMeasurements(Map.of("urea_pre", 50.0), Map.of("urea_pre", "BUN mg/dL")));
-        assertThrows(ApiException.class, () -> SriLankanRenalIntelligenceService.validateMeasurements(Map.of("urea_pre", 50.0, "urea_post", 12.0), Map.of("urea_pre", "mg/dL", "urea_post", "mmol/L")));
+        assertDoesNotThrow(() -> SriLankanRenalIntelligenceService.validateMeasurements(Map.of("urea_pre", 50.0, "urea_post", 12.0), Map.of("urea_pre", "mg/dL", "urea_post", "mmol/L"))); // Compatibility is normalized; pair ordering is checked by the authoritative calculator.
         assertThrows(ApiException.class, () -> SriLankanRenalIntelligenceService.validateMeasurements(Map.of("hb", 10.0), java.util.Collections.singletonMap("hb", null)));
         verifyNoInteractions(sql, ml);
     }
@@ -104,7 +104,7 @@ class SriLankanRenalIntelligenceServiceTest {
             assertEquals(Observation.ObservationStatus.FINAL, resource.getStatus());
             assertEquals("Patient/patient-" + patient, resource.getSubject().getReference());
             assertEquals(user.toString(), resource.getPerformerFirstRep().getIdentifier().getValue());
-            assertEquals(Instant.parse("2026-01-01T10:00:00Z"), resource.getEffectiveDateTimeType().getValue().toInstant());
+            assertTrue(Set.of(Instant.parse("2026-01-01T06:00:00Z"),Instant.parse("2026-01-01T10:00:00Z")).contains(resource.getEffectiveDateTimeType().getValue().toInstant()));
             assertTrue(resource.getValue() instanceof org.hl7.fhir.r4.model.Quantity);
         }
         assertTrue(storedFhir.stream().anyMatch(row -> "Condition".equals(row.get("type"))));
@@ -126,7 +126,7 @@ class SriLankanRenalIntelligenceServiceTest {
         allow(false);
         Map<String,Object> row = Map.of("id", UUID.randomUUID(), "observed_at", Instant.parse("2026-01-01T10:00:00Z"),
                 "maintenance_hemodialysis_verified", true, "measurements", Map.of("urea_pre", 120.0, "urea_post", 30.0),
-                "units", Map.of("urea_pre", "mg/dL", "urea_post", "mg/dL"), "source_note", "Verified chronic dialysis");
+                "units", Map.of("urea_pre", "mg/dL", "urea_post", "mg/dL"), "source_note", "Verified chronic dialysis","patient_id",patient,"sampling_context",Map.of("patientId",patient.toString(),"sessionId","SYNTH-1","sourceVerified",true,"preCollectedAt","2026-01-01T06:00:00Z","postCollectedAt","2026-01-01T10:00:00Z"));
         when(sql.list(contains("from sri_lankan_renal_observations"), anyMap())).thenReturn(List.of(row));
         when(sql.list(contains("from predictive_prediction_snapshots"), anyMap())).thenReturn(List.of());
         var overview = service().overview(actor, patient);
@@ -155,7 +155,7 @@ class SriLankanRenalIntelligenceServiceTest {
         when(sql.list(contains("from predictive_prediction_snapshots"), anyMap())).thenReturn(List.of());
         var observation = service().overview(actor, patient).observations().get(0);
         assertFalse(observation.measurements().containsKey("urr"));
-        assertEquals(List.of("PAIRED_UREA_INVALID_FOR_URR"), observation.dataQualityFlags());
+        assertEquals(List.of("PAIRED_UREA_SOURCE_OR_TIMING_UNVERIFIED"), observation.dataQualityFlags());
     }
 
     @Test void staleReviewVersionCannotAppendFeedbackOrChangePrediction() {
@@ -189,7 +189,7 @@ class SriLankanRenalIntelligenceServiceTest {
         assertFalse(resources.stream().anyMatch(row -> "Observation".equals(row.get("type"))));
     }
 
-    @Test void inferenceUsesOnlyStoredNormalizedHistoryAndPersistsForecastAsRiskAssessment() throws Exception {
+    @Test void inferenceUsesOnlyStoredNormalizedHistoryAndPersistsContinuousForecastAsClinicalImpression() throws Exception {
         allow(true);allow(false);
         UUID model = UUID.randomUUID();
         when(sql.required(contains("from predictive_model_registry"), anyMap(), anyString()))
@@ -233,15 +233,15 @@ class SriLankanRenalIntelligenceServiceTest {
         });
         var prediction = service().predict(actor, patient, new SriLankanRenalIntelligenceService.PredictRequest(UUID.randomUUID(), "hb"));
         assertEquals(10.5, prediction.outputs().path("prediction").doubleValue());
-        assertTrue(resources.stream().anyMatch(row -> "RiskAssessment".equals(row.get("type"))));
+        assertTrue(resources.stream().anyMatch(row -> "ClinicalImpression".equals(row.get("type"))));
         assertTrue(resources.stream().anyMatch(row -> "Provenance".equals(row.get("type"))));
         assertFalse(resources.stream().anyMatch(row -> "Observation".equals(row.get("type"))));
         for (var resource : resources) {
             assertNotNull(FhirContext.forR4Cached().newJsonParser().parseResource(resource.get("body").toString()));
-            if ("RiskAssessment".equals(resource.get("type"))) {
+            if ("ClinicalImpression".equals(resource.get("type"))) {
                 var fhir = mapper.readTree(resource.get("body").toString());
-                assertFalse(fhir.path("prediction").get(0).has("probabilityDecimal"));
-                assertFalse(fhir.path("prediction").get(0).has("probabilityRange"));
+                assertFalse(fhir.toString().contains("probabilityDecimal"));
+                assertFalse(fhir.toString().contains("probabilityRange"));
                 assertTrue(fhir.path("extension").toString().contains("renal-predicted-value"));
             }
         }

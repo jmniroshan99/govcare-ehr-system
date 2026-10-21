@@ -82,7 +82,9 @@ public class SriLankanRenalIntelligenceService {
     }
 
     public record ObservationRequest(UUID requestId, Instant observedAt, boolean maintenanceHemodialysisVerified,
-            Map<String,Double> measurements, Map<String,String> units, String sourceNote, boolean sourceVerified) {}
+            Map<String,Double> measurements, Map<String,String> units, String sourceNote, boolean sourceVerified, Map<String,String> samplingContext) {
+        public ObservationRequest(UUID requestId,Instant observedAt,boolean verified,Map<String,Double> measurements,Map<String,String> units,String note,boolean sourceVerified){this(requestId,observedAt,verified,measurements,units,note,sourceVerified,Map.of());}
+    }
     public record PredictRequest(UUID requestId, String modelKey) {}
     public record ReviewRequest(UUID patientId, UUID requestId, int expectedVersion, String action,
             String reason, String note, String modifiedInterpretation) {}
@@ -94,7 +96,9 @@ public class SriLankanRenalIntelligenceService {
     public record ObservationView(UUID id, @JsonProperty("observed_at") Instant observedAt,
             @JsonProperty("maintenance_hemodialysis_verified") boolean maintenanceHemodialysisVerified,
             Map<String,Double> measurements, Map<String,String> units,
-            @JsonProperty("source_note") String sourceNote, @JsonProperty("data_quality_flags") List<String> dataQualityFlags) {}
+            @JsonProperty("source_note") String sourceNote, @JsonProperty("data_quality_flags") List<String> dataQualityFlags, @JsonProperty("sampling_context") Map<String,Object> samplingContext) {
+        public ObservationView(UUID id,Instant at,boolean hd,Map<String,Double> measurements,Map<String,String> units,String note,List<String> flags){this(id,at,hd,measurements,units,note,flags,Map.of());}
+    }
     public record PredictionView(UUID id, @JsonProperty("model_key") String modelKey, String status,
             @JsonSerialize(using = RenalPredictionJsonSerializer.class) JsonNode outputs,
             @JsonProperty("created_at") Instant createdAt, @JsonProperty("review_state") String reviewState,
@@ -166,11 +170,19 @@ public class SriLankanRenalIntelligenceService {
             throw ApiException.badRequest("The observation date must be a valid past clinical date.");
         String note = requiredText(request.sourceNote(), 2000, "Document the verified source in 1–2000 characters.");
         validateMeasurements(request.measurements(), request.units());
+        var sampling=renalOutputMapper.valueToTree(request.samplingContext()==null?Map.of():request.samplingContext());
+        ObjectNode samplingObject=(ObjectNode)sampling;
+        if(samplingObject.hasNonNull("patientId")&&!patient.toString().equals(samplingObject.path("patientId").asText()))throw ApiException.badRequest("Sampling patient does not match the authorized patient.");
+        samplingObject.put("patientId",patient.toString()).put("sourceVerified",true);
+        if(request.measurements().containsKey("urea_pre")||request.measurements().containsKey("urea_post")){
+            var pair=renalOutputMapper.createObjectNode();pair.set("measurements",renalOutputMapper.valueToTree(request.measurements()));pair.set("units",renalOutputMapper.valueToTree(request.units()));pair.set("sampling_context",samplingObject);pair.put("source_note",note);
+            var calculated=UreaReductionRatio.evaluate(patient.toString(),pair);if(!calculated.path("value").isNumber())throw ApiException.badRequest("URR source verification: "+calculated.path("reasons").toString());
+        }
         Map<String,Object> payload = new LinkedHashMap<>();
         payload.put("observedAt", request.observedAt().toString());
         payload.put("maintenanceHemodialysisVerified", request.maintenanceHemodialysisVerified());
         payload.put("measurements", new TreeMap<>(request.measurements())); payload.put("units", new TreeMap<>(request.units()));
-        payload.put("sourceNote", note); payload.put("sourceVerified", true);
+        payload.put("sourceNote", note); payload.put("sourceVerified", true);payload.put("samplingContext",samplingObject);
         String fingerprint = fingerprint(json.write(payload));
         Map<String,Object> params = params(scoped, patient);
         params.put("request", request.requestId()); params.put("fingerprint", fingerprint);
@@ -191,11 +203,11 @@ public class SriLankanRenalIntelligenceService {
             throw ApiException.conflict("A verified renal observation is already recorded for this patient and date/time.");
         UUID id = UUID.randomUUID(); params.put("id", id); params.put("dialysis", request.maintenanceHemodialysisVerified());
         params.put("values", json.write(new TreeMap<>(request.measurements()))); params.put("units", json.write(new TreeMap<>(request.units())));
-        params.put("note", note); params.put("department", scoped.departmentId());
+        params.put("note", note); params.put("department", scoped.departmentId());params.put("sampling",samplingObject.toString());
         sql.update("""
                 insert into sri_lankan_renal_observations(id,hospital_id,patient_id,observed_at,maintenance_hemodialysis_verified,
-                  measurements,units,source_note,source_verified,actor_id,department_id,request_id,input_fingerprint)
-                values(:id,:h,:p,:time,:dialysis,cast(:values as jsonb),cast(:units as jsonb),:note,true,:actor,:department,:request,:fingerprint)
+                  measurements,units,source_note,source_verified,actor_id,department_id,request_id,input_fingerprint,sampling_context)
+                values(:id,:h,:p,:time,:dialysis,cast(:values as jsonb),cast(:units as jsonb),:note,true,:actor,:department,:request,:fingerprint,cast(:sampling as jsonb))
                 """, params);
         List<String> resources = persistMeasuredFhir(scoped, patient, id, request, note);
         audit(scoped, patient, "VERIFIED_RENAL_OBSERVATION_RECORDED", id,
@@ -223,6 +235,7 @@ public class SriLankanRenalIntelligenceService {
         for (Map<String,Object> row : rows.stream().limit(MAX_HISTORY).sorted(java.util.Comparator.comparing(r -> instant(r.get("observed_at")))).toList()) {
             if (!Boolean.TRUE.equals(row.get("maintenance_hemodialysis_verified"))) continue;
             ObservationView observation = observationView(row);
+            if("urr".equals(request.modelKey())&&!observation.measurements().containsKey("urr"))continue;
             Normalized normalized = normalizeMeasurements(observation.measurements(), observation.units());
             history.add(Map.of("observed_at", observation.observedAt().toString(),
                     "measurements", normalized.measurements(), "units", normalized.units()));
@@ -345,7 +358,7 @@ public class SriLankanRenalIntelligenceService {
 
     private List<Map<String,Object>> observationRows(GovCarePrincipal scoped, UUID patient) {
         return sql.list("""
-                select id,observed_at,maintenance_hemodialysis_verified,measurements,units,source_note,actor_id,department_id
+                select id,observed_at,maintenance_hemodialysis_verified,measurements,units,source_note,sampling_context,patient_id,created_at,actor_id,department_id
                 from sri_lankan_renal_observations where hospital_id=:h and patient_id=:p and source_verified=true
                 order by observed_at desc,id limit 201
                 """, params(scoped, patient));
@@ -410,7 +423,7 @@ public class SriLankanRenalIntelligenceService {
         int score = (int)Math.round(100.0 * worsening / evaluated);
         String status = worsening == 0 ? "NO_ADVERSE_DIRECTION_DETECTED" : score >= 50
                 ? "MULTIDOMAIN_WORSENING_SIGNAL" : "MIXED_TRAJECTORY";
-        return new RenalDeteriorationComposite(status, score, evaluated, worsening,
+        return new RenalDeteriorationComposite(status, null, evaluated, worsening,
                 "HEURISTIC_DIRECTIONAL_COMPOSITE", "NOT_CLINICALLY_VALIDATED", limitations, List.copyOf(components));
     }
 
@@ -443,15 +456,18 @@ public class SriLankanRenalIntelligenceService {
         List<String> flags = new ArrayList<>();
         tree(row.get("measurements")).fields().forEachRemaining(e -> { if (e.getValue().isNumber() && Double.isFinite(e.getValue().doubleValue())) values.put(e.getKey(), e.getValue().doubleValue()); else flags.add("INVALID_STORED_NUMERIC_" + e.getKey().toUpperCase()); });
         tree(row.get("units")).fields().forEachRemaining(e -> units.put(e.getKey(), e.getValue().asText()));
-        if (values.containsKey("urea_pre") && values.containsKey("urea_post")) {
-            double pre = values.get("urea_pre"), post = values.get("urea_post");
-            if (pre > 0 && post >= 0 && post <= pre && units.get("urea_pre") != null && units.get("urea_pre").equals(units.get("urea_post"))) {
-                values.put("urr", 100 * (pre - post) / pre); units.put("urr", "%");
-            } else flags.add("PAIRED_UREA_INVALID_FOR_URR");
+        ObjectNode sampling=renalOutputMapper.createObjectNode(); JsonNode savedSampling=tree(row.get("sampling_context")); if(savedSampling.isObject())sampling.setAll((ObjectNode)savedSampling);
+        if(row.get("created_at")!=null)sampling.put("recordedAt",instant(row.get("created_at")).toString());
+        var source=renalOutputMapper.createObjectNode().put("id",row.get("id").toString()).put("source_note",text(row.get("source_note")));
+        source.set("measurements",renalOutputMapper.valueToTree(values));source.set("units",renalOutputMapper.valueToTree(units));source.set("sampling_context",sampling);
+        if(values.containsKey("urea_pre")||values.containsKey("urea_post")){
+            var result=UreaReductionRatio.evaluate(Objects.toString(row.get("patient_id"),null),source);
+            if(result.path("value").isNumber()){values.put("urr",result.path("value").asDouble());units.put("urr","%");}
+            else flags.add("PAIRED_UREA_SOURCE_OR_TIMING_UNVERIFIED");
         }
         return new ObservationView(UUID.fromString(row.get("id").toString()), instant(row.get("observed_at")),
                 Boolean.TRUE.equals(row.get("maintenance_hemodialysis_verified")), Collections.unmodifiableMap(values),
-                Collections.unmodifiableMap(units), text(row.get("source_note")), List.copyOf(flags));
+                Collections.unmodifiableMap(units), text(row.get("source_note")), List.copyOf(flags),renalOutputMapper.convertValue(sampling,new com.fasterxml.jackson.core.type.TypeReference<Map<String,Object>>(){}));
     }
 
     static void validateMeasurements(Map<String,Double> measurements, Map<String,String> units) {
@@ -471,9 +487,6 @@ public class SriLankanRenalIntelligenceService {
             if (value < min || value > max)
                 throw ApiException.badRequest("The recorded " + key + " value is outside the supported plausibility range; verify the source and units.");
         }
-        if (measurements.containsKey("urea_pre") && measurements.containsKey("urea_post")
-                && !java.util.Objects.equals(units.get("urea_pre"), units.get("urea_post")))
-            throw ApiException.badRequest("Paired pre/post blood urea must be transcribed in the same explicit units; BUN is a different analyte.");
     }
     private static Normalized normalizeMeasurements(Map<String,Double> raw, Map<String,String> units) {
         Map<String,Double> values = new TreeMap<>(); Map<String,String> targetUnits = new TreeMap<>();
@@ -507,7 +520,9 @@ public class SriLankanRenalIntelligenceService {
             Map<String,Object> body = new LinkedHashMap<>();
             body.put("resourceType", "Observation"); body.put("id", id); body.put("status", "final");
             body.put("code", Map.of("text", "Verified hemodialysis " + entry.getKey().replace('_', ' ')));
-            body.put("subject", Map.of("reference", reference)); body.put("effectiveDateTime", request.observedAt().toString());
+            body.put("subject", Map.of("reference", reference));
+            String samplingAt=request.samplingContext()==null?null:request.samplingContext().get(entry.getKey().equals("urea_pre")?"preCollectedAt":entry.getKey().equals("urea_post")?"postCollectedAt":"");
+            body.put("effectiveDateTime",samplingAt==null?request.observedAt().toString():samplingAt);
             body.put("valueQuantity", Map.of("value", entry.getValue(), "unit", request.units().get(entry.getKey())));
             body.put("performer", List.of(Map.of("identifier", Map.of("system", "urn:govcare:user", "value", scoped.id().toString()))));
             body.put("note", List.of(Map.of("text", "Clinician verified source: " + sourceNote)));
@@ -534,41 +549,11 @@ public class SriLankanRenalIntelligenceService {
     }
 
     private List<String> persistPredictionFhir(GovCarePrincipal scoped, UUID patient, UUID snapshot, ObjectNode output, List<Map<String,Object>> rows) {
-        String id = snapshot.toString(); Map<String,Object> body = new LinkedHashMap<>();
-        body.put("resourceType", "RiskAssessment"); body.put("id", id); body.put("status", "final");
-        body.put("subject", Map.of("reference", ensurePatientReference(scoped, patient))); body.put("occurrenceDateTime", Instant.now().toString());
-        boolean classifier = "hyperkalemia".equals(output.path("model_key").asText());
-        body.put("method", Map.of("text", output.path("model").asText() + " " + output.path("method").asText()
-                + (classifier ? "; research classifier; probability not clinically calibrated" : "; regression research only")));
-        Map<String,Object> prediction = new LinkedHashMap<>();
-        prediction.put("outcome", Map.of("text", classifier
-                ? "Next-period pre-dialysis potassium >=5.5 mmol/L research risk score; clinician review required"
-                : "Next-period " + output.path("model_key").asText() + " research forecast; clinician review required"));
-        if (classifier && output.path("probability").isNumber()) prediction.put("probabilityDecimal", output.path("probability").doubleValue());
-        body.put("prediction", List.of(prediction));
-        body.put("note", List.of(Map.of("text", classifier
-                ? "Not clinically validated; dataset permission UNVERIFIED. Probability is an internally evaluated research risk score, not a calibrated treatment or diagnostic probability."
-                : "Not clinically validated; dataset permission UNVERIFIED. Predicted quantities are extensions, not measured laboratory observations.")));
-        List<Map<String,Object>> extensions = new ArrayList<>();
-        for (String key : List.of("model", "model_version", "method", "validation_status", "clinical_validation", "dataset_permission_status", "status"))
-            extensions.add(Map.of("url", "urn:govcare:renal-" + key.replace('_', '-'), "valueString", output.path(key).asText()));
-        extensions.add(Map.of("url", "urn:govcare:requires-clinician-review", "valueBoolean", true));
-        if (output.path("prediction").isNumber()) extensions.add(Map.of("url", "urn:govcare:renal-predicted-value",
-                "valueQuantity", Map.of("value", output.path("prediction").doubleValue(), "unit", output.path("unit").asText())));
-        if (classifier && output.path("probability").isNumber()) extensions.add(Map.of(
-                "url", "urn:govcare:renal-research-probability", "valueDecimal", output.path("probability").doubleValue()));
-        if (output.path("interval").isObject()) {
-            extensions.add(Map.of("url", "urn:govcare:renal-prediction-interval-low", "valueDecimal", output.path("interval").path("low").doubleValue()));
-            extensions.add(Map.of("url", "urn:govcare:renal-prediction-interval-high", "valueDecimal", output.path("interval").path("high").doubleValue()));
-            extensions.add(Map.of("url", "urn:govcare:renal-prediction-interval-level", "valueDecimal", output.path("interval").path("level").doubleValue()));
-        }
-        if (output.path("forecast_date").isTextual()) extensions.add(Map.of("url", "urn:govcare:renal-forecast-date", "valueDateTime", output.path("forecast_date").asText()));
-        extensions.add(Map.of("url", "urn:govcare:renal-explanation", "valueString", output.path("explanation").toString()));
-        body.put("extension", extensions);
-        body.put("basis", rows.stream().map(row -> Map.of("identifier", Map.of("system", "urn:govcare:renal-session", "value", row.get("id").toString()))).toList());
-        storeFhir(scoped, patient, "RiskAssessment", id, json.write(body));
-        String provenance = persistProvenance(scoped, patient, List.of("RiskAssessment/" + id), "urn:govcare:predictive-snapshot", snapshot);
-        return List.of("RiskAssessment/" + id, provenance);
+        var body=RenalPredictionFhir.resource(ensurePatientReference(scoped,patient),snapshot.toString(),output,rows);
+        String type=body.path("resourceType").asText(),reference=type+"/"+snapshot;
+        storeFhir(scoped,patient,type,snapshot.toString(),body.toString());
+        String provenance=persistProvenance(scoped,patient,List.of(reference),"urn:govcare:predictive-snapshot",snapshot);
+        return List.of(reference,provenance);
     }
 
     private List<String> persistReviewFhir(GovCarePrincipal scoped, UUID patient, UUID prediction, UUID review, String action,
@@ -581,7 +566,8 @@ public class SriLankanRenalIntelligenceService {
         impression.setSummary("Research prediction " + snapshot.get("model_key") + " v" + snapshot.get("model_version")
                 + ": " + action + ". " + reason + (modified == null ? "" : ". Clinician interpretation: " + modified)
                 + (note == null ? "" : ". Note: " + note));
-        impression.addSupportingInfo(new Reference("RiskAssessment/" + prediction));
+        String resourceType=sql.one("select resource_type from fhir_resource where resource_id=:rid and hospital_id=:h and patient_id=:p and resource_type in ('RiskAssessment','ClinicalImpression') limit 1",Map.of("rid",prediction.toString(),"h",scoped.hospitalId(),"p",patient)).map(row->Objects.toString(row.get("resource_type"),"RiskAssessment")).orElse("RiskAssessment");
+        impression.addSupportingInfo(new Reference(resourceType+"/"+prediction));
         storeFhir(scoped, patient, "ClinicalImpression", id, FHIR.newJsonParser().encodeResourceToString(impression));
         String provenance = persistProvenance(scoped, patient, List.of("ClinicalImpression/" + id), "urn:govcare:renal-review", review);
         return List.of("ClinicalImpression/" + id, provenance);

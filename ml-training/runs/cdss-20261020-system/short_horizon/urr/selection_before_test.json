@@ -1,0 +1,12 @@
+{
+  "selected_method": "xgboost",
+  "best_candidate": "xgboost",
+  "gate_passed": true,
+  "improvement": 0.17082511824751656,
+  "selection_uses_test": false,
+  "criterion": "Validation MAE; >=5% better than persistence and below both training constants",
+  "frozen_before_test": true,
+  "status": "TRAINED_RESEARCH_ONLY",
+  "served": false,
+  "deployment_reason": "Staged benchmark only; existing approved serving location is retained."
+}

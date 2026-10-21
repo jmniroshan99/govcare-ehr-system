@@ -1,0 +1,20 @@
+{
+  "hb": {
+    "status": "BASELINE_SELECTED",
+    "method": "PERSISTENCE_BASELINE",
+    "algorithm": "XGBoost",
+    "old_sha256": "d81abfee0f345dcf59a2e2ce51617f9038a3693b4630de8cc97b1b0216eb4211",
+    "new_sha256": "c9c949b57f55a60f58a35c60e4573c7c0600e5d81f350bb1b8665bdee048b091",
+    "artifact_revision": "RENAL-PACKAGED-20261020T085820Z-SERIALIZATION-REPAIR",
+    "reason": "Original hash-matching XGBoost pickle raises input stream corrupted in both original Python 3.14 and isolated Python 3.12 environments. Refit using retained legacy specification and split."
+  },
+  "urr": {
+    "status": "RESEARCH_SERVING_APPROVED",
+    "method": "RESEARCH_MODEL",
+    "algorithm": "XGBoost",
+    "old_sha256": "7de2f633c04a8a8c58d5629f81483ca32c3e3fa6f6ef3dde47d5ff2c8732a1e2",
+    "new_sha256": "a1ace23df2a9ad062b1d5b5bb46610d5bb7874d2aa8aa938f6e15ee66b4703a9",
+    "artifact_revision": "RENAL-PACKAGED-20261020T085820Z-SERIALIZATION-REPAIR",
+    "reason": "Original hash-matching XGBoost pickle raises input stream corrupted in both original Python 3.14 and isolated Python 3.12 environments. Refit using retained legacy specification and split."
+  }
+}

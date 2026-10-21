@@ -17,7 +17,7 @@ public class CkdOutlookService {
     private final SqlSupport sql; private final ClinicalPatientAccess access;
     private final RenalClinicalModuleService modules; private final ObjectMapper mapper;
     public CkdOutlookService(SqlSupport sql, ClinicalPatientAccess access, RenalClinicalModuleService modules, ObjectMapper mapper) {
-        this.sql=sql;this.access=access;this.modules=modules;this.mapper=mapper.copy().configure(com.fasterxml.jackson.databind.cfg.JsonNodeFeature.WRITE_NULL_PROPERTIES,true);
+        this.sql=sql;this.access=access;this.modules=modules;this.mapper=mapper.copy().setSerializationInclusion(com.fasterxml.jackson.annotation.JsonInclude.Include.ALWAYS).configure(com.fasterxml.jackson.databind.cfg.JsonNodeFeature.WRITE_NULL_PROPERTIES,true);
     }
     public record AssessmentRequest(UUID requestId,String evidenceFingerprint,String sexForEquation,
         boolean confirmedChronicCkd,boolean noKidneyReplacementTherapy,boolean clinicallyStable,String sourceNote) {}
@@ -121,6 +121,12 @@ public class CkdOutlookService {
         var scoped=access.clinicalScope(actor,patient,false);var p=params(scoped,patient);
         return sql.one("select outputs from ckd_outlook_snapshots where hospital_id=:h and patient_id=:p order by created_at desc,id desc limit 1",p).map(row->decorate(decode(row.get("outputs")),p)).orElse(null);
     }
+    public ObjectNode selectedForReport(GovCarePrincipal actor,UUID patient,UUID snapshot){
+        if(snapshot==null)return storedForReport(actor,patient);
+        var scoped=access.clinicalScope(actor,patient,false);var p=params(scoped,patient);p.put("id",snapshot);
+        var row=sql.required("select outputs from ckd_outlook_snapshots where id=:id and hospital_id=:h and patient_id=:p",p,"The selected outlook does not belong to this patient.");
+        return decorate(decode(row.get("outputs")),p);
+    }
 
     private Current current(GovCarePrincipal actor,UUID patient,boolean write) {
         var scoped=access.clinicalScope(actor,patient,write);var p=params(scoped,patient);
@@ -139,7 +145,13 @@ public class CkdOutlookService {
     }
     private Map<String,Object> params(GovCarePrincipal actor,UUID patient){return new HashMap<>(Map.of("h",actor.hospitalId(),"p",patient,"actor",actor.id()));}
     private Map<String,Object> with(Map<String,Object> p,String key,Object value){var copy=new HashMap<>(p);copy.put(key,value);return copy;}
-    private JsonNode tree(Object value){try{return value instanceof JsonNode n?n.deepCopy():mapper.readTree(Objects.toString(value,"null"));}catch(Exception e){throw new IllegalStateException("Stored outlook evidence is unreadable.",e);}}
+    private JsonNode tree(Object value){try{
+        if(value instanceof JsonNode n)return n.deepCopy();
+        // SqlSupport normalizes native PostgreSQL JSONB to Map/List. Their Java
+        // toString representation is not JSON and must never be parsed as JSON.
+        if(value instanceof Map<?,?>||value instanceof List<?>)return mapper.valueToTree(value);
+        return mapper.readTree(Objects.toString(value,"null"));
+    }catch(Exception e){throw new IllegalStateException("Stored outlook evidence is unreadable.",e);}}
     private ObjectNode decode(Object value){JsonNode node=tree(value);if(!node.isObject())throw new IllegalStateException("Stored outlook evidence must be an object.");return (ObjectNode)node;}
     private String hash(JsonNode node){return ClinicalIntelligenceEngine.sha256(node.toString());}
     private void lock(String key){sql.required("select pg_advisory_xact_lock(hashtextextended(:lock,0)) as held",Map.of("lock",key),"Cannot serialize outlook operation.");}

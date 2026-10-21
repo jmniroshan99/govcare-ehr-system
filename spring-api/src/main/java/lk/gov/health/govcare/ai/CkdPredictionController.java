@@ -21,6 +21,9 @@ public class CkdPredictionController {
     @PostMapping("/predict")
     public Map<String,Object> predict(@RequestBody PredictionRequest request) { return service.predict(current.get(),request); }
 
+    @PostMapping("/validate")
+    public Map<String,Object> validate(@RequestBody PredictionRequest request) { return service.validate(current.get(),request); }
+
     @GetMapping("/patients")
     public Map<String,Object> patients(@RequestParam(required=false) String search,
                                       @RequestParam(required=false) UUID hospitalId,

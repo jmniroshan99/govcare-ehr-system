@@ -1,0 +1,123 @@
+{
+  "registered": true,
+  "training_status": "TRAINED_RESEARCH_ONLY",
+  "evaluated": true,
+  "served": false,
+  "parameters": {
+    "max_depth": 4,
+    "min_samples_leaf": 10
+  },
+  "tuning": [
+    {
+      "parameters": {
+        "max_depth": 4,
+        "min_samples_leaf": 5
+      },
+      "fold_scores": [
+        11.870798584922813,
+        10.562851472198876,
+        14.039601170538084
+      ],
+      "mean": 12.157750409219924
+    },
+    {
+      "parameters": {
+        "max_depth": 4,
+        "min_samples_leaf": 10
+      },
+      "fold_scores": [
+        12.021021862139884,
+        10.272786040164341,
+        13.068347020378331
+      ],
+      "mean": 11.78738497422752
+    }
+  ],
+  "validation": {
+    "MAE": 13.033719153393573,
+    "RMSE": 16.5656063348916,
+    "R2": -0.5223672613891404,
+    "MedianAbsoluteError": 10.13698679165405
+  },
+  "test": {
+    "MAE": 11.389186994972244,
+    "RMSE": 14.26391952080055,
+    "R2": 0.00726905935443678,
+    "MedianAbsoluteError": 9.76088187394322
+  },
+  "patient_uncertainty": {
+    "unit": "patient",
+    "iterations": 200,
+    "patients": 9,
+    "seed": 314159,
+    "MAE_percentile_95": [
+      9.491324384534229,
+      13.828624750804083
+    ],
+    "candidate_minus_baseline_95": [
+      -2.924087080054454,
+      1.9061623814452495
+    ],
+    "limitation": "Exploratory interval; only a small reused test cohort; no model-selection correction."
+  },
+  "passed_validation_gate": false,
+  "patient_test_metrics": {
+    "LK_36f257b8b2ebb7ceaa3dcba7": {
+      "MAE": 8.301564403115181,
+      "RMSE": 11.428840310110672,
+      "R2": -1.3618659543944727,
+      "MedianAbsoluteError": 3.2633142054490776
+    },
+    "LK_62f67cfefae276256ed25caf": {
+      "MAE": 7.788875024493122,
+      "RMSE": 11.394933709006136,
+      "R2": -0.3678895654545207,
+      "MedianAbsoluteError": 3.62305132217341
+    },
+    "LK_6bcd65d451164cf4766fcd12": {
+      "MAE": 13.21546451317916,
+      "RMSE": 13.709373532004603,
+      "R2": -0.9796042599189243,
+      "MedianAbsoluteError": 12.192704641506133
+    },
+    "LK_98bfc5d0688f7913531eae63": {
+      "MAE": 28.13831519414009,
+      "RMSE": 28.13831519414009,
+      "R2": null,
+      "MedianAbsoluteError": 28.13831519414009,
+      "unestimable_metrics": {
+        "R2": "Fewer than two observations"
+      }
+    },
+    "LK_b7d14c5182ae80f1da13e3e2": {
+      "MAE": 18.152765474660068,
+      "RMSE": 19.698676179517374,
+      "R2": -0.2271951968065935,
+      "MedianAbsoluteError": 19.106397696858316
+    },
+    "LK_c29bc88e16f169e4f94008a2": {
+      "MAE": 15.353096413056319,
+      "RMSE": 17.99384163523605,
+      "R2": -0.17000293360340146,
+      "MedianAbsoluteError": 12.80367665029133
+    },
+    "LK_cabf4c7dac7d17f4107499b6": {
+      "MAE": 12.355918886010867,
+      "RMSE": 14.93162628500986,
+      "R2": -1.3624726781426046,
+      "MedianAbsoluteError": 13.450815194140091
+    },
+    "LK_cb3c81531587fa2213a8705b": {
+      "MAE": 11.445230611069022,
+      "RMSE": 14.132438617475788,
+      "R2": -0.4375099739411259,
+      "MedianAbsoluteError": 9.274862221659347
+    },
+    "LK_fbf7c31050d66a518088063e": {
+      "MAE": 7.27107296056332,
+      "RMSE": 9.634956552934627,
+      "R2": -0.326766407088815,
+      "MedianAbsoluteError": 5.882220628936324
+    }
+  }
+}

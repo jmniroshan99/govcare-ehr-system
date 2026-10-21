@@ -1,0 +1,207 @@
+GovCare EHR renal trends implementation and verification
+Delivery date: 21 October 2026, Asia/Colombo
+
+Implementation is complete in the existing application. Signed-in native API
+and downloadable PDF verification remains blocked by the saved local doctor
+credentials returning HTTP 401. No account passwords or permissions were changed.
+
+ROOT CAUSE
+
+The old Renal Trends chart used a dialysis-specific observation list plus a
+separate CKD feature history. Its source count represented renal-session rows,
+not all laboratory evidence. The feature projection did not read lab_results,
+CBC report results or standalone stored FHIR observations. It also lacked an
+explicit verification flag for graph eligibility. A large chart container and
+generic zero-lab wording obscured these differences.
+
+Read-only audit of this local PostgreSQL database found:
+  Verified renal-session rows:                      0
+  Saved CKD assessments / feature projections:     41 / 41
+  FINAL clinical observations:                    748
+  FINAL clinical observations without collection: 726
+  Verified manual-entry records:                   0
+  Active laboratory results:                      18
+  Laboratory results with verification/collection: 1
+  CBC reports:                                     0
+  Stored FHIR Observation resources:              284
+
+These are database-wide counts, not counts for the unidentified patient in the
+original screenshot. No screenshot-patient identifier was supplied. The evidence
+supports both an incomplete source query and genuinely missing collection dates;
+it does not establish which records belong to that screenshot patient.
+
+The exact three production clinical/laboratory/FHIR SQL queries were also run
+read-only against a local patient with clinical history. They returned 47, 0 and
+11 rows respectively. Evidence contains counts only, without patient identifiers
+or clinical measurements. This check verifies SQL execution, not API RBAC.
+
+IMPLEMENTATION
+
+React:
+  src/components/ai/RenalTrendsDashboard.tsx
+  src/components/ai/renal-trends-dashboard.css
+  src/components/ai/SriLankanRenalPanel.tsx
+  src/components/ai/ClinicalMeasurementDialog.tsx
+  src/services/renalIntelligenceService.ts
+  src/services/predictiveIntelligenceService.ts
+  src/pages/PredictiveClinicalIntelligence.tsx
+
+The section now provides patient/status/evidence metadata, five verified result
+cards, dated Recharts graphs, measurement and time selectors, refresh, existing
+clinical-entry dialogs and a source-history table. Serum, pre-HD and post-HD
+measurements retain separate series or an explicit sampling-context selector.
+One result renders as one point. Zero results produce compact instructions and
+graph-readiness progress. Assessment values without source verification appear
+separately. A failed API request produces a recoverable error rather than zero
+patient data. Patient switching aborts requests and closes old patient dialogs.
+
+Spring and normalization:
+  ClinicalPredictionFeatureService.java discovers existing CKD projections,
+    clinical observations, laboratory results, CBC results and FHIR quantities,
+    including panel components. ClinicalPatientAccess remains the scope boundary.
+  ClinicalFeatureNormalizer.java retains entry source and explicit verification.
+    Additional chemistry definitions normalize supported explicit units.
+  RenalTrendTimeline.java builds a read-only provenance-aware timeline with
+    inclusion decisions, missing-date/unit/verification reasons, duplicate
+    suppression, conflict exclusion and distinct sampling contexts.
+  ClinicalFeatureMappingEngine.java attaches that timeline to the existing
+    six-module response and persisted snapshot.
+  RenalClinicalModuleService.java excludes evaluation time from the fingerprint
+    so refreshing an unchanged timeline does not itself create a new snapshot.
+  PredictiveIntelligenceService.java reuses the existing verified-entry, audit,
+    idempotency and FHIR Observation/Provenance workflow for generic whole urea,
+    albumin, sodium and calcium. Whole urea remains distinct from BUN.
+
+No database migration was needed. Existing JSON and observation tables already
+support this capability. No FHIR resource schema or ML artifact was replaced.
+Queries remain hospital/patient scoped. FHIR FINAL status alone does not confer
+source verification. Existing linked clinician-verification records provide the
+verification evidence; unresolved imported FHIR values remain excluded.
+
+FORECASTS
+
+React continues to use Spring only. Existing authenticated Spring-to-Django
+inference, stored prediction snapshots, review and FHIR write-back remain intact.
+The chart uses stored Hb/URR outputs only when the existing backend module permits
+the forecast. A dashed overlay additionally requires compatible units, an actual
+origin matching a measured point and an explicit later target date. No frontend
+3-, 6- or 12-month forecast is manufactured. Backend next-observation horizon text
+is displayed unchanged. Research estimates carry NOT CLINICALLY VALIDATED.
+
+Model details, requirements, explanation, associated features, supplied interval,
+source snapshot and review reference are expandable. SHAP contribution units are
+read from the serving output; they are not described as clinical risk percentages.
+Hyperkalemia remains a separate research score in the existing modules, never a
+diagnosis or a potassium measurement.
+
+PDF
+
+  RenalTrendPdf.java
+  CkdAssessmentReportService.java
+
+The CKD PDF pipeline includes graphs from the saved renalTimeline, actual dates
+and units, latest verified values, source identifiers, exclusions, review context
+and eligible stored forecasts. It never invokes inference. Old snapshots without
+the new verification projection receive an explicit explanation rather than
+inferred dates or fabricated graph values.
+
+verification/renal-trends-v56/verified-trends.pdf is generated by the actual Java
+assembler and OpenPDF renderer using clearly marked operational test records.
+Both pages were rendered by PDFBox and visually inspected. Text assertions verify
+dates, verified values, graph labels and the no-inference statement. Existing CKD
+report/download/FHIR/review tests continue to pass. A signed-in native report
+download has NOT been verified because the local account fails sign-in.
+
+VERIFICATION
+
+Spring: 299 test cases represented in final Surefire reports; 294 passed,
+5 existing tests skipped, 0 failures and 0 errors. Full-suite runs were followed
+by focused tests after the final timeline/FHIR changes.
+
+New tests cover dated Hb, single/two-point data, verified versus unverified
+assessment provenance, missing dates, safe unit normalization, invalid values,
+duplicates, conflicts, sampling contexts, FHIR components/subject matching and
+verified generic chemistry persistence through the existing audit/FHIR workflow.
+Existing tests cover RBAC, ML serving methods, URR pairing, research scores,
+recoverable ML failure, readiness, assessments and clinician review.
+
+Frontend: TypeScript project build passed. Vite production build passed.
+61 relevant Node contract/unit tests passed.
+
+Browser: production SriLankanRenalPanel and existing entry dialog were exercised
+with actual Java-assembled operational fixture responses at the HTTP boundary.
+Coverage includes 1366px, 768px and 375px; light/dark themes; real date filtering;
+measurement switching; single-point and empty states; source inclusion reasons;
+entry dialog; refresh; patient switching; and recoverable API failure. Screenshots
+are in verification/renal-trends-v56/screenshots. These are software QA records,
+not signed-in real patient sessions or evidence of clinical validation.
+
+ML: 20 Django renal-service tests passed in .venv-cdss312. The older Python 3.14
+ML_Server/.venv crashed in native pandas code. Existing startup already prefers
+the Python 3.12 environment. No training or inference artifacts were changed.
+
+Native PostgreSQL: aggregate source audit and exact source SQL statements passed.
+Native authenticated API flow: blocked at doctor local-login, HTTP 401. A valid
+local test-account file can be supplied through GOVCARE_TRENDS_ACCOUNTS when
+rerunning node scripts/verify-renal-trends-live.mjs.
+
+KNOWN LIMITATIONS
+
+The source screenshot patient cannot be identified from the supplied request.
+Source verification and collection dates cannot be reconstructed from missing
+evidence. The system deliberately leaves those values outside verified graphs.
+Legacy assessment snapshots without verification metadata remain separate from
+verified laboratory history. Old PDF snapshots require a newly captured current
+workspace snapshot to acquire the new verified timeline.
+
+Browser screenshots use operational fixtures, including a model-unavailable
+scenario; they do not establish the native installation's model availability.
+Clinical validation and dataset permission status remain as reported by existing
+model governance. No forecasts or probability values were inserted into patients.
+
+The required 12ui design service was attempted but requires account sign-in.
+The implementation uses existing GovCare tokens/components. The report does not
+claim a completed 12ui design comparison.
+
+PACKAGE
+
+output/GovCare_EHR_Renal_Trends_V56.zip contains the updated project source,
+existing V44+ migrations/features, accepted ML artifacts, current frontend dist
+and verification evidence. Installed dependencies, virtual environments, Git
+history, temporary build products, credentials, runtime logs and patient-upload
+storage are excluded. Configuration examples are retained. A SHA-256 file
+manifest is embedded in the archive. Existing uncommitted source work is included
+and has not been reset, committed or discarded.
+
+REPRODUCTION
+
+  node node_modules/typescript/bin/tsc -b
+  node node_modules/vite/bin/vite.js build
+  cd spring-api; mvn test
+  .venv-cdss312/Scripts/python.exe ML_Server/manage.py test renal_service
+
+Browser: run RenalTrendTimelineTest to generate fixtures, start Vite, set
+GOVCARE_VISUAL_URL, GOVCARE_PLAYWRIGHT_MODULE and GOVCARE_CHROMIUM_EXECUTABLE for
+your local browser tools, then run scripts/verify-renal-trends-browser.mjs.
+The default width list is all three requested widths.
+
+Native read-only checks: set GOVCARE_TRENDS_API to the Spring origin and, if
+needed, GOVCARE_TRENDS_ACCOUNTS to a valid private test-account JSON file; run
+scripts/verify-renal-trends-live.mjs. Ordinary overview access writes the existing
+audit/module snapshot records; the verifier does not add clinical measurements
+or run predictions.
+
+STARTUP RECOVERY FOLLOW-UP - 21 October 2026
+
+The application services were stopped when port 5300 refused connections.
+start-renal-fullstack-windows.bat also forced the older Python environment,
+bypassing the Node launcher preference for the compatible .venv-cdss312.
+The batch default now matches that preference and preserves an explicit override.
+A Windows API wildcard-port probe could miss an existing loopback listener;
+the probe now checks the explicit browser loopback address as well.
+
+All 19 relevant startup tests pass. The actual batch launcher was started
+persistently. Frontend 5300, Spring 4002 and renal ML 8001 returned HTTP 200.
+Chrome rendered the real login page with no runtime errors. No sign-in was
+attempted; this does not resolve the previously recorded credential limitation.
+Evidence: verification/renal-startup-recovery/verification.json and login-5300.png.

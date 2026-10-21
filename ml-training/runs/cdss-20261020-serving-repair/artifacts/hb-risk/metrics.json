@@ -1,0 +1,417 @@
+{
+  "Ridge": {
+    "validation": {
+      "MAE": 1.1282747747617572,
+      "RMSE": 1.356055462768553,
+      "R2": 0.3666103100407504,
+      "MedianAbsoluteError": 0.9969090754515841
+    },
+    "test": {
+      "MAE": 0.9450125081545595,
+      "RMSE": 1.234257924555214,
+      "R2": 0.579093942648407,
+      "MedianAbsoluteError": 0.7766266945268345
+    }
+  },
+  "RandomForest": {
+    "validation": {
+      "MAE": 1.049420991564876,
+      "RMSE": 1.2744941289770837,
+      "R2": 0.44051072850490425,
+      "MedianAbsoluteError": 0.9522972123042823
+    },
+    "test": {
+      "MAE": 0.9102167389411774,
+      "RMSE": 1.1475565871997158,
+      "R2": 0.6361506966449817,
+      "MedianAbsoluteError": 0.7449783378909629
+    }
+  },
+  "XGBoost": {
+    "validation": {
+      "MAE": 1.0478633721669515,
+      "RMSE": 1.2852826221223892,
+      "R2": 0.4309985724862806,
+      "MedianAbsoluteError": 0.9939858436584474
+    },
+    "test": {
+      "MAE": 0.9219611155835884,
+      "RMSE": 1.1593718328751104,
+      "R2": 0.6286197390367596,
+      "MedianAbsoluteError": 0.7243425369262688
+    }
+  },
+  "LightGBM": {
+    "validation": {
+      "MAE": 1.083203359313529,
+      "RMSE": 1.3075976954258783,
+      "R2": 0.41106905089737467,
+      "MedianAbsoluteError": 1.0377002997771623
+    },
+    "test": {
+      "MAE": 0.9030609588716191,
+      "RMSE": 1.1488133227429622,
+      "R2": 0.6353533281487435,
+      "MedianAbsoluteError": 0.7488259636564543
+    }
+  },
+  "baselines": {
+    "Persistence": {
+      "validation": {
+        "MAE": 0.9791666666666666,
+        "RMSE": 1.2341213698642268,
+        "R2": 0.475395719590736,
+        "MedianAbsoluteError": 0.7749999999999995
+      },
+      "test": {
+        "MAE": 0.8708860759493672,
+        "RMSE": 1.1163911115393435,
+        "R2": 0.6556452584008614,
+        "MedianAbsoluteError": 0.7000000000000011
+      }
+    },
+    "RollingMean3": {
+      "validation": {
+        "MAE": 1.1260416666666666,
+        "RMSE": 1.3845407632135647,
+        "R2": 0.33972085847381106,
+        "MedianAbsoluteError": 1.0250000000000004
+      },
+      "test": {
+        "MAE": 1.0561181434599152,
+        "RMSE": 1.3613150339504938,
+        "R2": 0.48797565725682046,
+        "MedianAbsoluteError": 0.7666666666666657
+      }
+    },
+    "TrainingMean": {
+      "validation": {
+        "MAE": 1.6320029239766076,
+        "RMSE": 1.9292160703365848,
+        "R2": -0.281969894886521,
+        "MedianAbsoluteError": 1.5
+      },
+      "test": {
+        "MAE": 1.6871419053964023,
+        "RMSE": 2.0012307444279465,
+        "R2": -0.10654138085354092,
+        "MedianAbsoluteError": 1.6589473684210514
+      }
+    }
+  },
+  "group_kfold_train_only": {
+    "Ridge": [
+      {
+        "MAE": 1.0003143851830707,
+        "RMSE": 1.1757802967457434,
+        "R2": 0.4946521025278783,
+        "MedianAbsoluteError": 0.9183950529789016
+      },
+      {
+        "MAE": 1.1408917246479835,
+        "RMSE": 1.4360857754440672,
+        "R2": 0.4349362772092841,
+        "MedianAbsoluteError": 0.9689539822874256
+      },
+      {
+        "MAE": 0.8861786163564032,
+        "RMSE": 1.1569819942856925,
+        "R2": 0.6190435805183416,
+        "MedianAbsoluteError": 0.6730778091985492
+      }
+    ],
+    "RandomForest": [
+      {
+        "MAE": 0.8456724362921755,
+        "RMSE": 1.0153086665092363,
+        "R2": 0.6231796979916993,
+        "MedianAbsoluteError": 0.7599260502339122
+      },
+      {
+        "MAE": 1.0113167002207437,
+        "RMSE": 1.3266174752585538,
+        "R2": 0.5177990150432842,
+        "MedianAbsoluteError": 0.8478526849676697
+      },
+      {
+        "MAE": 0.8180596563573174,
+        "RMSE": 1.052755897725378,
+        "R2": 0.6845885448903148,
+        "MedianAbsoluteError": 0.6221539889741319
+      }
+    ],
+    "XGBoost": [
+      {
+        "MAE": 0.8763134479522706,
+        "RMSE": 1.048087158143309,
+        "R2": 0.5984562169497751,
+        "MedianAbsoluteError": 0.8345137596130376
+      },
+      {
+        "MAE": 1.014025536794511,
+        "RMSE": 1.3155704678496696,
+        "R2": 0.5257963450452858,
+        "MedianAbsoluteError": 0.8243219375610344
+      },
+      {
+        "MAE": 0.8158253472948831,
+        "RMSE": 1.0754509374031818,
+        "R2": 0.6708428444272727,
+        "MedianAbsoluteError": 0.6015201568603512
+      }
+    ],
+    "LightGBM": [
+      {
+        "MAE": 0.9043985071924123,
+        "RMSE": 1.1258205288299252,
+        "R2": 0.5366849221090617,
+        "MedianAbsoluteError": 0.8096117751149903
+      },
+      {
+        "MAE": 0.9722135849285942,
+        "RMSE": 1.2917914093562475,
+        "R2": 0.5427839687348657,
+        "MedianAbsoluteError": 0.7883444505575898
+      },
+      {
+        "MAE": 0.8204265598502837,
+        "RMSE": 1.0949077409432868,
+        "R2": 0.658825040841397,
+        "MedianAbsoluteError": 0.639277859940842
+      }
+    ]
+  },
+  "selected_candidate": "XGBoost",
+  "served_method": "PERSISTENCE_BASELINE",
+  "served_test": {
+    "MAE": 0.8708860759493672,
+    "RMSE": 1.1163911115393435,
+    "R2": 0.6556452584008614,
+    "MedianAbsoluteError": 0.7000000000000011
+  },
+  "exploratory_classification": {
+    "LogisticRegression": {
+      "validation": {
+        "Accuracy": 0.625,
+        "BalancedAccuracy": 0.5698051948051949,
+        "Precision": 0.6545454545454545,
+        "Recall": 0.8181818181818182,
+        "Sensitivity": 0.8181818181818182,
+        "Specificity": 0.32142857142857145,
+        "F1": 0.7272727272727273,
+        "ROC_AUC": 0.6371753246753247,
+        "PR_AUC_average_precision": 0.6813541802863703,
+        "BrierScore": 0.24232440030172697,
+        "ConfusionMatrix": [
+          [
+            9,
+            19
+          ],
+          [
+            8,
+            36
+          ]
+        ],
+        "PositiveEvents": 44,
+        "NegativeEvents": 28,
+        "threshold": 0.5
+      },
+      "test": {
+        "Accuracy": 0.5316455696202531,
+        "BalancedAccuracy": 0.43541364296081275,
+        "Precision": 0.6333333333333333,
+        "Recall": 0.7169811320754716,
+        "Sensitivity": 0.7169811320754716,
+        "Specificity": 0.15384615384615385,
+        "F1": 0.672566371681416,
+        "ROC_AUC": 0.5174165457184324,
+        "PR_AUC_average_precision": 0.7200142799453026,
+        "BrierScore": 0.2656211830456452,
+        "ConfusionMatrix": [
+          [
+            4,
+            22
+          ],
+          [
+            15,
+            38
+          ]
+        ],
+        "PositiveEvents": 53,
+        "NegativeEvents": 26,
+        "threshold": 0.5
+      }
+    },
+    "RandomForest": {
+      "validation": {
+        "Accuracy": 0.625,
+        "BalancedAccuracy": 0.5568181818181819,
+        "Precision": 0.6440677966101694,
+        "Recall": 0.8636363636363636,
+        "Sensitivity": 0.8636363636363636,
+        "Specificity": 0.25,
+        "F1": 0.7378640776699029,
+        "ROC_AUC": 0.700487012987013,
+        "PR_AUC_average_precision": 0.7644895567220034,
+        "BrierScore": 0.2143335973379432,
+        "ConfusionMatrix": [
+          [
+            7,
+            21
+          ],
+          [
+            6,
+            38
+          ]
+        ],
+        "PositiveEvents": 44,
+        "NegativeEvents": 28,
+        "threshold": 0.5
+      },
+      "test": {
+        "Accuracy": 0.6708860759493671,
+        "BalancedAccuracy": 0.5587808417997098,
+        "Precision": 0.7014925373134329,
+        "Recall": 0.8867924528301887,
+        "Sensitivity": 0.8867924528301887,
+        "Specificity": 0.23076923076923078,
+        "F1": 0.7833333333333333,
+        "ROC_AUC": 0.5667634252539914,
+        "PR_AUC_average_precision": 0.7357556993646968,
+        "BrierScore": 0.2278209623133548,
+        "ConfusionMatrix": [
+          [
+            6,
+            20
+          ],
+          [
+            6,
+            47
+          ]
+        ],
+        "PositiveEvents": 53,
+        "NegativeEvents": 26,
+        "threshold": 0.5
+      }
+    },
+    "XGBoost": {
+      "validation": {
+        "Accuracy": 0.6666666666666666,
+        "BalancedAccuracy": 0.6038961038961039,
+        "Precision": 0.6724137931034483,
+        "Recall": 0.8863636363636364,
+        "Sensitivity": 0.8863636363636364,
+        "Specificity": 0.32142857142857145,
+        "F1": 0.7647058823529411,
+        "ROC_AUC": 0.6793831168831169,
+        "PR_AUC_average_precision": 0.733221796518235,
+        "BrierScore": 0.21650336682796478,
+        "ConfusionMatrix": [
+          [
+            9,
+            19
+          ],
+          [
+            5,
+            39
+          ]
+        ],
+        "PositiveEvents": 44,
+        "NegativeEvents": 28,
+        "threshold": 0.5
+      },
+      "test": {
+        "Accuracy": 0.6455696202531646,
+        "BalancedAccuracy": 0.5301161103047896,
+        "Precision": 0.6865671641791045,
+        "Recall": 0.8679245283018868,
+        "Sensitivity": 0.8679245283018868,
+        "Specificity": 0.19230769230769232,
+        "F1": 0.7666666666666667,
+        "ROC_AUC": 0.5936139332365747,
+        "PR_AUC_average_precision": 0.7356882023377127,
+        "BrierScore": 0.2204708456993103,
+        "ConfusionMatrix": [
+          [
+            5,
+            21
+          ],
+          [
+            7,
+            46
+          ]
+        ],
+        "PositiveEvents": 53,
+        "NegativeEvents": 26,
+        "threshold": 0.5
+      }
+    },
+    "LightGBM": {
+      "validation": {
+        "Accuracy": 0.625,
+        "BalancedAccuracy": 0.5568181818181819,
+        "Precision": 0.6440677966101694,
+        "Recall": 0.8636363636363636,
+        "Sensitivity": 0.8636363636363636,
+        "Specificity": 0.25,
+        "F1": 0.7378640776699029,
+        "ROC_AUC": 0.6712662337662337,
+        "PR_AUC_average_precision": 0.7325669706732176,
+        "BrierScore": 0.22210126064225932,
+        "ConfusionMatrix": [
+          [
+            7,
+            21
+          ],
+          [
+            6,
+            38
+          ]
+        ],
+        "PositiveEvents": 44,
+        "NegativeEvents": 28,
+        "threshold": 0.5
+      },
+      "test": {
+        "Accuracy": 0.6835443037974683,
+        "BalancedAccuracy": 0.5780116110304789,
+        "Precision": 0.7121212121212122,
+        "Recall": 0.8867924528301887,
+        "Sensitivity": 0.8867924528301887,
+        "Specificity": 0.2692307692307692,
+        "F1": 0.7899159663865546,
+        "ROC_AUC": 0.634978229317852,
+        "PR_AUC_average_precision": 0.7594197596439439,
+        "BrierScore": 0.21373908377555295,
+        "ConfusionMatrix": [
+          [
+            7,
+            19
+          ],
+          [
+            6,
+            47
+          ]
+        ],
+        "PositiveEvents": 53,
+        "NegativeEvents": 26,
+        "threshold": 0.5
+      }
+    },
+    "selected_by_validation_brier": "RandomForest",
+    "deployment_status": "NOT_SERVED; original protocol labels are not validated disease probabilities",
+    "definition": "Next Hb outside 10\u201312 g/dL"
+  },
+  "selected_candidate_test_cluster_bootstrap": {
+    "method": "Patient-cluster bootstrap, 500 resamples, exploratory small-cohort CI",
+    "patients": 9,
+    "MAE_95CI": [
+      0.7144296960875893,
+      1.1700371715188023
+    ],
+    "baseline_minus_model_MAE_95CI": [
+      -0.13729166618305247,
+      0.05436635372965212
+    ]
+  }
+}

@@ -1,0 +1,68 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+const root=fileURLToPath(new URL('../',import.meta.url));
+const output=path.join(root,'verification/clinical-intelligence-v2/browser');
+const fixtures=JSON.parse(await fs.readFile(path.join(root,'verification/clinical-intelligence-v2/ui-fixtures.json'),'utf8'));
+const {chromium}=await import(process.env.GOVCARE_PLAYWRIGHT_MODULE||'playwright');
+const html=path.join(root,'clinical-intelligence-qa.html'), origin='http://127.0.0.1:5300';
+const checks=[],errors=[];let browser,server,scenario='screenshot',reviewBody,sessionBody;
+const headers={'access-control-allow-origin':'*','access-control-allow-headers':'*','access-control-allow-methods':'GET,POST,OPTIONS'};
+try{
+ await fs.mkdir(output,{recursive:true});
+ const patient={id:fixtures.screenshot.patientId,hospital_id:fixtures.screenshot.hospitalId,full_name:'SYNTHETIC SOFTWARE QA',patient_no:'SYNTHETIC-CKD-QA'};
+ await fs.writeFile(html,`<!doctype html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body><main id="root" style="max-width:1440px;margin:auto;padding:16px"></main><script type="module">import React from 'react';import{createRoot}from'react-dom/client';import{MemoryRouter}from'react-router-dom';import '/src/index.css';import{SriLankanRenalPanel}from'/src/components/ai/SriLankanRenalPanel.tsx';window.reportSnapshot=null;createRoot(document.getElementById('root')).render(React.createElement(MemoryRouter,null,React.createElement('p',null,'SYNTHETIC SOFTWARE VERIFICATION - NOT A CLINICAL RECORD'),React.createElement(SriLankanRenalPanel,{patient:${JSON.stringify(patient)},onGenerateReport:id=>window.reportSnapshot=id})));</script></body></html>`);
+ browser=await chromium.launch({headless:true,executablePath:process.env.GOVCARE_CHROMIUM_EXECUTABLE,args:['--no-proxy-server','--disable-background-networking']});
+ const page=await browser.newPage();page.on('pageerror',e=>errors.push(e.message));
+ await page.route('**/api/ai-cdss/ckd/**',async route=>{
+  const req=route.request();if(req.method()==='OPTIONS')return route.fulfill({status:204,headers});
+  if(req.method()==='GET')return route.fulfill({status:200,headers,contentType:'application/json',body:JSON.stringify(fixtures[scenario])});
+  const body=req.postDataJSON();if(req.url().endsWith('/predictive-intelligence/reviews'))reviewBody=body;
+  else if(req.url().endsWith('/renal-intelligence/observations'))sessionBody=body;
+  else throw Error('Unexpected synthetic mutation '+req.url());
+  return route.fulfill({status:200,headers,contentType:'application/json',body:JSON.stringify({saved:true,id:crypto.randomUUID(),reviewVersion:1})});
+ });
+ const open=async name=>{scenario=name;await page.goto(origin+'/clinical-intelligence-qa.html?case='+name,{waitUntil:'domcontentloaded',timeout:60000});await page.locator('.ckd-risk-card').first().waitFor();};
+ const card=n=>page.locator('.ckd-risk-card').nth(n);
+ for(const width of [1440,390]){
+  await page.setViewportSize({width,height:1100});await open('screenshot');
+  assert.equal(await page.locator('.ckd-risk-card').count(),5);
+  assert.match(await card(0).innerText(),/Recorded hemoglobin/);assert.match(await card(1).innerText(),/Recorded potassium/);
+  assert.match(await card(1).innerText(),/Severe low potassium/);assert.match(await card(1).getByRole('alert').innerText(),/Prompt verification/);
+  assert.match(await card(1).innerText(),/Measurement date unverified/);assert.match(await card(1).innerText(),/1 of 1/);
+  assert.match(await card(3).innerText(),/Trend not established/);
+  assert.match(await card(4).innerText(),/4 of 5/);assert.equal(await card(4).getByRole('progressbar').getAttribute('aria-valuenow'),'80');
+  await card(4).locator('summary').click();assert.match(await card(4).innerText(),/not a verified paired reading|not verified/);
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+  await card(4).locator('summary').click();
+  await page.screenshot({path:path.join(output,`clinical-${width}.png`),fullPage:true});
+  await page.locator('.ckd-related-dashboard').screenshot({path:path.join(output,`cards-${width}.png`)});
+  if(width===390)await card(1).screenshot({path:path.join(output,'potassium-mobile.png')});
+  checks.push(`${width}px: severe undated potassium retained; exact coverage; unavailable trend; unpaired BP; no horizontal overflow`);
+ }
+ await page.setViewportSize({width:1440,height:1100});await open('screenshot');
+ await page.locator('.ckd-related-header-actions').getByRole('button',{name:'Generate report',exact:true}).click();
+ assert.equal(await page.evaluate(()=>window.reportSnapshot),fixtures.screenshot.snapshotId);
+ await card(1).locator('summary').click();await card(1).getByRole('button',{name:'Review assessment and record plan'}).click();
+ const drawer=page.locator('.renal-side-drawer[open]');await drawer.waitFor();
+ await drawer.getByLabel('Action',{exact:true}).selectOption('MODIFY');await drawer.getByLabel('Clinical reason',{exact:false}).fill('Synthetic source reconciliation');
+ await drawer.getByLabel('Revised interpretation',{exact:false}).fill('Verify undated severe low potassium against source');await drawer.getByLabel('Clinical note',{exact:false}).fill('Software QA only');
+ await drawer.getByRole('button',{name:'Save review',exact:true}).click();await drawer.waitFor({state:'hidden'});
+ assert.equal(reviewBody.snapshotId,fixtures.screenshot.snapshotId);assert.equal(reviewBody.moduleKey,'hyperkalemia');assert.equal(reviewBody.expectedVersion,0);assert.ok(reviewBody.requestId);
+ checks.push('Report selects displayed immutable snapshot; clinician review preserves snapshot, module, version, request UUID and notes');
+ await open('baseline');await card(0).locator('summary').click();assert.match(await card(0).innerText(),/Persistence baseline repeats/);assert.match(await card(0).innerText(),/13.8/);
+ await open('serviceError');assert.match(await card(1).innerText(),/Inference service unavailable/);assert.match(await card(1).innerText(),/Severe low potassium/);
+ checks.push('Actual baseline explanation and inference failure preserve recorded measurements and abnormal finding');
+ await open('screenshot');await card(2).getByRole('button',{name:/dialysis|session/i}).first().click();
+ const dialog=page.getByRole('dialog');await dialog.waitFor();
+ await dialog.locator('[data-renal-entry=observedAt]').fill('2026-10-19T12:00');await dialog.locator('[data-renal-entry=urea_pre]').fill('20');await dialog.locator('[data-renal-entry=urea_post]').fill('7');
+ await dialog.getByLabel('Dialysis session identifier',{exact:true}).fill('SYNTHETIC-HD-ONLY');await dialog.getByLabel('Pre-dialysis collection time',{exact:true}).fill('2026-10-19T08:00');await dialog.getByLabel('Post-dialysis collection time',{exact:true}).fill('2026-10-19T12:00');
+ await dialog.getByLabel(/Source report or session/).fill('SYNTHETIC VERIFIED SOURCE');await dialog.locator('input[type=checkbox]').first().check();await dialog.locator('input[type=checkbox]').last().check();
+ await dialog.getByRole('button',{name:/Save.*source|Save.*result|Record.*result|Save.*observation/i}).click();await dialog.waitFor({state:'hidden'});
+ assert.equal(sessionBody.samplingContext.sessionId,'SYNTHETIC-HD-ONLY');assert.ok(Date.parse(sessionBody.samplingContext.postCollectedAt)>Date.parse(sessionBody.samplingContext.preCollectedAt));assert.equal(sessionBody.measurements.urea_pre,20);
+ checks.push('Dialysis entry sends explicit same-session identifier and ordered actual collection times');
+ await page.evaluate(()=>document.documentElement.classList.add('dark'));await page.screenshot({path:path.join(output,'clinical-dark.png'),fullPage:true});assert.deepEqual(errors,[]);
+ const report={status:'passed',checks,errors,scope:'Actual React panel/forms with Java-generated synthetic saved contracts and captured API mutations; clinical validation incomplete'};
+ await fs.writeFile(path.join(output,'report.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report));
+}finally{await browser?.close();server?.kill();await fs.rm(html,{force:true});}

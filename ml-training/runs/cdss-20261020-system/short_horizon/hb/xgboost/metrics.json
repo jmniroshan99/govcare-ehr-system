@@ -1,0 +1,135 @@
+{
+  "registered": true,
+  "training_status": "TRAINED_RESEARCH_ONLY",
+  "evaluated": true,
+  "served": false,
+  "parameters": {
+    "n_estimators": 80,
+    "max_depth": 2,
+    "learning_rate": 0.05,
+    "reg_lambda": 10,
+    "subsample": 0.8,
+    "colsample_bytree": 0.7,
+    "min_child_weight": 10
+  },
+  "tuning": [
+    {
+      "parameters": {
+        "n_estimators": 80,
+        "max_depth": 2,
+        "learning_rate": 0.05,
+        "reg_lambda": 10,
+        "subsample": 0.8,
+        "colsample_bytree": 0.7,
+        "min_child_weight": 5
+      },
+      "fold_scores": [
+        0.8821135967969895,
+        0.9861030608888655,
+        0.8640893875606475
+      ],
+      "mean": 0.9107686817488342
+    },
+    {
+      "parameters": {
+        "n_estimators": 80,
+        "max_depth": 2,
+        "learning_rate": 0.05,
+        "reg_lambda": 10,
+        "subsample": 0.8,
+        "colsample_bytree": 0.7,
+        "min_child_weight": 10
+      },
+      "fold_scores": [
+        0.889973083138466,
+        0.9680792066786023,
+        0.8650979935176789
+      ],
+      "mean": 0.9077167611115824
+    }
+  ],
+  "validation": {
+    "MAE": 1.0470571147070988,
+    "RMSE": 1.272540317293846,
+    "R2": 0.4422248184421931,
+    "MedianAbsoluteError": 1.0300656318664547
+  },
+  "test": {
+    "MAE": 0.9391143605678892,
+    "RMSE": 1.1692902503362823,
+    "R2": 0.6222382477206643,
+    "MedianAbsoluteError": 0.7189722061157227
+  },
+  "patient_uncertainty": {
+    "unit": "patient",
+    "iterations": 200,
+    "patients": 9,
+    "seed": 314159,
+    "MAE_percentile_95": [
+      0.7179057248723758,
+      1.1775624648986323
+    ],
+    "candidate_minus_baseline_95": [
+      -0.0577268754111397,
+      0.16975107218658442
+    ],
+    "limitation": "Exploratory interval; only a small reused test cohort; no model-selection correction."
+  },
+  "passed_validation_gate": false,
+  "patient_test_metrics": {
+    "LK_36f257b8b2ebb7ceaa3dcba7": {
+      "MAE": 0.8487788633866742,
+      "RMSE": 1.1018719912585528,
+      "R2": -0.22464778342389735,
+      "MedianAbsoluteError": 0.52839241027832
+    },
+    "LK_62f67cfefae276256ed25caf": {
+      "MAE": 0.5909820383245292,
+      "RMSE": 0.6879526614555113,
+      "R2": 0.4296141176010926,
+      "MedianAbsoluteError": 0.549657249450684
+    },
+    "LK_6bcd65d451164cf4766fcd12": {
+      "MAE": 1.0488083600997924,
+      "RMSE": 1.1651190044616369,
+      "R2": 0.4274784391980808,
+      "MedianAbsoluteError": 1.191697120666504
+    },
+    "LK_98bfc5d0688f7913531eae63": {
+      "MAE": 0.5103616714477539,
+      "RMSE": 0.5103616714477539,
+      "R2": null,
+      "MedianAbsoluteError": 0.5103616714477539
+    },
+    "LK_b7d14c5182ae80f1da13e3e2": {
+      "MAE": 0.42305822372436513,
+      "RMSE": 0.4627215296047919,
+      "R2": 0.6993758306336686,
+      "MedianAbsoluteError": 0.3609451293945307
+    },
+    "LK_c29bc88e16f169e4f94008a2": {
+      "MAE": 1.7285246531168619,
+      "RMSE": 1.9151267349479313,
+      "R2": 0.15031305547449303,
+      "MedianAbsoluteError": 1.5183286666870117
+    },
+    "LK_cabf4c7dac7d17f4107499b6": {
+      "MAE": 0.9791064349087801,
+      "RMSE": 1.1353196124864737,
+      "R2": 0.6544904179838972,
+      "MedianAbsoluteError": 0.6890502929687496
+    },
+    "LK_cb3c81531587fa2213a8705b": {
+      "MAE": 0.9599451585249466,
+      "RMSE": 1.1306088115570856,
+      "R2": -0.797668880256085,
+      "MedianAbsoluteError": 0.9899477005004886
+    },
+    "LK_fbf7c31050d66a518088063e": {
+      "MAE": 0.911563387784091,
+      "RMSE": 1.198350490320865,
+      "R2": 0.3971226437585068,
+      "MedianAbsoluteError": 0.5860546112060554
+    }
+  }
+}

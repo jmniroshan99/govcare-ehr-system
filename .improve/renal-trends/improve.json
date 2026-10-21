@@ -1,0 +1,58 @@
+{
+  "version": 2,
+  "scope": "page",
+  "createdAt": "2026-10-21T02:58:02.089Z",
+  "runDir": "C:\\Users\\JM PC\\Desktop\\GovCare_EHR_Modern_Clinical_Intelligence\\.improve\\renal-trends",
+  "input": {
+    "kind": "image",
+    "value": "C:\\Users\\JM PC\\Desktop\\GovCare_EHR_Modern_Clinical_Intelligence\\verification\\renal-readiness-v48\\screenshots\\renal-readiness-1366.png",
+    "sha256": "8d83e484ae04c26b19d5766480dc97db4ef4bc06752bcf5382ff72e7567928fa"
+  },
+  "concept": "Preserve GovCare tokens and clinical workflows. Focus the renal trend section with compact teal and navy header, five verified result cards, dated chart and clear research details. Responsive controls and concise missing-data guidance. No invented measurements. Redesign this existing product interface. Its layout, composition, section order, and proportions are yours to rework: this should read as a new design of the same product, not a retouch of the one it has. Give it a deliberate hierarchy, a real spacing rhythm, typography with range, restrained color, purposeful states, and surfaces and controls that belong to one system. Keep the product's logo, wordmark, and brand imagery as they are. Keep every real piece of content, data, and control the page carries: say the same things, in whatever arrangement serves them best, and invent nothing. These are conservation defaults, not a freeze: the brief above outranks them, and they outrank the page as it stands.",
+  "direction": "Preserve GovCare tokens and clinical workflows. Focus the renal trend section with compact teal and navy header, five verified result cards, dated chart and clear research details. Responsive controls and concise missing-data guidance. No invented measurements.",
+  "candidates": 4,
+  "retain": {
+    "include": [
+      "assets",
+      "content"
+    ],
+    "exclude": [
+      "layout",
+      "style"
+    ]
+  },
+  "retainFlag": "assets,content",
+  "conversionModel": "standard",
+  "responsiveQuality": "standard",
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "fullPage": false,
+  "bootstrap": [],
+  "bootstrapSha256": [],
+  "kitIgnore": {
+    "state": "already-ignored",
+    "relativeOutDir": ".improve/renal-trends"
+  },
+  "planSourceConvert": false,
+  "pageLimit": 5,
+  "requestedPages": [],
+  "pageConcurrency": 3,
+  "referenceOrder": "current-first",
+  "pages": [],
+  "stages": {
+    "capture": {
+      "settledAt": "2026-10-21T02:58:02.303Z",
+      "replayCount": 0,
+      "priceCeilingUsd": 0,
+      "outcome": "settled"
+    }
+  },
+  "capture": {
+    "sourceImage": "C:\\Users\\JM PC\\Desktop\\GovCare_EHR_Modern_Clinical_Intelligence\\.improve\\renal-trends\\source.png",
+    "sha256": "171169cedb2820065b1efb71cd875553a50e98036c1239b333491b1dc8ef1cb3",
+    "width": 1366,
+    "height": 3212
+  }
+}

@@ -21,6 +21,8 @@ class RenalDialysisContextServiceTest {
         when(sql.update(anyString(),anyMap())).thenAnswer(i->{String q=i.getArgument(0);Map<String,Object> p=i.getArgument(1);writes.add(new HashMap<>(p));if(q.contains("insert into renal_dialysis_context_events"))saved.set(Map.of("id",p.get("id"),"input_fingerprint",p.get("fingerprint")));return 1;});
         var request=new RenalDialysisContextService.Request(UUID.randomUUID(),"MAINTENANCE_HD",Instant.now().minusSeconds(60),"Operational verified dialysis context source",true);
         var first=service.verify(actor,patient,request);var second=service.verify(actor,patient,request);assertEquals(first.get("id"),second.get("id"));assertEquals(4,writes.size());
+        assertInstanceOf(java.sql.Timestamp.class,writes.getFirst().get("verified"));
+        assertEquals(request.verifiedAt(),((java.sql.Timestamp)writes.getFirst().get("verified")).toInstant());
         verify(sql,never()).update(contains("sri_lankan_renal_observations"),anyMap());
         var parser=ca.uhn.fhir.context.FhirContext.forR4Cached().newJsonParser();for(var row:writes)if(row.containsKey("body"))assertDoesNotThrow(()->parser.parseResource(row.get("body").toString()));
         assertThrows(ApiException.class,()->service.verify(actor,patient,new RenalDialysisContextService.Request(request.requestId(),"NOT_ON_MAINTENANCE_HD",request.verifiedAt(),request.sourceNote(),true)));

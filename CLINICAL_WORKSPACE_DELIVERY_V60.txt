@@ -1,0 +1,241 @@
+GovCare EHR - Clinical scores, synthetic test library, clinical workspace and reports
+Delivery V60 - 2026-10-21
+
+RESULT
+The existing application was extended, preserving patient records, JWT/RBAC,
+hospital authorization, CKD model coefficients, Django services, clinician reviews,
+FHIR resources and audit history. No mock API responses are used in live testing.
+
+Four improvements are connected end to end:
+1. Validated percentage displays with explicit score meanings.
+2. Eight reusable clinical test PDFs and authorized patient-scoped library imports.
+3. A simpler clinical workspace, source review, history, prediction and review views.
+4. A concise saved-assessment PDF and authenticated generate/preview/download flow.
+
+HOW TO USE
+Open the CKD workspace and choose an authorized patient. The existing Change patient
+selector allows an authorized network user to select a configured hospital and then
+an authorized patient. Hospital selection never grants permission by itself.
+
+For a designated synthetic patient, expand Clinical Test Document Library in Select
+Clinical Reports. Use a library fixture or upload another PDF. Each stored association
+belongs to the selected patient and hospital. A duplicate within the same patient can
+reuse its existing source without copying verified observations.
+
+Review the protected original PDF beside the form. Four clear steps organize review:
+1 Review original PDF; 2 Review extracted values; 3 Add missing values;
+4 Confirm reviewed observations. Correct values/units, supply actual collection dates,
+select measurements, add a note and explicitly confirm association before saving.
+The model runs only after its required inputs pass existing backend validation.
+
+Workspace views: Overview, Clinical History, AI Predictions, Clinical Review, Reports.
+The existing 5-year outlook remains available as an additional view. Reports lets you
+choose a saved assessment, generate a clinical summary, preview pages, open the original
+PDF, download it and invoke PDF printing. The technical appendix is opt-in.
+
+ROOT CAUSES
+Score display:
+- The dashboard multiplied scores for gauge positioning but divided them back and used
+  toFixed(4) for visible text. Related research cards also used raw decimal labels.
+- The gauge clamped values, allowing an invalid result to appear plausible.
+- These are now numeric/finite/range-checked; invalid scores become Unavailable.
+  Examples: .9999 -> 99.99%; .9997 -> 99.97%; .75 -> 75.00%.
+- Raw API/database classifier fields remain for compatibility. New responses also expose
+  typed screening/selected-class presentation descriptors with calibrated=false.
+- Event probability, research score, measured percentages and input coverage have
+  separate display contracts. No new calibrated clinical risk model was invented.
+
+Synthetic testing:
+- Earlier PDF fixtures were external files rather than a reusable in-application library.
+  The previous V59 patient-scoped upload/verification repair is retained and reused.
+- Library access requires ClinicalPatientAccess and BOTH stored flags:
+  SYNTHETIC_RESEARCH_DEMONSTRATION and NOT_A_REAL_PATIENT.
+- An authorized Super Admin must still pass server authorization; names, URLs, file
+  names, client role flags and hospital selections do not enable the exception.
+- Original source identifiers remain unverified. Real-patient mismatches remain blocked.
+- Testing classification now also follows manually entered synthetic assessment inputs
+  and new FHIR outputs. Upload alone never confirms clinical observations.
+
+Clinical interface:
+- Default cards repeated coverage, quality explanations, missing inputs and technical
+  model details, with colors distinguishing diseases instead of warning significance.
+- Cards now lead with measurement/date, finding, genuine trend, available prediction,
+  one explanation and a clear action. Evidence/coverage details are under
+  How was this result calculated? Navy/teal/white theme tokens support dark mode;
+  amber/red remain for meaningful warnings. Existing clinical safety signals remain.
+- Dedicated review uses the existing immutable-snapshot review drawer and audited API.
+  No old assessment is silently rewritten after a new measurement or review.
+- An existing source-reference projection mistakenly returned the removed feature payload
+  instead of the assessment identity. This now returns the copied assessment reference,
+  retaining its IDs/dates and removing duplicated measurements; a regression test checks it.
+
+Report layout and download:
+- The previous default renderer appended several overlapping evidence/clinical sections,
+  repeated per-source warnings and extensive technical details. The verified earlier
+  report was 19 pages for one assessment.
+- The new default renderer exports that SAME saved assessment in four pages. Real
+  grouped excluded-source counts are retained (creatinine 9, potassium 9, hemoglobin 5
+  for the tested historical assessment). There are no repeated warning lines.
+- Page 1: patient, score meanings, classification and saved input values/dates/sources.
+  Page 2: clinical findings, available future outputs, next actions and model limitations.
+  Page 3: comparable verified dated trends and brief saved factor explanations.
+  Page 4: grouped evidence quality, missing information, source traceability and review.
+- Optional appendix lists unique excluded record IDs/dates/values/reasons, input provenance,
+  detailed prediction evidence and source warnings. Underlying audit records are unchanged.
+- Report rendering performs no inference. Later observations do not replace saved inputs.
+  Stored clinical context is labeled with its evaluation time; measured data and forecasts
+  remain distinct. Unknown collection dates are not replaced by upload/assessment times.
+- The historical Failed to fetch screenshot was not reproducible with the running current
+  stack. The download client did expose a raw fetch error and lacked a bounded deadline.
+  It now uses the configured API address, existing JWT, no-store, PDF header/type checking,
+  a 60-second timeout and useful session/network errors. No authorization or CORS relaxation
+  was introduced. Actual browser generation, preview and download were exercised.
+- Native browser PDF plugins can show blank embedded panes. Bounded authenticated PDFBox
+  page rendering provides visible page previews independently of that plugin. Originals
+  remain available for opening, printing and downloading. Page navigation is supported.
+
+TEST LIBRARY
+Eight real PDFs are bundled as Spring classpath resources and as exportable artifacts:
+  comprehensive.pdf - full numeric CKD panel
+  renal.pdf - renal chemistry with creatinine unit conversion
+  cbc.pdf - Hb/PCV/RBC/WBC/platelets
+  electrolytes.pdf - potassium/sodium/calcium
+  hemodialysis.pdf - pre/post urea with explicit session/time review
+  urine-acr.pdf - urine ACR/protein with unit conversion
+  multipage.pdf - two-page laboratory source
+  scanned.pdf - image-only source with missing collection date
+Fixtures are synthetic and labeled not for patient care. Scanned source remains accepted
+as OCR_REQUIRED when local OCR is unavailable, with visible original pages and manual entry.
+No collection date or missing measurement is inferred.
+
+MAIN SOURCE CHANGES
+Frontend:
+  src/lib/clinicalScore.ts
+  src/lib/ckdWorkspace.ts
+  src/services/aiCdssService.ts
+  src/components/ai/CKDRiskResultDashboard.tsx
+  src/components/ai/CkdClinicalWorkspace.tsx
+  src/components/ai/CkdPatientOverview.tsx
+  src/components/ai/CkdClinicalReviewInbox.tsx
+  src/components/ai/CkdReportCenter.tsx
+  src/components/ai/ClinicalTestDocumentLibrary.tsx
+  src/components/ai/ClinicalPdfDocumentPreview.tsx
+  src/components/ai/ClinicalPdfImportWorkspace.tsx
+  src/components/ai/ClinicalPdfObservationReview.tsx
+  src/components/ai/CkdRelatedClinicalDashboard.tsx
+  src/components/ai/RenalClinicalModules.tsx
+  src/components/ai/SriLankanRenalPanel.tsx
+  src/components/ai/ckd-nephrology-workspace.css
+  src/components/ai/clinical-pdf-import.css
+  src/pages/CKDAICDSS.tsx
+  src/pages/PredictiveClinicalIntelligence.tsx
+
+Spring, under spring-api/src/main/java/lk/gov/health/govcare/ai/:
+  ClinicalScoreDisplay.java
+  CkdConciseReportPdf.java
+  CkdAssessmentReportService.java
+  CkdAssessmentReportController.java
+  ClinicalTestDocumentLibrary.java
+  ClinicalTestDocumentController.java
+  ClinicalPdfImportService.java
+  ClinicalPdfWorkflowController.java
+  ClinicalFeatureMappingEngine.java
+  CkdPredictionService.java
+  PredictiveIntelligenceService.java
+Library resource directory: spring-api/src/main/resources/clinical-test-documents/
+
+API / DATABASE / FHIR
+Additive authenticated APIs:
+  GET  /api/ai-cdss/pdf/patients/{patient}/test-library
+  GET  /api/ai-cdss/pdf/patients/{patient}/test-library/{fixture}/content
+  POST /api/ai-cdss/pdf/patients/{patient}/test-library/{fixture}/use
+  GET  /api/ai-cdss/pdf/patients/{patient}/documents/{document}/preview-page?page=1
+Existing report generation accepts optional technicalAppendix=true. Existing report
+list/download URLs remain. Existing patient selection, upload, extraction, verification
+and clinician review APIs remain in use.
+
+No new migration is required for V60. The V59/V50 classification and verification schema
+is reused. Source package includes all existing migrations and model artifacts.
+
+New synthetic observations, source documents and report DocumentReferences are tagged
+TEST_DOCUMENT. New CKD FHIR RiskAssessment stores its uncalibrated score in the explicit
+urn:govcare:uncalibrated-screening-model-score decimal extension, with explanatory rationale,
+rather than asserting a calibrated probabilityDecimal. Existing historical FHIR resources
+and raw stored assessment scores are preserved. Downstream consumers should use the new
+extension for newly created uncalibrated CKD score resources.
+Reference model: https://hl7.org/fhir/R4/riskassessment.html
+Extension structure: https://hl7.org/fhir/R4/extensibility.html
+
+VERIFICATION
+Actual local Spring APIs, PostgreSQL, FHIR persistence, existing CKD model and Chromium
+were used. Two isolated synthetic QA hospitals/patients were used. No real patient was
+reclassified as synthetic or populated with test observations.
+
+Checks passed:
+- Numeric range validation and exact .9999/.9997 percentage formatting; invalid scores
+  remain unavailable. URR 65 remains a measured percent; coverage 80 is not event risk.
+- Same comprehensive fixture used in two authorized hospitals with independent document,
+  report and observation UUIDs; no observations transferred between patients.
+- Strict unmarked patient denied library access; unassigned cross-hospital clinician
+  denied both lookup and import; existing real-patient mismatch tests pass.
+- Image-only source accepted and manually verified with explicit collection time.
+- Upload alone adds no verified observation; missing inputs keep prediction disabled.
+- Existing CKD model produces an actual saved assessment only after readiness validation.
+- Later Hb 11.2 does not replace assessment Hb 12.8 in its saved report.
+- New synthetic assessment inputs, including manual history, retain TEST_DOCUMENT tags;
+  new FHIR score descriptor and classification checked against actual database resources.
+- Reports generated/listed/downloaded with JWT/CORS and PDF content validation; export
+  leaves prediction count unchanged. Unauthorized report download remains denied.
+- Chromium completes library use, visible source preview, manual verification, existing
+  clinician review/note persistence, report preview and real PDF download.
+- Desktop, tablet, mobile and dark theme screenshots; no page horizontal overflow.
+- PDF summary and all library fixtures rendered with Poppler and visually inspected.
+- Unique-source grouping test counts 13 records repeated three times as 13, while retaining
+  all 39 underlying evidence entries and detailed source IDs in the optional appendix.
+
+Automated results:
+  Full Spring Maven suite/package: 343 tests, zero failures/errors, five opt-in JDBC
+  tests skipped. Actual native PostgreSQL integration was separately exercised.
+  Focused Node tests: 53 passed, zero failures.
+  Django renal_service tests: 20 passed, zero failures (compatible Python 3.12 runtime).
+  Frontend npm run build: TypeScript and Vite production build passed.
+  Spring Boot executable package: BUILD SUCCESS.
+  Actual live API and browser scenarios: passed.
+
+Evidence and screenshots: verification/clinical-workspace-v60/
+  live.json, score-fhir.json, browser.json, final-browser.json,
+  protected-page-preview.json, report-comparison.json,
+  java-tests.log, node-tests.log, django-tests.log, frontend-build.log,
+  browser-downloaded-summary.pdf, legacy-assessment-compact.pdf, technical-appendix.pdf.
+Tests/scripts:
+  CkdConciseReportTest.java; ClinicalTestLibraryAccessTest.java;
+  ClinicalPdfTestingWorkflowTest.java; scripts/clinical-score.test.cjs;
+  scripts/ckd-report-download.test.cjs; scripts/verify-clinical-workspace-live.mjs;
+  scripts/verify-clinical-score-fhir-live.mjs; scripts/verify-clinical-workspace-browser.mjs;
+  scripts/verify-clinical-workspace-final.mjs.
+Generation: scripts/generate-clinical-library.py (bundled output requires no Python runtime).
+
+LIMITATIONS
+- Screening and selected-class scores remain uncalibrated. Research artifacts retain
+  existing population, validation, horizon, eligibility and safety limitations. No new
+  anemia/CV/deterioration event model or risk equation was fabricated.
+- Local OCR remains optional and disabled in this environment. Installed-engine OCR was
+  not exercised. Existing configurable local OCR and safe manual fallback remain available.
+- Main PDF is normally four pages; long clinician notes or clinically relevant additional
+  evidence can require more pages. The optional technical appendix intentionally expands it.
+- Printing invokes the PDF/browser print facility; physical printer output was not tested.
+- Private extension governance and downstream adoption need institution-specific integration
+  review. This delivery is engineering verification, not clinical or regulatory validation.
+- The external UI design tool sign-in service was unreachable. Existing GovCare components
+  and theme tokens were used, then checked in actual desktop/mobile/dark browser views.
+- Production deployment, production patient access and institution-specific OCR/printer
+  configuration were not requested or tested. Existing local services remain available.
+
+DELIVERY
+Complete source package: output/GovCare_EHR_Clinical_Workspace_V60.zip
+Example clinical summary: output/pdf/GovCare_Synthetic_Clinical_Summary_V60.pdf
+Reusable test PDFs: output/pdf/GovCare_Clinical_Test_Library/
+Includes current source, bundled test resources, existing model artifacts, built frontend
+and verification evidence. Installed environments, private sessions/credentials, patient
+storage, logs and temporary state are excluded. Archive CRC and each file SHA-256 are
+checked; a sidecar manifest and archive checksum accompany the package.

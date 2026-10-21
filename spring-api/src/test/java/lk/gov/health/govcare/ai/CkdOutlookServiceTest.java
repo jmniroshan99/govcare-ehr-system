@@ -79,6 +79,24 @@ class CkdOutlookServiceTest {
         var report=service.storedForReport(actor,patient);assertEquals(.42,report.path("fiveYearRisk").asDouble());
         verifyNoInteractions(modules);verify(sql,never()).update(anyString(),anyMap());
     }
+    @Test void reportReloadAcceptsNativePostgresNormalizedJsonbMaps() {
+        ObjectNode saved=stored().put("fiveYearRisk",.42);
+        var normalized=mapper.convertValue(saved,Map.class);
+        when(sql.one(contains("select outputs from ckd_outlook_snapshots"),anyMap())).thenReturn(Optional.of(Map.of("outputs",normalized)));
+        var report=service.storedForReport(actor,patient);
+        assertEquals(.42,report.path("fiveYearRisk").asDouble());
+        verifyNoInteractions(modules);
+    }
+    @Test void normalizedJsonbUnavailableProbabilitiesRemainExplicitNullWithApplicationNonNullDefaults() {
+        var appMapper=new ObjectMapper().setSerializationInclusion(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL);
+        var actual=new CkdOutlookService(sql,access,modules,appMapper);
+        var output=stored();output.putNull("fiveYearRisk");output.putNull("twoYearRisk");
+        Map<?,?> normalized=mapper.convertValue(output,Map.class);
+        when(sql.one(contains("select outputs from ckd_outlook_snapshots"),anyMap())).thenReturn(Optional.of(Map.of("outputs",normalized)));
+        var report=actual.storedForReport(actor,patient);
+        assertTrue(report.has("fiveYearRisk"));assertTrue(report.path("fiveYearRisk").isNull());
+        assertTrue(report.path("learnedModel").has("probability"));assertTrue(report.path("learnedModel").path("probability").isNull());
+    }
     @Test void staleReviewVersionCannotOverwriteAnotherClinicianAndNoSnapshotIsUpdated() {
         when(sql.one(startsWith("select review_version"),anyMap())).thenReturn(Optional.of(Map.of("review_version",2)));
         var r=new CkdOutlookService.ReviewRequest(UUID.randomUUID(),UUID.randomUUID(),0,"ACCEPT","Clinical review","Notes","",List.of());

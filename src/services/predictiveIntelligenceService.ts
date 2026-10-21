@@ -78,7 +78,8 @@ export type ForecastOutput = {
   intervalMethod: string; explanation: string;
 };
 export type ForecastResult = { id: string; horizon_months: number; status: PredictionStatus; explanation: string; outputs: ForecastOutput | []; created_at: string };
-export type MeasurementInput = { metric: Metric; value: number; unit: string; observedAt: string; referenceLow: number | null;
+export type MeasurementMetric = Metric | "urea" | "albumin" | "sodium" | "calcium";
+export type MeasurementInput = { metric: MeasurementMetric; value: number; unit: string; observedAt: string; referenceLow: number | null;
   referenceHigh: number | null; sourceNote: string; sourceVerified: boolean };
 const base = "/api/ai-cdss/ckd";
 // ClinicalOverview and the six-module renal snapshot have different response contracts.

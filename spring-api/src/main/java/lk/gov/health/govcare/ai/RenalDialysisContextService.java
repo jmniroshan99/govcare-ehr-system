@@ -37,7 +37,7 @@ public class RenalDialysisContextService {
         sql.required("select pg_advisory_xact_lock(hashtextextended(:lock,0)) as held",Map.of("lock","renal-context|"+scoped.hospitalId()+"|"+patient+"|"+scoped.id()+"|"+r.requestId()),"Cannot serialize clinical verification.");
         var prior=sql.one("select id,input_fingerprint from renal_dialysis_context_events where hospital_id=:h and patient_id=:p and actor_id=:actor and request_id=:request",p);
         if(prior.isPresent()){if(!fingerprint.equals(prior.get().get("input_fingerprint")))throw ApiException.conflict("The request UUID was already used for different verification content.");return Map.of("id",prior.get().get("id"),"saved",true);}
-        UUID id=UUID.randomUUID();p.put("id",id);p.put("status",r.status());p.put("verified",r.verifiedAt());p.put("note",r.sourceNote().trim());p.put("fingerprint",fingerprint);
+        UUID id=UUID.randomUUID();p.put("id",id);p.put("status",r.status());p.put("verified",java.sql.Timestamp.from(r.verifiedAt()));p.put("note",r.sourceNote().trim());p.put("fingerprint",fingerprint);
         sql.update("insert into renal_dialysis_context_events(id,hospital_id,patient_id,actor_id,department_id,request_id,context_status,verified_at,source_note,source_verified,input_fingerprint) values(:id,:h,:p,:actor,:department,:request,:status,:verified,:note,true,:fingerprint)",p);
         ObjectNode body=mapper.createObjectNode().put("resourceType","ClinicalImpression").put("id",id.toString()).put("status","completed").put("date",r.verifiedAt().toString());
         body.putObject("subject").putObject("identifier").put("system","urn:govcare:patient").put("value",patient.toString());

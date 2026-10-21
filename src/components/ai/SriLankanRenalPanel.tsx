@@ -1,23 +1,21 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
+import {modelScorePercent,validatedUnitScore} from "../../lib/clinicalScore";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { Activity, BrainCircuit, CheckCircle2, FileCheck2, Download, Info, Plus, RefreshCw, ShieldCheck, TriangleAlert, X } from "lucide-react";
-import { CartesianGrid, Line, LineChart, ReferenceArea, ReferenceLine, ResponsiveContainer, XAxis, YAxis } from "recharts";
+import { RenalTrendsDashboard } from "./RenalTrendsDashboard";
 import { Button } from "../ui/button";
-import { ChartTooltip } from "../../theme/ChartTooltip";
 import { RenalClinicalModules } from "./RenalClinicalModules";
 import { ClinicalMeasurementDialog } from "./ClinicalMeasurementDialog";
 import { CkdEvidenceDialog,CkdEvidenceSetup } from "./CkdEvidenceSetup";
 import type { EvidenceMetric } from "../../services/ckdClinicalEvidenceService";
-import { recordVerifiedMeasurement, type MeasurementInput, type Metric } from "../../services/predictiveIntelligenceService";
+import { recordVerifiedMeasurement, type MeasurementInput, type MeasurementMetric as Metric } from "../../services/predictiveIntelligenceService";
 import { RenalResearchInfographic } from "./RenalResearchInfographic";
-import { chartColor } from "../../theme/colors";
-import { normalizeRenalChartMeasurement, renalChartUnit, renalUnitName } from "../../lib/renalMeasurementUnits";
 import { ApiRequestError } from "../../services/apiClient";
 import type { AuthorizedPatient } from "../../services/patientService";
 import { renalModuleOrder, getRenalPredictiveIntelligence, predictRenalOutcome, recordRenalObservation, reviewRenalPrediction,
   verifyRenalDialysisStatus,type RenalDialysisVerificationInput,
   type RenalPredictiveIntelligence, type RenalMeasurementKey, type RenalModelKey, type RenalObservation,
-  type RenalObservationInput, type RenalPrediction, type RenalReviewAction, type RenalReviewInput, type RenalDataAction,type ClinicalMappedFeature } from "../../services/renalIntelligenceService";
+  type RenalObservationInput, type RenalPrediction, type RenalReviewAction, type RenalReviewInput, type RenalDataAction } from "../../services/renalIntelligenceService";
 import "./sri-lankan-renal.css";
 import "./predictive-intelligence.css";
 
@@ -40,20 +38,6 @@ const fields: Array<{ key: RenalMeasurementKey; label: string; unit: string }> =
   { key: "urea_post", label: "Urea · post-dialysis", unit: "mmol/L" },
   { key: "dry_weight", label: "Recorded dry weight", unit: "kg" },
 ];
-const chartMetrics = [
-  { key: "hb", label: "Hemoglobin", unit: "g/dL", model: "hb" },
-  { key: "creatinine", label: "Serum Creatinine · clinical features", unit: "mg/dL", model: null },
-  { key: "egfr", label: "eGFR · clinical features", unit: "mL/min/1.73 m²", model: null },
-  { key: "acr", label: "Urine ACR · clinical features", unit: "mg/g", model: null },
-  { key: "potassium", label: "Serum Potassium · clinical features", unit: "mmol/L", model: null },
-  { key: "urr", label: "Measured URR from paired urea", unit: "%", model: "urr" },
-  { key: "creatinine_pre", label: "Creatinine · pre-dialysis", unit: "umol/L", model: null },
-  { key: "urea_pre", label: "Urea · pre-dialysis", unit: "mmol/L", model: null },
-  { key: "potassium_pre", label: "Potassium · pre-dialysis", unit: "mmol/L", model: null },
-  { key: "albumin", label: "Serum albumin", unit: "g/L", model: null },
-  { key: "dry_weight", label: "Recorded dry weight", unit: "kg", model: "dry-weight" },
-] as const;
-type ChartMetric = typeof chartMetrics[number]["key"];
 const readable = (value: string | null | undefined) => value ? value.toLowerCase().replaceAll("_", " ").replaceAll("-", " ") : "Unavailable";
 const formatNumber = (value: unknown) => typeof value === "number" && Number.isFinite(value) ? value.toLocaleString(undefined, { maximumFractionDigits: 2 }) : "Unavailable";
 const formatDate = (value?: string | null) => value && Number.isFinite(Date.parse(value))
@@ -72,7 +56,7 @@ const dryWeightLimitation = "Unavailable: the source dry-weight data do not esta
 
 
 /** The enclosing CKD workspace owns the selected and authorized patient. */
-type RenalPanelProps={patient:AuthorizedPatient;onGenerateReport?:()=>void;reportBusy?:boolean};
+type RenalPanelProps={patient:AuthorizedPatient;onGenerateReport?:(clinicalSnapshotId?:string)=>void;reportBusy?:boolean};
 export function SriLankanRenalPanel({ patient, onGenerateReport, reportBusy }: RenalPanelProps) {
   return <RenalPatientWorkspace key={`${patient.id}:${patient.hospital_id ?? ""}`} patient={patient} onGenerateReport={onGenerateReport} reportBusy={reportBusy}/>;
 }
@@ -92,10 +76,14 @@ function RenalPatientWorkspace({ patient, onGenerateReport, reportBusy }: RenalP
   const [entryFocus,setEntryFocus]=useState("");
   const history=useRef<HTMLDetailsElement>(null);
   const [review, setReview] = useState<RenalPrediction | null>(null);
-  const [metric, setMetric] = useState<ChartMetric>("hb");
   const operation = useRef<AbortController | null>(null);
   const mounted = useRef(true);
   const predictionRequests = useRef<Partial<Record<RenalModelKey, string>>>({});
+  useEffect(() => {
+    operation.current?.abort();
+    setObservationOpen(false); setClinicalEntry(null); setEvidenceEntry(null); setReview(null);
+    setNotice(""); setBusyModel(null); predictionRequests.current = {};
+  }, [patient.id]);
 
   useEffect(() => {
     mounted.current = true;
@@ -125,12 +113,6 @@ function RenalPatientWorkspace({ patient, onGenerateReport, reportBusy }: RenalP
   const scopedData = data?.patientId === patient.id ? data : null;
   const canWrite = Boolean(scopedData?.canReview && !loading && !busyModel);
   const latestRows = models.map(model => ({ ...model, snapshot: latestPrediction(scopedData?.predictions ?? [], model.key) }));
-  const selected = chartMetrics.find(item => item.key === metric) ?? chartMetrics[0];
-  const chartModule=renalModuleOrder.find(key=>scopedData?.[key].modelKey===selected.model);
-  const chartPrediction = selected.model&&chartModule&&(scopedData?.[chartModule].forecast!=null||scopedData?.[chartModule].researchRiskScore!=null) ? latestPrediction(scopedData?.predictions ?? [], selected.model) : undefined;
-  const clinicalChartKey=selected.key==="hb"?"hemoglobin":["creatinine","egfr","acr","potassium"].includes(selected.key)?selected.key:null;
-  const clinicalSeries=clinicalChartKey?scopedData?.clinicalFeatureData?.history[clinicalChartKey]:undefined;
-
   const mutate = async <T,>(action: (signal: AbortSignal) => Promise<T>) => {
     if (!scopedData?.canReview || loading || operation.current) throw new Error("Clinical write permission and a ready patient workspace are required.");
     const controller = new AbortController(); operation.current = controller;
@@ -180,13 +162,12 @@ function RenalPatientWorkspace({ patient, onGenerateReport, reportBusy }: RenalP
     if(action.focusKey?.startsWith("trend:")){if(canWrite)setEvidenceEntry({kind:"trend",metric:action.focusKey.slice(6) as EvidenceMetric});return;}
     if(action.type==="ADD_CLINICAL_HISTORY"){
       if(!canWrite)return;
-      const supported:Metric[]=["egfr","creatinine","acr","potassium","hemoglobin","hba1c","systolic","diastolic","glucose","bmi","bun"];
+      const supported:Metric[]=["egfr","creatinine","acr","potassium","hemoglobin","hba1c","systolic","diastolic","glucose","bmi","bun","urea","albumin","sodium","calcium"];
       if(supported.includes(action.focusKey as Metric))setClinicalEntry(action.focusKey as Metric);
       else navigate(`/ai-cdss/ckd?patientId=${encodeURIComponent(patient.id)}&view=assessment`);
     }else if(action.type==="ADD_LAB_RESULT"||action.type==="VERIFY_DIALYSIS_STATUS") {
       if(!canWrite)return;setEntryFocus(action.focusKey??(action.type==="VERIFY_DIALYSIS_STATUS"?"dialysis":"observedAt"));setObservationOpen(true);
     }else if(action.type==="VIEW_HISTORY") {
-      if(action.focusKey&&chartMetrics.some(m=>m.key===action.focusKey))setMetric(action.focusKey as ChartMetric);
       if(history.current){history.current.open=true;history.current.scrollIntoView({behavior:"smooth",block:"start"});history.current.querySelector("summary")?.focus();}
     }else if(action.type==="OPEN_CLINICAL_RECORD")navigate(`/patients/${encodeURIComponent(patient.id)}`);
   };
@@ -194,7 +175,7 @@ function RenalPatientWorkspace({ patient, onGenerateReport, reportBusy }: RenalP
   return <section className="sri-renal" aria-label="Sri Lankan renal research intelligence" aria-busy={loading}>
     <div className="pci-section-header sri-renal-header"><div><span className="pci-kicker">Sri Lankan longitudinal renal research</span><h2>CKD clinical monitoring workspace</h2>
       <p className="pci-muted">Review related clinical risks, complete source evidence and access renal research forecasts.</p></div>
-      <div className="sri-renal-actions">{onGenerateReport&&<Button variant="outline" disabled={reportBusy||loading||Boolean(busyModel)} onClick={onGenerateReport}><Download size={15}/>{reportBusy?"Preparing report…":"Generate report"}</Button>}{scopedData?.canReview && <Button disabled={!canWrite} onClick={() => {setEntryFocus("observedAt");setObservationOpen(true);}}><Plus size={15} /> Add verified renal results</Button>}
+      <div className="sri-renal-actions">{onGenerateReport&&<Button variant="outline" disabled={reportBusy||loading||Boolean(busyModel)} onClick={()=>onGenerateReport(scopedData?.snapshotId)}><Download size={15}/>{reportBusy?"Preparing report…":"Generate report"}</Button>}{scopedData?.canReview && <Button disabled={!canWrite} onClick={() => {setEntryFocus("observedAt");setObservationOpen(true);}}><Plus size={15} /> Add verified renal results</Button>}
         <Button variant="outline" aria-label="Refresh renal research intelligence" disabled={loading || Boolean(busyModel) || observationOpen || Boolean(clinicalEntry) || Boolean(review)} onClick={() => { setNotice(""); setRefresh(value => value + 1); }}><RefreshCw size={15} className={loading ? "pci-spin" : ""} /> Refresh</Button></div>
     </div>
     <div className="sri-renal-governance" aria-label="Research governance status"><span><BrainCircuit size={14} /> Internal research evaluation</span><span><ShieldCheck size={14} /> Clinical validation not completed</span><span><Info size={14} /> Dataset permission unverified</span></div>
@@ -212,14 +193,11 @@ function RenalPatientWorkspace({ patient, onGenerateReport, reportBusy }: RenalP
       })}</div>}
       {!scopedData.canReview && <p className="sri-renal-permission"><ShieldCheck size={15} /> Read-only clinical access. Recording observations and reviewing predictions require clinical write permission.</p>}
       {!scopedData.observations.length && (!scopedData.clinicalFeatureData?.assessmentCount?<div className="sri-renal-empty"><FileCheck2 size={23} /><strong>No dated dialysis observations recorded</strong><p>Record verified source results with explicit units and a measurement date. Predictions require sufficient patient history.</p></div>:<p className="sri-renal-small">CKD assessment measurements support the monitoring results below. Dialysis adequacy and maintenance-HD forecasts require separately verified session data.</p>)}
-      <RenalClinicalModules data={scopedData} patientDisplay={`${patient.full_name||"Authorized patient"} · ${patient.patient_no||patient.id}`} canWrite={canWrite} busyModel={busyModel} onRun={key => void runPrediction(key)} onRefresh={() => setRefresh(value => value + 1)} onAction={takeDataAction}/>
+      <RenalClinicalModules data={scopedData} patientDisplay={`${patient.full_name||"Authorized patient"} · ${patient.patient_no||patient.id}`} canWrite={canWrite} busyModel={busyModel} onRun={key => void runPrediction(key)} onRefresh={() => setRefresh(value => value + 1)} onAction={takeDataAction} onGenerateReport={onGenerateReport}/>
       <details className="sri-renal-sources"><summary>Stored research model history and legacy review</summary><div className="sri-renal-models">{latestRows.map(model => <RenalModelCard key={model.key} model={model} canWrite={canWrite} busy={busyModel === model.key}
         onRun={() => void runPrediction(model.key)} onReview={setReview} />)}</div></details>
-      <div className="sri-renal-chart-card"><div className="pci-section-header"><div><span className="pci-kicker">Measured history and research forecast</span><h3>Renal trends</h3></div>
-        <label className="sri-renal-chart-select">Measurement<select aria-label="Renal trend measurement" value={metric} onChange={event => setMetric(event.target.value as ChartMetric)}>{chartMetrics.map(item => <option key={item.key} value={item.key}>{item.label}</option>)}</select></label></div>
-        <RenalTrendChart observations={scopedData.observations} metric={selected} prediction={chartPrediction} clinicalSeries={clinicalSeries}/>
-      </div>
-      <details ref={history} className="sri-renal-sources"><summary>Source observations / clinical context ({scopedData.observations.length} labs)</summary>
+      <RenalTrendsDashboard key={patient.id} data={scopedData} patientDisplay={`${patient.patient_no || patient.id}`} canWrite={canWrite} refreshing={loading || Boolean(busyModel)} onAction={takeDataAction} onRefresh={() => setRefresh(value => value + 1)} />
+      <details ref={history} className="sri-renal-sources"><summary>Dialysis session records ({scopedData.observations.length} sessions)</summary>
         {scopedData.clinicalFeatureData&&<section><h4>Saved CKD assessment sources ({scopedData.clinicalFeatureData.assessmentCount})</h4><ul>{scopedData.clinicalFeatureData.assessmentSources.map(source=><li key={source.assessmentId}>Assessment {source.assessmentId} · recorded {formatDate(source.recordedAt)} · measurement date {source.observationDate?formatDate(source.observationDate):"Not verified"}</li>)}</ul><p>Recording time is distinct from laboratory measurement time. Each feature retains its own source date.</p></section>}
         {scopedData.currentRenalStatus.dialysisStatus&&<div className="sri-renal-status"><div><strong>Clinician-recorded dialysis context</strong><span>{readable(scopedData.currentRenalStatus.dialysisStatus)} · {formatDate(scopedData.currentRenalStatus.dialysisVerifiedAt)}</span></div><p>{scopedData.currentRenalStatus.dialysisEvidence}</p></div>}
         <div className="pci-table-wrap"><table className="sri-renal-table"><caption className="sr-only">Dated dialysis measurements and recorded source</caption><thead><tr><th scope="col">Observed date</th><th scope="col">Measurements</th><th scope="col">Clinical context and source</th></tr></thead>
@@ -247,8 +225,8 @@ function RenalModelCard({ model, canWrite, busy, onRun, onReview }: {
   const snapshot = model.snapshot; const output = snapshot?.outputs;
   const isClassifier = model.key === "hyperkalemia";
   const valueAvailable = model.key !== "dry-weight" && output?.status === "AVAILABLE" &&
-    (isClassifier ? Number.isFinite(output?.probability) : Number.isFinite(output?.prediction));
-  const displayValue = isClassifier && Number.isFinite(output?.probability) ? `${formatNumber(Number(output?.probability) * 100)}%` : formatNumber(output?.prediction);
+    (isClassifier ? validatedUnitScore(output?.probability)!==null : Number.isFinite(output?.prediction));
+  const displayValue = isClassifier && Number.isFinite(output?.probability) ? modelScorePercent(output?.probability) : formatNumber(output?.prediction);
   const stale = inputIsStale(snapshot);
   const interval = output?.interval;
   const performanceNote = output?.explanation?.limitations?.find(note => /negative|poor|r.?2|baseline|performance|improv/i.test(note));
@@ -261,7 +239,7 @@ function RenalModelCard({ model, canWrite, busy, onRun, onReview }: {
     {performanceNote && <p className="sri-renal-limitation">{performanceNote}</p>}
     {qualityFlags.length > 0 && <p className="sri-renal-limitation">Data quality: {readable(qualityFlags[0])}{qualityFlags.length > 1 ? ` · ${qualityFlags.length} flags` : ""}</p>}
     {valueAvailable && interval && !isClassifier && <p>Empirical residual interval: <strong>{formatNumber(interval.low)} – {formatNumber(interval.high)} {output?.unit}</strong><small className="sri-renal-small">Internal cohort estimate; not clinically calibrated.</small></p>}
-    {valueAvailable && isClassifier && <p className="sri-renal-limitation">Internal research probability for next pre-HD K+ ≥5.5 mmol/L in the 14–62 day next-observation window. It is not clinically calibrated and does not replace the current-potassium safety rule.</p>}
+    {valueAvailable && isClassifier && <p className="sri-renal-limitation">Uncalibrated research model score for next pre-HD K+ ≥5.5 mmol/L in the 14–62 day next-observation window. It is not clinically calibrated and does not replace the current-potassium safety rule.</p>}
     {snapshot && <><p className="sri-renal-review-state"><FileCheck2 size={13} /> Review: {readable(snapshot.review_state)} · v{snapshot.review_version}</p>
       <details className="sri-renal-explanation"><summary>Why this output?</summary><PredictionExplanation prediction={snapshot} /></details></>}
     <div className="sri-renal-model-actions"><Button variant="outline" disabled={!canWrite || model.key === "dry-weight"} onClick={onRun}>{busy ? "Running…" : model.key === "dry-weight" ? "Model unavailable" : model.key === "hyperkalemia" ? "Run K+ risk model" : `Run ${model.key === "hb" ? "Hb" : "URR"} forecast`}</Button>
@@ -284,48 +262,6 @@ function PredictionExplanation({ prediction }: { prediction: RenalPrediction }) 
     {explanation?.limitations?.length > 0 && <><strong>Limitations</strong><ul>{explanation.limitations.map((limitation, index) => <li key={index}>{limitation}</li>)}</ul></>}
     {output.horizon_definition && <p>Horizon definition: {output.horizon_definition}</p>}
   </div>;
-}
-
-function RenalTrendChart({ observations, metric, prediction,clinicalSeries }: { observations: RenalObservation[]; metric: typeof chartMetrics[number]; prediction?: RenalPrediction;clinicalSeries?:ClinicalMappedFeature[] }) {
-  const generic=["creatinine","egfr","acr","potassium"].includes(metric.key);const unit = generic?metric.unit:renalChartUnit(metric.key as RenalMeasurementKey);
-  const series = useMemo<Array<{ time: number; measured: number | null; predicted: number | null; converted?: boolean }>>(() => clinicalSeries?clinicalSeries.filter(p=>p.available&&p.value!=null&&Number.isFinite(Date.parse(p.observedAt??""))).map(p=>({time:Date.parse(p.observedAt!),measured:p.value,predicted:null,converted:Boolean(p.originalUnit&&p.originalUnit!==p.unit)})).sort((a,b)=>a.time-b.time):observations.flatMap(row => {
-    const normalized = normalizeRenalChartMeasurement(metric.key as RenalMeasurementKey, row.measurements?.[metric.key as RenalMeasurementKey], row.units?.[metric.key as RenalMeasurementKey]);
-    const time = observedTime(row);
-    return normalized && Number.isFinite(time) ? [{ time, measured: normalized.value, predicted: null, converted: normalized.converted }] : [];
-  }).sort((a, b) => a.time - b.time), [observations, metric.key,clinicalSeries]);
-  const output = prediction?.outputs;
-  const origin = output?.forecast_origin_date ? Date.parse(output.forecast_origin_date) : NaN;
-  const target = output?.forecast_date ? Date.parse(output.forecast_date) : NaN;
-  const forecastAvailable = metric.model !== "dry-weight" && output?.status === "AVAILABLE" && Number.isFinite(output.prediction) &&
-    Number.isFinite(origin) && Number.isFinite(target) && target > origin && renalUnitName(output.unit) === renalUnitName(unit);
-  const anchor = series.filter(row => row.time <= origin).at(-1);
-  const points = [...series];
-  if (forecastAvailable) {
-    if (anchor?.measured != null) points.push({ time: origin, measured: null, predicted: anchor.measured });
-    points.push({ time: target, measured: null, predicted: output.prediction });
-  }
-  points.sort((a, b) => a.time - b.time);
-  const omitted = (clinicalSeries?.length??observations.filter(row => Number.isFinite(row.measurements?.[metric.key as RenalMeasurementKey])).length) - series.length;
-  const converted = series.filter(row => row.converted).length;
-  const axisDate = (value: number) => new Date(value).toLocaleDateString(undefined, { month: "short", day: "numeric" });
-  if (!points.length) return <div className="sri-renal-empty"><Activity size={23} /><strong>No dated {metric.label.toLowerCase()} series available</strong><p>{metric.key === "urr" ? "URR is derived by the server from paired pre/post-dialysis urea measurements with the same explicit units." : "Record verified measurements with supported explicit source units to display this trend."}</p>{omitted > 0 && <p>{omitted} source value(s) have unsupported or missing units, or unresolved dates. Original source observations remain unchanged.</p>}</div>;
-  return <><div className="sri-renal-chart" role="img" aria-label={`${metric.label}: ${series.length} dated measurements in ${unit}${forecastAvailable ? ", with a separate dashed research forecast" : ""}.`}>
-    <ResponsiveContainer width="100%" height="100%" minWidth={1}><LineChart data={points} margin={{ left: -12, right: 12, top: 16, bottom: 6 }} accessibilityLayer>
-      <CartesianGrid vertical={false} stroke="var(--chart-grid)" strokeDasharray="3 5" /><XAxis dataKey="time" type="number" domain={["dataMin", "dataMax"]} tickFormatter={axisDate} minTickGap={40} stroke="var(--chart-axis)" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-      <YAxis domain={["auto", "auto"]} width={70} label={{ value: unit, angle: -90, position: "insideLeft", fontSize: 10, fill: "var(--chart-axis)" }} tick={{ fontSize: 11 }} stroke="var(--chart-axis)" tickLine={false} axisLine={false} />
-      <ChartTooltip wrapperStyle={{ maxWidth: "calc(100% - 70px)" }} contentStyle={{ whiteSpace: "normal", overflowWrap: "anywhere" }} labelFormatter={value => formatDate(new Date(Number(value)).toISOString())} formatter={(value, name) => [`${formatNumber(Number(value))} ${unit}`, name === "Research forecast" ? "Research forecast (not measured)" : "Measured source value"]} />
-      {forecastAvailable && <ReferenceLine x={origin} stroke="var(--chart-axis)" strokeDasharray="3 4" />}
-      {forecastAvailable && output.interval && Number.isFinite(output.interval.low) && Number.isFinite(output.interval.high) && <ReferenceArea x1={origin} x2={target} y1={output.interval.low} y2={output.interval.high} ifOverflow="extendDomain" fill="var(--tone-accent-surface)" fillOpacity={0.5} strokeOpacity={0} />}
-      <Line type="linear" dataKey="measured" name="Measured" stroke={chartColor(0)} strokeWidth={2.5} dot={{ fill: "var(--bg-surface)", stroke: chartColor(0), r: 4, strokeWidth: 2 }} isAnimationActive={false} connectNulls={false} />
-      {forecastAvailable && <Line type="linear" dataKey="predicted" name="Research forecast" stroke="var(--brand-primary)" strokeWidth={2.5} strokeDasharray="7 6" dot={{ fill: "var(--bg-surface)", stroke: "var(--brand-primary)", r: 4, strokeWidth: 2 }} isAnimationActive={false} connectNulls />}
-    </LineChart></ResponsiveContainer></div>
-    <div className="sri-renal-chart-key"><span><i className="sri-renal-line-solid" /> Measured · {unit}</span>{forecastAvailable && <span><i className="sri-renal-line-dashed" /> Research forecast · not a lab result</span>}</div>
-    <p className="sri-renal-chart-note"><Info size={14} />{forecastAvailable ? `Dashed values are separate research estimates anchored approximately ${output.horizon_days ?? 30} days after the input date. Shading, when present, is an empirical residual interval from the internal cohort; it is not clinically calibrated.` : "Only recorded source values are displayed. No prediction is plotted for this measurement."}</p>
-    {inputIsStale(prediction) && <p className="sri-renal-stale">Forecast input is over 62 days old. Reconcile newer source results before interpretation.</p>}
-    {forecastAvailable && series.some(row => row.time > origin) && <p className="sri-renal-chart-note">Newer measured results exist after this snapshot's input date. Run and review a new forecast to use current evidence.</p>}
-    {converted > 0 && <p className="sri-renal-chart-note">{converted} source measurement(s) converted to {unit} for this chart using supported explicit source units. Original values and units remain in Source observations.</p>}
-    {omitted > 0 && <p className="sri-renal-chart-note">{omitted} source value(s) with unsupported or missing units, or unresolved dates are omitted from this series. Source observations retain their recorded values and units.</p>}
-  </>;
 }
 
 function RenalDialog({ title, description, onClose, busy, children }: { title: string; description: string; onClose: () => void; busy: boolean; children: ReactNode }) {
@@ -383,6 +319,7 @@ function RenalObservationDialog({ patient, focusKey, onClose, onSave,onVerify }:
   const [values, setValues] = useState<Partial<Record<RenalMeasurementKey, string>>>({});
   const [observedAt, setObservedAt] = useState(""); const [sourceNote, setSourceNote] = useState("");
   const [ureaUnit, setUreaUnit] = useState("mmol/L"); const [sourceVerified, setSourceVerified] = useState(false);
+  const [sessionId,setSessionId]=useState(""),[preCollectedAt,setPreCollectedAt]=useState(""),[postCollectedAt,setPostCollectedAt]=useState(""),[regimen,setRegimen]=useState("");
   const [dialysisVerified, setDialysisVerified] = useState(false); const [busy, setBusy] = useState(false); const [error, setError] = useState("");
   const attempt = useRef<{ body: string; id: string } | null>(null);
   const submit = async (event: FormEvent) => {
@@ -400,13 +337,18 @@ function RenalObservationDialog({ patient, focusKey, onClose, onSave,onVerify }:
     if (!Object.keys(measurements).length) { setError("Enter at least one source measurement."); return; }
     if ((measurements.urea_pre == null) !== (measurements.urea_post == null)) { setError("Enter both pre- and post-dialysis urea from the same session, or leave both blank. URR cannot be entered as a substitute."); return; }
     if (measurements.urea_pre != null && measurements.urea_post! > measurements.urea_pre) { setError("Post-dialysis urea exceeds pre-dialysis urea. Reconcile the paired source results before saving."); return; }
-    const payload = { observedAt: new Date(time).toISOString(), maintenanceHemodialysisVerified: dialysisVerified, measurements, units, sourceNote: sourceNote.trim(), sourceVerified: true as const };
+    const hasUreaPair=measurements.urea_pre!=null&&measurements.urea_post!=null;
+    const preTime=Date.parse(preCollectedAt),postTime=Date.parse(postCollectedAt);
+    if(hasUreaPair&&(!sessionId.trim()||!Number.isFinite(preTime)||!Number.isFinite(postTime)||preTime>=postTime||postTime>Date.now())){setError("Verify the same dialysis session identifier and actual pre/post collection times. The post sample must follow the pre sample and not be in the future.");return;}
+    const payload = { observedAt: new Date(time).toISOString(), maintenanceHemodialysisVerified: dialysisVerified, measurements, units, sourceNote: sourceNote.trim(), sourceVerified: true as const,
+      ...(hasUreaPair?{samplingContext:{sessionId:sessionId.trim(),preCollectedAt:new Date(preTime).toISOString(),postCollectedAt:new Date(postTime).toISOString(),regimen}}:{}) };
     setBusy(true); try { await onSave({ ...payload, requestId: requestForPayload(attempt, payload) }); } catch (failure) { setError(errorMessage(failure)); } finally { setBusy(false); }
   };
   return <RenalDialog title={verificationOnly?"Verify clinical dialysis status":"Record verified renal source results"} description={verificationOnly?`Record source-confirmed clinical dialysis context for ${patient.full_name||patient.patient_no||"the selected patient"}. No laboratory value is required. This does not relabel past laboratory sampling context.`:`Record the measured values for ${patient.full_name || patient.patient_no || "the selected patient"}. Every field retains explicit source units; leave unavailable results blank. Dialysis verification must be confirmed from the clinical record.`} onClose={onClose} busy={busy}>
     <form onSubmit={event => void submit(event)} className="sri-renal-form"><fieldset disabled={busy}><label>{verificationOnly?"Clinical verification date and time":"Source measurement date and time"} <span className="pci-required">Required</span><input data-renal-entry="observedAt" type="datetime-local" required aria-required="true" value={observedAt} onChange={event => setObservedAt(event.target.value)} /></label>
       {verificationOnly?<label>Clinical dialysis context<select data-renal-entry="dialysis" value={dialysisStatus} onChange={event=>setDialysisStatus(event.target.value as RenalDialysisVerificationInput["status"])}><option value="UNCONFIRMED">Not yet confirmed</option><option value="MAINTENANCE_HD">Verified chronic maintenance hemodialysis</option><option value="NOT_ON_MAINTENANCE_HD">Verified not on chronic maintenance hemodialysis</option></select></label>:<div className="pci-entry-grid">{fields.map(field => <label key={field.key}>{field.label} <small>({field.key.startsWith("urea_") ? ureaUnit : field.unit})</small><input data-renal-entry={field.key} type="number" min="0" step="any" inputMode="decimal" value={values[field.key] ?? ""} onChange={event => setValues(previous => ({ ...previous, [field.key]: event.target.value }))} /></label>)}</div>}
       {!verificationOnly&&<label>Paired urea source unit<select value={ureaUnit} onChange={event => setUreaUnit(event.target.value)}><option value="mmol/L">mmol/L · both values</option><option value="mg/dL">mg/dL · both values</option></select></label>}
+      {!verificationOnly&&(values.urea_pre||values.urea_post)&&<fieldset className="sri-sampling-context"><legend>Same-session urea sampling evidence</legend><label>Dialysis session identifier<input aria-label="Dialysis session identifier" value={sessionId} maxLength={80} onChange={event=>setSessionId(event.target.value)} required/></label><div className="pci-entry-grid"><label>Pre-dialysis collection time<input aria-label="Pre-dialysis collection time" type="datetime-local" value={preCollectedAt} onChange={event=>setPreCollectedAt(event.target.value)} required/></label><label>Post-dialysis collection time<input aria-label="Post-dialysis collection time" type="datetime-local" value={postCollectedAt} onChange={event=>setPostCollectedAt(event.target.value)} required/></label></div><label>Recorded dialysis regimen<select aria-label="Recorded dialysis regimen" value={regimen} onChange={event=>setRegimen(event.target.value)}><option value="">Not verified; no universal adequacy target</option><option value="IN_CENTRE_HD_THREE_TIMES_WEEKLY">In-centre hemodialysis three times weekly</option><option value="OTHER_VERIFIED_REGIMEN">Other verified regimen; individual target review</option></select></label></fieldset>}
       {!verificationOnly&&<p className="sri-renal-small">Both urea values must use the same explicit unit and dialysis session. The server derives measured URR; forecasts and user-entered URR cannot replace a measured pair.</p>}
       <label>Source report or session <span className="pci-required">Required</span><textarea required aria-required="true" maxLength={2000} rows={3} value={sourceNote} onChange={event => setSourceNote(event.target.value)} placeholder="Report reference, session date, sampling context and verifier" /></label>
       {!verificationOnly&&<label className="pci-verification-check"><input data-renal-entry="dialysis" type="checkbox" checked={dialysisVerified} onChange={event => setDialysisVerified(event.target.checked)} />I have separately confirmed chronic maintenance hemodialysis in the clinical record. Acute dialysis or high creatinine alone is insufficient.</label>}

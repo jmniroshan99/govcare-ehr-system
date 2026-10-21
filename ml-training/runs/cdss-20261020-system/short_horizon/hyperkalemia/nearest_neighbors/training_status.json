@@ -1,0 +1,79 @@
+{
+  "registered": true,
+  "training_status": "TRAINED_RESEARCH_ONLY",
+  "evaluated": false,
+  "served": false,
+  "parameters": {
+    "weights": "distance",
+    "n_neighbors": 15
+  },
+  "tuning": [
+    {
+      "parameters": {
+        "weights": "distance",
+        "n_neighbors": 5
+      },
+      "fold_scores": [
+        0.18674706945150288,
+        0.22021743102216818,
+        0.11198616325827732
+      ],
+      "mean": 0.1729835545773161
+    },
+    {
+      "parameters": {
+        "weights": "distance",
+        "n_neighbors": 15
+      },
+      "fold_scores": [
+        0.16146817625252238,
+        0.21603947620905262,
+        0.10438202605632435
+      ],
+      "mean": 0.1606298928392998
+    }
+  ],
+  "validation": {
+    "Accuracy": 0.6944444444444444,
+    "BalancedAccuracy": 0.5254545454545454,
+    "Precision": 0.5,
+    "Recall": 0.09090909090909091,
+    "Sensitivity": 0.09090909090909091,
+    "Specificity": 0.96,
+    "F1": 0.15384615384615385,
+    "ROC_AUC": 0.6768181818181819,
+    "PR_AUC_average_precision": 0.43551092468927655,
+    "BrierScore": 0.20443681851011858,
+    "ConfusionMatrix": [
+      [
+        48,
+        2
+      ],
+      [
+        20,
+        2
+      ]
+    ],
+    "PositiveEvents": 22,
+    "NegativeEvents": 50,
+    "threshold": 0.5,
+    "Prevalence": 0.3055555555555556,
+    "calibration": {
+      "method": "five quantile bins; descriptive, small sample",
+      "mean_predicted": [
+        0.029166306140733102,
+        0.10897593766833912,
+        0.20572747388362994,
+        0.3110704331291197,
+        0.46694205964930025
+      ],
+      "fraction_positive": [
+        0.13333333333333333,
+        0.14285714285714285,
+        0.42857142857142855,
+        0.35714285714285715,
+        0.4666666666666667
+      ]
+    }
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "registered": true,
+  "training_status": "TRAINED_RESEARCH_ONLY",
+  "evaluated": false,
+  "served": false,
+  "parameters": {
+    "n_estimators": 100,
+    "max_depth": 4,
+    "max_features": 0.6,
+    "min_samples_leaf": 10
+  },
+  "tuning": [
+    {
+      "parameters": {
+        "n_estimators": 100,
+        "max_depth": 4,
+        "max_features": 0.6,
+        "min_samples_leaf": 5
+      },
+      "fold_scores": [
+        9.13048494099155,
+        10.647816300255524,
+        11.856023804055157
+      ],
+      "mean": 10.544775015100745
+    },
+    {
+      "parameters": {
+        "n_estimators": 100,
+        "max_depth": 4,
+        "max_features": 0.6,
+        "min_samples_leaf": 10
+      },
+      "fold_scores": [
+        9.24250736272424,
+        10.629896088620642,
+        11.620876792490293
+      ],
+      "mean": 10.497760081278392
+    }
+  ],
+  "validation": {
+    "MAE": 9.27907952335203,
+    "RMSE": 12.850784226954081,
+    "R2": 0.08385540056445273,
+    "MedianAbsoluteError": 6.3637380004869115
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "run_id": "cdss-20261020-system",
+  "created_at": "2026-10-20T08:43:49.031188+00:00",
+  "dataset_sha256": "683e3ce49330922c91581e3f49896c611af0bc2da52abf1f9faea9567aff3da9",
+  "split_manifest_sha256": "8a867629dc57900a200c75dcb2346c5b61eafccbeb54f862f8233ca9b9f017d8",
+  "environment": {
+    "python": "3.14.5",
+    "platform": "Windows-10-10.0.19045-SP0",
+    "numpy": "2.4.6",
+    "pandas": "3.0.6",
+    "scikit-learn": "1.9.1",
+    "xgboost": "3.4.1",
+    "scipy": "1.18.1",
+    "joblib": "1.6.0",
+    "Django": "5.2.16",
+    "scikit-survival": "NOT_INSTALLED",
+    "lifelines": "NOT_INSTALLED"
+  },
+  "limitations": [
+    "Previously examined patient test cohort reused; not a new independent test set.",
+    "Original precleaning measurements unavailable; upstream interpolation leakage cannot be excluded.",
+    "Dataset secondary-use permission UNVERIFIED; clinical validation NOT_COMPLETED.",
+    "Small single-source maintenance-hemodialysis cohort; no general-population CKD inference."
+  ],
+  "tasks": {},
+  "new_independent_test_set": false
+}

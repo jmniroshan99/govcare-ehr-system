@@ -44,7 +44,7 @@ class CkdAssessmentReportTest {
         try (var document = Loader.loadPDF(bytes)) {
             String text = new PDFTextStripper().getText(document).replaceAll("\\s+", " ");
             assertTrue(text.contains("CKD-RELATED CLINICAL RISKS & PREDICTIVE INTELLIGENCE"));
-            assertTrue(text.contains("32.1%")); assertTrue(text.contains("99.0%"));
+            assertTrue(text.contains("0.3215")); assertTrue(text.contains("0.9900"));assertTrue(text.contains("calibration unverified"));
             assertTrue(text.contains("Result not calculated - insufficient longitudinal data.")); assertFalse(text.contains("0.0%"));
             for (String label : List.of("Renal Clinical Trajectory", "Kidney Failure / G5D", "Hyperkalemia Monitoring", "Anemia / Hb Deterioration", "Dialysis Adequacy / URR", "Renal Clinical Deterioration")) assertTrue(text.contains(label), label);
             assertFalse(text.contains("RELATED DISEASE PROBABILITIES"));

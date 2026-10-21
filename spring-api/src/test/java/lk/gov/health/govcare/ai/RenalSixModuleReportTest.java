@@ -22,7 +22,7 @@ class RenalSixModuleReportTest {
         try(var pdf=Loader.loadPDF(bytes)) {
             String text=new PDFTextStripper().getText(pdf);int previous=-1;
             for(String label:List.of("Renal Clinical Trajectory","Kidney Failure / G5D","Hyperkalemia Monitoring","Anemia / Hb Deterioration","Dialysis Adequacy / URR","Renal Clinical Deterioration")){int at=text.indexOf(label);assertTrue(at>previous,label);previous=at;}
-            assertTrue(text.contains("Research Risk Score: 42.0%"));assertTrue(text.contains("Persistence Baseline"));assertTrue(text.contains("No inference")||text.contains("no inference"));
+            assertTrue(text.contains("Research score: 0.4200"));assertTrue(text.contains("Persistence Baseline"));assertTrue(text.contains("No inference")||text.contains("no inference"));
             assertFalse(text.contains("RELATED DISEASE PROBABILITIES"));assertFalse(text.contains("Cardiovascular disease"));assertTrue(text.contains("Outputs require clinician interpretation"));assertTrue(pdf.getNumberOfPages()>=3);
         }
         String directory=System.getProperty("govcare.renal.qa.output");

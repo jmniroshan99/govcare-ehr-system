@@ -7,7 +7,8 @@ const root = path.resolve(__dirname, '..');
 const mlRoot = path.join(root, 'ML_Server');
 
 async function main() {
-  const python = process.env.GOVCARE_RENAL_PYTHON || path.join(mlRoot, '.venv', process.platform === 'win32' ? 'Scripts/python.exe' : 'bin/python');
+  const compatible = path.join(root, '.venv-cdss312', process.platform === 'win32' ? 'Scripts/python.exe' : 'bin/python');
+  const python = process.env.GOVCARE_RENAL_PYTHON || (fs.existsSync(compatible) ? compatible : path.join(mlRoot, '.venv', process.platform === 'win32' ? 'Scripts/python.exe' : 'bin/python'));
   if (!fs.existsSync(python)) throw new Error('Renal Python environment missing. Follow RUN_SRI_LANKAN_RENAL.md or set GOVCARE_RENAL_PYTHON to an absolute Python path.');
   const envPath = path.join(mlRoot, '.env');
   if (!fs.existsSync(envPath)) throw new Error('ML_Server/.env is missing. Run npm run renal:configure or setup-renal-ml-windows.bat first.');

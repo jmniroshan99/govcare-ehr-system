@@ -33,7 +33,7 @@ class ClinicalFeatureUiAndPdfTest {
     @Test void migratedDatedCkdRowsProduceTheSixOutputsWithSourceLineage()throws Exception{
         var c=scenario(PATIENT,true);assertEquals(2,c.output.path("clinicalFeatureData").path("assessmentCount").asInt());
         assertEquals(25,c.output.path("akiRisk").path("creatinineChangePercent").asDouble(),1e-8);assertFalse(c.output.path("akiRisk").path("acuteReviewSignal").asBoolean());
-        assertEquals("High",c.output.path("renalTrajectory").path("clinicalAssessment").path("riskLevel").asText());assertEquals(420,c.output.path("clinicalFeatureData").path("current").path("acr").path("value").asDouble());
+        assertEquals("Observed increase",c.output.path("renalTrajectory").path("clinicalAssessment").path("riskLevel").asText());assertEquals(420,c.output.path("clinicalFeatureData").path("current").path("acr").path("value").asDouble());
         assertEquals(5.8,c.output.path("hyperkalemia").path("clinicalAssessment").path("currentValue").asDouble());assertEquals(9.8,c.output.path("anemia").path("clinicalAssessment").path("currentValue").asDouble());
         assertTrue(c.output.path("dialysisAdequacy").path("clinicalAssessment").path("currentValue").isNull());
         for(String key:RenalClinicalModules.ORDER){assertTrue(c.output.path(key).path("researchRiskScore").isNull());assertTrue(c.output.path(key).path("forecast").isNull());assertTrue(c.output.path(key).path("readiness").has("clinicalDataReadiness"));}
@@ -41,14 +41,13 @@ class ClinicalFeatureUiAndPdfTest {
     }
     @Test void datedPdfIncludesAssessmentInputsCalculatedMonitoringCompletenessAndMissingSessionGuidance()throws Exception{
         var c=scenario(PATIENT,true);byte[] bytes=pdf(c);String text=text(bytes);
-        for(String expected:List.of("CKD Progression","Monitoring inputs: 100% available","High potassium monitoring signal","Anemia monitoring signal","Measured creatinine change: 25","Requires hemodialysis session data","Clinical recommendations","Longitudinal forecasting requires repeated dated observations","Source: CKD_ASSESSMENT"))assertTrue(text.contains(expected),expected);
-        assertFalse(text.contains("Research Risk Score:"));assertFalse(text.contains("0/0"));save("clinical-features-dated-v49.pdf",bytes);
-        for(String expected:List.of("CKD Related Clinical Intelligence Summary","Anemia Monitoring","Hyperkalemia Risk Monitoring","Dialysis Effectiveness Monitoring","Renal Function Progression","CKD Cardiovascular Monitoring","Risk not estimated","Clinical diabetes status","Clinician notes:","AI explanation / clinical rule:"))assertTrue(text.contains(expected),expected);
+        for(String expected:List.of("Renal Function and Progression","Recorded-input coverage: 1 of 1 listed inputs recorded","Mild high potassium","Recorded hemoglobin","Observed dated pair:","Missing or unverified requirements:","Source: CKD_ASSESSMENT","Why this result?","GOVCARE-CLINICAL-RULES-2.0"))assertTrue(text.contains(expected),expected);
+        assertFalse(text.contains("Research Risk Score:"));assertFalse(text.contains("0/0"));save("clinical-features-dated-v4.pdf",bytes);
     }
     @Test void undatedPdfShowsUsefulSnapshotResultsButNeverInventsAnAkiBaselineOrUrr()throws Exception{
         var c=scenario(UNDATED,false);byte[] bytes=pdf(c);String text=text(bytes);
-        assertTrue(text.contains("Baseline creatinine required for AKI trend calculation"));assertTrue(text.contains("Single clinical snapshot available"));assertTrue(text.contains("Undated assessment snapshot"));assertTrue(text.contains("Dialysis verification required"));
-        assertFalse(text.contains("Measured creatinine change:"));assertFalse(text.contains("Research Risk Score:"));save("clinical-features-undated-v49.pdf",bytes);
+        for(String expected:List.of("Trend not established","Measurement date unverified","Result not calculated","Previous comparable creatinine","Actual current collection time"))assertTrue(text.contains(expected),expected);
+        assertFalse(text.contains("Measured creatinine change:"));assertFalse(text.contains("Research Risk Score:"));save("clinical-features-undated-v4.pdf",bytes);
     }
     private byte[] pdf(Case c){
         List<Map<String,Object>> inputs=new ArrayList<>();var current=c.snapshots.stream().max(Comparator.comparing(s->s.path("recordedAt").asText())).orElseThrow();

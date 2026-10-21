@@ -1,0 +1,15 @@
+{
+  "schema_version": "CDSS-SURVIVAL-1",
+  "population": "Adults with stable nondialysis CKD G3–G5; never previously treated with maintenance dialysis or kidney transplantation",
+  "index": "One prespecified eligible clinic assessment per patient; all predictors measured at or before index_date",
+  "endpoint": "First initiation of maintenance kidney replacement therapy (chronic dialysis or kidney transplant), clinically adjudicated; exclude temporary acute dialysis",
+  "required_fields": ["patient_id", "index_date", "age", "sex", "egfr", "urine_acr_mg_g", "predictors_observed_at", "ckd_confirmed", "clinically_stable", "maintenance_dialysis_at_index", "prior_krt", "kidney_failure_event", "kidney_failure_date", "kidney_failure_type", "event_source_id", "death_date", "followup_end_date", "censoring_reason", "kidney_failure_ascertainment_complete", "mortality_ascertainment_complete"],
+  "features": {"age": "years", "sex_male": "binary verified equation variable", "egfr": "mL/min/1.73m2", "urine_acr_mg_g": "mg/g"},
+  "event_date": "Adjudicated first maintenance-dialysis start or transplant date; source reference mandatory for observed events",
+  "censoring": "Last verified date under kidney-failure and mortality ascertainment; blank event date with event=false is not automatically a five-year non-event",
+  "competing_event": "Death before kidney failure. Blank death date requires complete mortality ascertainment through followup_end_date",
+  "estimands": {"net": "Cause-specific kidney-failure net risk under hypothetical removal of competing mortality; not real-world incidence", "cif": "Real-world kidney-failure cumulative incidence using paired cause-specific hazards for kidney failure and death"},
+  "allowed_censoring_reasons": ["administrative", "lost_to_followup", "kidney_failure", "death"],
+  "horizons_days": [730.5, 1826.25],
+  "clinical_validation": "NOT_COMPLETED"
+}

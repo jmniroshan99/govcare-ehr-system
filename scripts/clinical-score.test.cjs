@@ -1,0 +1,7 @@
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),ts=require('typescript');
+const mod={exports:{}};new Function('exports','module',ts.transpileModule(fs.readFileSync('src/lib/clinicalScore.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText)(mod.exports,mod);
+const {modelScorePercent,clinicalPercent}=mod.exports;
+test('screening and selected-class scores use exact percentage formatting',()=>{assert.equal(modelScorePercent(.9999),'99.99%');assert.equal(modelScorePercent(.9997),'99.97%');assert.equal(modelScorePercent(.75),'75.00%');});
+test('invalid scores become unavailable without clamping, string coercion or fabricated zero',()=>{for(const value of [undefined,null,'0.9',NaN,Infinity,-.1,1.1])assert.equal(modelScorePercent(value),'Unavailable');assert.equal(modelScorePercent(0),'0.00%');});
+test('calibrated outcomes need an explicit outcome, horizon and calibration contract',()=>{assert.equal(clinicalPercent('EVENT_PROBABILITY',.8),'Not estimated');assert.equal(clinicalPercent('EVENT_PROBABILITY',.8,{calibrated:true,outcome:'kidney failure',horizon:'2 years'}),'80.00%');});
+test('URR and input coverage are already percentages and are not rescaled as risks',()=>{assert.equal(clinicalPercent('LAB_PERCENT',65),'65.00%');assert.equal(clinicalPercent('INPUT_COVERAGE',80),'80.00%');assert.equal(clinicalPercent('INPUT_COVERAGE',101),'Unavailable');});

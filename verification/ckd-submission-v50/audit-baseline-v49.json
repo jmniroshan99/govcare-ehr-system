@@ -1,9 +1,0 @@
-{
-  "status": "expected_baseline_failure",
-  "sqlState": "42703",
-  "message": "column \"actor_email\" of relation \"audit_logs\" does not exist",
-  "migrationCount": 44,
-  "lastMigration": "V45__unified_clinical_prediction_features.sql",
-  "mechanism": "Feature capture inserts nonexistent audit columns and omits required module; its transaction aborts the assessment save.",
-  "scope": "Actual V49 production audit SQL against all shipped migrations in isolated PGlite; not the user Windows error log."
-}

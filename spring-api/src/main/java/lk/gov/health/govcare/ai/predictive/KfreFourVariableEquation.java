@@ -2,9 +2,10 @@ package lk.gov.health.govcare.ai.predictive;
 
 /**
  * Published four-variable KFRE, non-North American calibration (2016).
- * Coefficients and S0 independently checked against Major et al. 2019 S1 Text
- * (doi:10.1371/journal.pmed.1002955.s008) and the authors' calculator source at
- * https://kidneyfailurerisk.com/assets/js/kidney-app.js.
+ * Coefficients and S0 checked against the original-model Table 3 in
+ * Bravo-Zuniga et al. (doi:10.1186/s12882-025-04357-z); its recalibrated models are not used.
+ * Original implementation reference: Major et al. 2019 S1 Text
+ * (doi:10.1371/journal.pmed.1002955.s008). Direct calculator-JS retrieval was unavailable.
  * Mathematical implementation is not local clinical validation or deployment approval.
  * Clinical eligibility/provenance is enforced by the dedicated outlook workflow.
  */

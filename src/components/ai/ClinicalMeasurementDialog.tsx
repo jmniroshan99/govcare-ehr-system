@@ -3,13 +3,13 @@ import { createPortal } from "react-dom";
 import { Plus, TriangleAlert, X } from "lucide-react";
 import { Button } from "../ui/button";
 import type { AuthorizedPatient } from "../../services/patientService";
-import type { MeasurementInput, Metric } from "../../services/predictiveIntelligenceService";
+import type { MeasurementInput, MeasurementMetric as Metric } from "../../services/predictiveIntelligenceService";
 
-const metricLabels: Record<Metric, string> = { egfr: "eGFR", creatinine: "Creatinine", acr: "Urine ACR", systolic: "Systolic BP",
+const metricLabels: Record<Metric, string> = { urea:"Blood urea (not BUN)",albumin:"Serum albumin",sodium:"Sodium",calcium:"Calcium",egfr: "eGFR", creatinine: "Creatinine", acr: "Urine ACR", systolic: "Systolic BP",
   diastolic: "Diastolic BP", hba1c: "HbA1c", glucose: "Glucose", potassium: "Potassium", hemoglobin: "Hemoglobin",
   bun: "Blood urea nitrogen", bmi: "BMI", weight: "Weight", total_cholesterol: "Total cholesterol", hdl: "HDL cholesterol",
   ldl: "LDL cholesterol", triglycerides: "Triglycerides" };
-const measurementUnits: Record<Metric,string[]> = { egfr:["mL/min/1.73m2"],creatinine:["mg/dL","umol/L"],acr:["mg/g","mg/mmol"],
+const measurementUnits: Record<Metric,string[]> = { urea:["mmol/L","mg/dL"],albumin:["g/L","g/dL"],sodium:["mmol/L"],calcium:["mmol/L"],egfr:["mL/min/1.73m2"],creatinine:["mg/dL","umol/L"],acr:["mg/g","mg/mmol"],
   systolic:["mm[Hg]"],diastolic:["mm[Hg]"],hba1c:["%","mmol/mol"],glucose:["mg/dL","mmol/L"],
   potassium:["mmol/L","mEq/L"],hemoglobin:["g/dL","g/L"],bun:["mg/dL"],bmi:["kg/m2"],weight:["kg","g","lb"],
   total_cholesterol:["mg/dL","mmol/L"],hdl:["mg/dL","mmol/L"],ldl:["mg/dL","mmol/L"],triglycerides:["mg/dL","mmol/L"] };

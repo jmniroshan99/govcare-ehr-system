@@ -1,0 +1,82 @@
+{
+  "registered": true,
+  "training_status": "TRAINED_RESEARCH_ONLY",
+  "evaluated": false,
+  "served": false,
+  "parameters": {
+    "kernel": "rbf",
+    "gamma": "scale",
+    "C": 1
+  },
+  "tuning": [
+    {
+      "parameters": {
+        "kernel": "rbf",
+        "gamma": "scale",
+        "C": 0.1
+      },
+      "fold_scores": [
+        0.16758012201605194,
+        0.23342678246027165,
+        0.10297720046075358
+      ],
+      "mean": 0.16799470164569238
+    },
+    {
+      "parameters": {
+        "kernel": "rbf",
+        "gamma": "scale",
+        "C": 1
+      },
+      "fold_scores": [
+        0.16696899546445132,
+        0.233388149545337,
+        0.10124370753207587
+      ],
+      "mean": 0.16720028418062138
+    }
+  ],
+  "validation": {
+    "Accuracy": 0.6944444444444444,
+    "BalancedAccuracy": 0.5,
+    "Precision": 0.0,
+    "Recall": 0.0,
+    "Sensitivity": 0.0,
+    "Specificity": 1.0,
+    "F1": 0.0,
+    "ROC_AUC": 0.6790909090909091,
+    "PR_AUC_average_precision": 0.4303172474939464,
+    "BrierScore": 0.21111163337068029,
+    "ConfusionMatrix": [
+      [
+        50,
+        0
+      ],
+      [
+        22,
+        0
+      ]
+    ],
+    "PositiveEvents": 22,
+    "NegativeEvents": 50,
+    "threshold": 0.5,
+    "Prevalence": 0.3055555555555556,
+    "calibration": {
+      "method": "five quantile bins; descriptive, small sample",
+      "mean_predicted": [
+        0.17865882033530897,
+        0.2059758863872368,
+        0.22414889337405208,
+        0.24175680783531303,
+        0.28943549552650544
+      ],
+      "fraction_positive": [
+        0.13333333333333333,
+        0.21428571428571427,
+        0.35714285714285715,
+        0.21428571428571427,
+        0.6
+      ]
+    }
+  }
+}

@@ -46,7 +46,9 @@ public class DocumentStorageService {
         if (file.getSize() > maxBytes) throw ApiException.payloadTooLarge("The uploaded file exceeds the configured size limit.");
 
         String original = StringUtils.cleanPath(Objects.requireNonNullElse(file.getOriginalFilename(), "patient-document"));
-        String mime = normalizedMime(file.getContentType(), original);
+        byte[] prefix;try(var input=file.getInputStream()){prefix=input.readNBytes(5);}
+        String mime = ClinicalPdfFileValidation.signature(prefix)?"application/pdf":normalizedMime(file.getContentType(), original);
+        if(mime.equals("application/pdf"))ClinicalPdfFileValidation.validate(file.getBytes());
         String extension = extensionFor(mime, original);
         UUID fileId = UUID.randomUUID();
         Path folder = patientFolder(hospitalId, patientId, documentType);

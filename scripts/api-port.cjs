@@ -24,17 +24,27 @@ function configuredApiPort(root, env) {
   return validateApiPort(local.SERVER_PORT || env.SERVER_PORT || local.PORT || env.PORT || "4002");
 }
 
-function probe(port) {
+function bindProbe(port, host) {
   return new Promise((resolve) => {
     const server = net.createServer();
     server.once("error", (error) => resolve({ error: error.code || error.message }));
     // Spring listens on wildcard interfaces by default. A loopback-only probe
     // could miss another process bound to a different local interface.
-    server.listen({ port, exclusive: true }, () => {
+    server.listen({ port, ...(host ? {host} : {}), exclusive: true }, () => {
       const selected = server.address().port;
       server.close((error) => resolve(error ? { error: error.code || error.message } : { port: selected }));
     });
   });
+}
+
+async function probe(port) {
+  const wildcard = await bindProbe(port);
+  if (!wildcard.port) return wildcard;
+  const ipv4 = await bindProbe(wildcard.port, "0.0.0.0");
+  if (!ipv4.port) return ipv4;
+  // Windows wildcard binds can coexist with a specific loopback listener.
+  // Also test the exact address used by the browser and service clients.
+  return bindProbe(ipv4.port, "127.0.0.1");
 }
 
 async function selectApiPort({ root = path.resolve(__dirname, ".."), env = process.env, candidates, exclude = [] } = {}) {

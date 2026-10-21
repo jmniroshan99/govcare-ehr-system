@@ -1,0 +1,91 @@
+GovCare EHR - Smart Clinical PDF Workflow V58
+
+Implemented in the existing React, Spring Boot and PostgreSQL application.
+
+ROOT CAUSES
+1. The original PDF fixtures print one fixed synthetic patient identity. Their mismatch block for another selected patient is correct. The separate universal test pack omits identity; real mismatch protection remains active.
+2. The previous screen displayed reading, preview, source saving and assessment actions together. Extraction preview intentionally did not change the clinical form, but the interface made the approval/application step difficult to find.
+3. The parser missed explicit aliases (SCr, UACR, K+) and retained only its first matching result. Its broad search between label and number could confuse reference text with a result.
+4. Unsupported ACR and urine-protein units could trigger Java null unboxing in ClinicalFeatureNormalizer, aborting the whole PDF. These now return an unsupported conversion for per-result review.
+5. Only embedded-text extraction existed. Image-only pages had no OCR integration.
+6. The Run control had browser validation without a non-persisting backend readiness check.
+
+UPDATED WORKFLOW
+Step 1: Select Clinical Reports. Device uploads and selected saved EHR reports are read automatically, with independent file requests. Compact rows show filename, date and status. Preview, re-read, remove and saved-report viewing use an overflow menu. One consolidated identity warning lists blocked reports while valid reports continue.
+Step 2: Review Clinical Measurements. Compare explicit sources and dates, review normalized and printed values, edit values, confirm identity and approve changes. Competing results are never selected automatically. Applying approved values updates the existing CKD form. Advanced options retain source saving, reuse, correction versions, reasons and processing/audit details.
+Step 3: CKD Assessment Readiness. Shows 17 required inputs, ready/missing/invalid counts and direct editing links. Unknown history remains unknown. The Run button enables only for the exact input/source snapshot accepted by the real backend validation API. The existing prediction, result dashboard, explanation and FHIR workflow remain in use.
+
+PIPELINE CHANGES
+ClinicalPdfExtractionService uses explicit anchored label mappings, the existing PDFBox extractor and ClinicalFeatureNormalizer. Supported synonyms include Creatinine, Serum / SCr, Estimated GFR, UACR, Hb / Haemoglobin, Glycated Hemoglobin, SBP, DBP, BUN, K+ and Body Mass Index.
+Within-report competing measurements are retained as measurementCandidates; the React comparison helper combines these with candidates from other PDFs and removes exact-content repeats. The multi-report backend response also identifies conflicts without choosing a result.
+Historical prefixes/sections are withheld from current inputs. Per-row dated results require manual date reconciliation. Multiple shared collection times are not collapsed into one invented time.
+Original number, printed unit/text, normalized value/unit, conversion method, source page, confidence basis, source references and review metadata remain available. Imported values are explicitly unverified. A clinician edit preserves the printed source value and is recorded as MANUAL_OVERRIDE internally, with the label Edited by clinician.
+Processing stages expose access, PDF validation, text extraction/OCR, identifiers/dates, recognition, normalization/validation, conflict review, identity, duplicate checks and clinician review. Failed HTTP reads remain isolated to their own row.
+Unsupported laboratory measurements remain in review details. Qualified, missing-unit, invalid, historical and low-confidence OCR values are not silently converted to exact inputs.
+
+BACKEND / STORAGE
+Added POST /api/ai-cdss/ckd/validate using the existing model feature definitions and source-reference access checks. It returns readiness without creating a prediction, document, observation or FHIR resource. Prediction still independently validates and authorizes requests.
+No schema migration or model change is required. Existing clinical records, source SHA-256 reuse, correction lineage, explicit source saves, document authorization, audit logging and FHIR persistence remain in place.
+New measurementCandidates and processingStages response fields are additive. Existing extraction fields and endpoints remain available.
+
+OPTIONAL LOCAL OCR
+The server now supports local Tesseract TSV output. It renders blank/image-only pages with PDFBox, reads word confidence, retains page references and requires clinician review. Values with minimum word confidence below 70% are withheld for manual entry. Text confidence remains a mapping heuristic, explicitly labelled, not clinical verification.
+OCR is OFF by default. Tesseract is not installed in this test environment. The live scan checks therefore verify OCR_REQUIRED; actual Tesseract recognition accuracy has not been validated here.
+To enable on an appropriately configured server, install Tesseract with English language data and set these Spring environment options, then restart:
+  GOVCARE_PDF_OCR_ENABLED=true
+  GOVCARE_PDF_OCR_EXECUTABLE=C:/Program Files/Tesseract-OCR/tesseract.exe
+  GOVCARE_PDF_OCR_LANGUAGE=eng
+  GOVCARE_PDF_OCR_TIMEOUT_SECONDS=15
+  GOVCARE_PDF_OCR_MAX_PAGES=10
+The executable can also be tesseract when it is on PATH. No patient PDF is sent to an external OCR service. Processing uses a bounded page count, 12-megapixel rendering limit, page timeout and overall OCR deadline, and temporary files are cleaned up.
+
+REFERENCE CHECKS FOR CONVERSIONS
+Creatinine umol/L to mg/dL: divide by 88.4, NIDDK adult eGFR equations:
+https://www.niddk.nih.gov/research-funding/research-programs/kidney-clinical-research-epidemiology/laboratory/glomerular-filtration-rate-equations/adults
+Urine ACR mg/mmol to mg/g: multiply by 8.84, published research protocol unit conversion:
+https://cdn-links.lww.com/permalink/jsn/e/jsn_2024_10_10_heerspink_1_sdc1.pdf
+Hemoglobin g/L to g/dL: divide by 10, dimensional volume conversion (1 L = 10 dL), NIST:
+https://www.nist.gov/pml/owm/si-units-volume
+Potassium remains mmol/L. Existing monovalent potassium mEq/L equivalence is preserved. Blood urea is never relabelled as BUN; nitrogen conversion applies only to an explicitly identified BUN measurement.
+Automated tests check these factors, invalid units and preserved originals. These mappings still require the deploying clinical team's governance; software review does not verify a laboratory result.
+
+ACCESSIBILITY / RESPONSIVE BEHAVIOR
+The stepper uses labelled navigation and current-step announcements. Inputs and source controls are labelled; warnings and loading states are announced; visible keyboard focus is provided. The native modal preview supports Escape, focus containment and restoration to the invoking report menu. Desktop uses a side preview drawer; mobile uses the full screen. Tables adapt to stacked rows on mobile, missing/manual rows stay compact, and all themes use the existing GovCare tokens.
+
+VERIFICATION
+See verification/pdf-wizard-v58/ for the full logs, browser evidence and screenshots.
+Full Java suite: 328 tests run, zero failures/errors, 5 opt-in JDBC tests skipped (their disposable-schema system property is not enabled). The live browser and native PostgreSQL checks independently exercise persistence boundaries.
+Final focused PDF pipeline tests: 13 passed after the final stage-status change.
+Frontend regression suite: 55 tests passed (review candidates, conflicts, patient cancellation/RBAC boundaries and existing CKD contracts).
+TypeScript build and production Vite build passed.
+Real browser checks cover single/multi upload, protected preview and Escape/focus restoration, editable approval, unknown/missing/invalid blocking, backend readiness, actual CKD prediction/results, edit lineage, FHIR RiskAssessment, consolidated mismatch blocking, valid-source continuation, saved-source repeated reads, unassigned-doctor denial, dark mode and tablet/mobile horizontal-overflow checks.
+Tests use an isolated synthetic QA facility. Explicit test assessment(s) are recorded only there; no real patient clinical data is modified. Reads alone do not create clinical records. Existing draft autosave from explicit form editing is allowed to settle before persistence comparisons.
+Universal test pack checks read all ten PDFs for two differently identified synthetic patients, verifying normalized values, fingerprints, stage statuses, OCR/unsupported cases and unchanged clinical counts.
+
+SCREENSHOTS
+verification/pdf-wizard-v58/screenshots/desktop.png
+verification/pdf-wizard-v58/screenshots/tablet.png
+verification/pdf-wizard-v58/screenshots/mobile.png
+Full-page review, readiness and dark-theme captures are included in that directory.
+
+FILES TO REVIEW
+src/components/ai/ClinicalPdfImportWorkspace.tsx
+src/components/ai/clinical-pdf-import.css
+src/pages/CKDAICDSS.tsx
+src/lib/clinicalPdfReview.ts
+src/services/aiCdssService.ts
+spring-api/src/main/java/lk/gov/health/govcare/ai/ClinicalPdfExtractionService.java
+spring-api/src/main/java/lk/gov/health/govcare/ai/ClinicalPdfOcrService.java
+spring-api/src/main/java/lk/gov/health/govcare/ai/ClinicalFeatureNormalizer.java
+spring-api/src/main/java/lk/gov/health/govcare/ai/ClinicalPdfImportService.java
+spring-api/src/main/java/lk/gov/health/govcare/ai/CkdPredictionController.java
+spring-api/src/main/java/lk/gov/health/govcare/ai/CkdPredictionService.java
+
+KNOWN LIMITATIONS
+OCR accuracy depends on an installed engine, language data and scan quality; no real OCR engine was available for end-to-end recognition testing here. Engine-output parsing and low-confidence rejection are covered by automated tests. Ambiguous layouts, unsupported units/labels, historical rows and per-row dates require manual reconciliation. No fabricated values or verified observations are created by import.
+The optional 12ui design tool could not reach its sign-in service. The implementation uses the established GovCare UI components and tokens, and is verified in the actual application.
+
+RUN / PACKAGE
+Start the existing start-renal-fullstack-windows.bat. The current local frontend remains http://127.0.0.1:5300; Spring is on 4002 and the renal ML service on 8001.
+The complete updated project is output/GovCare_EHR_Smart_PDF_Workflow_V58.zip, with a file manifest and SHA-256 sidecar. Source, model artifacts, current frontend build, tests and evidence are included. Installed dependencies, .env secrets, private QA credentials, runtime logs, patient storage, database backups and other archives are excluded. Configure local environment files for a fresh installation using the existing examples and README.
+Repackage with python scripts/package-clinical-pdf.py --wizard. Automated live/browser scripts require the existing isolated synthetic QA fixture setup and private session file outside the project.

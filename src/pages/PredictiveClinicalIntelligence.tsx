@@ -32,19 +32,19 @@ export function PredictiveClinicalIntelligence() {
   return <Navigate to={integratedCkdHref(params.toString())} replace />;
 }
 
-export function PredictiveIntelligencePanel({ patient }: { patient: AuthorizedPatient }) {
+export function PredictiveIntelligencePanel({ patient,initialTab="Overview" }: { patient: AuthorizedPatient;initialTab?:Tab }) {
   const profile = useAuthStore(state => state.profile);
   if (!canUsePredictiveWorkspace(profile)) return <div role="alert" className="gov-empty-state">Clinical intelligence access is unavailable for this account.</div>;
-  return <ClinicalWorkspace key={`${authorizationContextKey(profile)}:${patient.id}`} patient={patient} />;
+  return <ClinicalWorkspace key={`${authorizationContextKey(profile)}:${patient.id}`} patient={patient} initialTab={initialTab} />;
 }
 
-function ClinicalWorkspace({ patient }: { patient: AuthorizedPatient }) {
+function ClinicalWorkspace({ patient,initialTab }: { patient: AuthorizedPatient;initialTab:Tab }) {
   const profile = useAuthStore(state => state.profile);
   const [overview, setOverview] = useState<ClinicalOverview | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [refresh, setRefresh] = useState(0);
-  const [tab, setTab] = useState<Tab>("Overview");
+  const [tab, setTab] = useState<Tab>(initialTab);
   const [metric, setMetric] = useState<Metric>("egfr");
   const [days, setDays] = useState<number | null>(365);
   const [horizon, setHorizon] = useState(6);
@@ -115,7 +115,7 @@ function ClinicalWorkspace({ patient }: { patient: AuthorizedPatient }) {
     const timeout=window.setTimeout(()=>controller.abort(),30000);
     try { await recordVerifiedMeasurement(id,input,requestId,controller.signal); } finally { window.clearTimeout(timeout); }
     if(patientId.current!==id||controller.signal.aborted)return;
-    setMeasurementOpen(false);setMetric(input.metric);setForecast(null);setTab("Trends");
+    setMeasurementOpen(false);if(Object.hasOwn(metricLabels,input.metric))setMetric(input.metric as Metric);setForecast(null);setTab("Trends");
     setNotice("Verified result saved with its measurement date, source and FHIR provenance.");setRefresh(n=>n+1);
   };
 

@@ -1,8 +1,0 @@
-{
-  "status": "passed",
-  "checks": 26,
-  "migrations": 46,
-  "lastMigration": "V47__ckd_verified_evidence_and_demo.sql",
-  "engine": "PGlite PostgreSQL WASM; native Windows PostgreSQL not verified",
-  "scope": "All migrations, immutable clinical context and synthetic-demo runs, tenant/patient scope, idempotency, historical report cutoff, source/status constraints; no lab or prediction data manufactured by migration"
-}

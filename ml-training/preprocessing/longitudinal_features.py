@@ -4,6 +4,11 @@ import pandas as pd
 
 PREDICTORS = ['hb','urr','albumin','calcium','sodium','potassium_pre','potassium_post','creatinine_pre','creatinine_post']
 
+def feature_names():
+    """Canonical ordered schema shared by training and serving compatibility checks."""
+    suffixes=['','_previous','_difference','_pct_change','_mean3','_sd3','_min3','_max3','_slope_per_day']
+    return [p+s for p in PREDICTORS for s in suffixes]+['days_since_previous','potassium_reduction','creatinine_reduction']
+
 def feature_frame(frame):
     frame = frame.sort_values(['patient_id','observed_at']).reset_index(drop=True).copy()
     features = pd.DataFrame(index=frame.index)
@@ -29,7 +34,7 @@ def feature_frame(frame):
     features['days_since_previous'] = frame.groupby('patient_id')['observed_at'].diff().dt.total_seconds()/86400
     features['potassium_reduction'] = frame.potassium_pre-frame.potassium_post
     features['creatinine_reduction'] = frame.creatinine_pre-frame.creatinine_post
-    return features.replace([np.inf,-np.inf],np.nan)
+    return features[feature_names()].replace([np.inf,-np.inf],np.nan)
 
 def create_targets(frame, target):
     ordered=frame.sort_values(['patient_id','observed_at']).reset_index(drop=True)

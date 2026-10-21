@@ -1,0 +1,12 @@
+{
+  "selected_method": "persistence",
+  "best_candidate": "extra_trees",
+  "gate_passed": false,
+  "improvement": -0.03535343117647427,
+  "selection_uses_test": false,
+  "criterion": "Validation MAE; >=5% better than persistence and below both training constants",
+  "frozen_before_test": true,
+  "status": "BASELINE_SELECTED",
+  "served": false,
+  "deployment_reason": "Staged benchmark only; existing approved serving location is retained."
+}

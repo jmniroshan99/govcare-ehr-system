@@ -25,6 +25,23 @@ class RenalClinicalModuleServiceTest {
         when(sql.list(contains("renal_clinical_module_reviews"),anyMap())).thenReturn(List.of());
         assertNotNull(service().reportSnapshot(actor,patient));verifyNoInteractions(renal);verify(sql).one(contains("hospital_id=:h and patient_id=:p"),argThat(p->hospital.equals(p.get("h"))&&patient.equals(p.get("p"))));
     }
+    @Test void historicalReportReusesFirstAssessmentSnapshotWithoutRecalculation(){
+        var assessment=UUID.randomUUID();var snapshot=UUID.randomUUID();
+        when(access.clinicalScope(actor,patient,false)).thenReturn(actor);
+        var output=new ObjectMapper().createObjectNode().put("snapshotId",snapshot.toString()).put("generatedAt","2025-01-01T00:00:00Z");
+        for(String key:RenalClinicalModules.ORDER)output.putObject(key);
+        when(sql.one(contains("order by created_at asc,id asc"),anyMap())).thenReturn(Optional.of(Map.of("id",snapshot,"outputs",output)));
+        var saved=service().assessmentReportSnapshot(actor,patient,assessment);
+        assertEquals(snapshot.toString(),saved.path("snapshotId").asText());assertEquals("2025-01-01T00:00:00Z",saved.path("generatedAt").asText());
+        verifyNoInteractions(renal);verify(sql,never()).update(contains("insert into renal_clinical_module_snapshots"),anyMap());
+    }
+    @Test void selectedReportSnapshotMustBelongToTheAssessmentPatientAndHospital(){
+        var assessment=UUID.randomUUID();var snapshot=UUID.randomUUID();
+        when(access.clinicalScope(actor,patient,false)).thenReturn(actor);
+        when(sql.required(contains("outputs #>> '{clinicalFeatureData,latestAssessmentId}'=:assessment"),anyMap(),anyString())).thenThrow(ApiException.notFound("No matching authorized snapshot"));
+        assertThrows(ApiException.class,()->service().selectedReportSnapshot(actor,patient,assessment,snapshot));
+        verifyNoInteractions(renal);verify(sql,never()).update(anyString(),anyMap());
+    }
     @Test void unavailableSnapshotCannotBeReviewedAsAnotherPatient() {
         when(access.clinicalScope(actor,patient,true)).thenReturn(actor);when(sql.required(contains("for update"),anyMap(),anyString())).thenThrow(ApiException.notFound("Not found"));
         var request=new RenalClinicalModuleService.ReviewRequest(UUID.randomUUID(),UUID.randomUUID(),"anemia",0,"ACCEPT","Verified",null,null);
